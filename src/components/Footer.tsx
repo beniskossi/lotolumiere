@@ -1,7 +1,12 @@
 import { Link } from "react-router-dom";
 import { Settings, Heart, BarChart3, History as HistoryIcon } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 export const Footer = () => {
+  const { user } = useAuth();
+  const { isAdmin } = useAdminRole(user?.id);
+
   return (
     <footer className="bg-gradient-card border-t border-border/50 mt-12">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -34,12 +39,14 @@ export const Footer = () => {
                   Historique
                 </Link>
               </li>
-              <li>
-                <Link to="/admin" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-                  <Settings className="w-3 h-3" />
-                  Administration
-                </Link>
-              </li>
+              {isAdmin && (
+                <li>
+                  <Link to="/admin" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                    <Settings className="w-3 h-3" />
+                    Administration
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 
