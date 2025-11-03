@@ -31,7 +31,7 @@ const Home = () => {
               <Sparkles className="w-8 h-8" />
             </div>
             <div>
-              <h1 className="text-5xl font-bold mb-2">Loto Lumière</h1>
+              <h1 className="text-5xl font-bold mb-2">LOTO LUMIERE</h1>
               <p className="text-white/80 text-sm">Côte d'Ivoire</p>
             </div>
           </div>

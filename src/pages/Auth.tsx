@@ -64,7 +64,7 @@ const Auth = () => {
       } else {
         toast({
           title: "Connexion réussie",
-          description: "Bienvenue sur Loto Bonheur !",
+          description: "Bienvenue sur LOTO LUMIERE !",
         });
         navigate("/");
       }
@@ -157,7 +157,7 @@ const Auth = () => {
               <Trophy className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Loto Bonheur</CardTitle>
+          <CardTitle className="text-2xl font-bold">LOTO LUMIERE</CardTitle>
           <CardDescription>
             Connectez-vous ou créez un compte pour accéder à l'application
           </CardDescription>

@@ -37,7 +37,7 @@ export const PWAInstallPrompt = () => {
     if (outcome === "accepted") {
       toast({
         title: "✓ Application installée",
-        description: "Loto Bonheur est maintenant disponible sur votre appareil",
+        description: "LOTO LUMIERE est maintenant disponible sur votre appareil",
       });
     }
 
@@ -61,7 +61,7 @@ export const PWAInstallPrompt = () => {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <CardTitle className="text-lg mb-1">
-                Installer Loto Bonheur
+                Installer LOTO LUMIERE
               </CardTitle>
               <CardDescription className="text-white/80 text-sm">
                 Accédez rapidement à l'app depuis votre écran d'accueil

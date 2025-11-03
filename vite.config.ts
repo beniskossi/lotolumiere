@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "icon-192.png", "icon-512.png"],
       manifest: {
-        name: "Loto Bonheur - Analyse et Prédictions",
-        short_name: "Loto Bonheur",
+        name: "LOTO LUMIERE - Analyse et Prédictions",
+        short_name: "LOTO LUMIERE",
         description: "Application d'analyse avancée des résultats de loterie avec statistiques et prédictions intelligentes",
         theme_color: "#1e3a5f",
         background_color: "#1e3a5f",

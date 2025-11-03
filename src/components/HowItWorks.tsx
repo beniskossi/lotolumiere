@@ -47,7 +47,7 @@ export const HowItWorks = () => {
         <CardHeader>
           <CardTitle className="text-2xl flex items-center gap-3">
             <Info className="w-7 h-7" />
-            Comment Utiliser Loto Bonheur
+            Comment Utiliser LOTO LUMIERE
           </CardTitle>
           <CardDescription className="text-white/80 text-base">
             Guide complet pour profiter au maximum de toutes les fonctionnalités

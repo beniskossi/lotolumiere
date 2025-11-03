@@ -29,7 +29,7 @@ export const InstallButton = () => {
     if (outcome === "accepted") {
       toast({
         title: "✓ Application installée",
-        description: "Loto Bonheur a été ajouté à votre écran d'accueil",
+        description: "LOTO LUMIERE a été ajouté à votre écran d'accueil",
       });
     }
 
