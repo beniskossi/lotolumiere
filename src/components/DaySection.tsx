@@ -15,16 +15,25 @@ export const DaySection = ({ day, draws }: DaySectionProps) => {
   };
 
   return (
-    <div className="mb-8">
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold text-foreground bg-gradient-primary bg-clip-text text-transparent">
+    <div className="mb-10 animate-fade-in">
+      <div className="mb-6 relative">
+        <h2 className="text-3xl font-bold text-foreground inline-block relative">
           {day}
+          <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-accent rounded-full"></div>
         </h2>
-        <div className="h-1 w-16 bg-gradient-accent rounded-full mt-2"></div>
+        <p className="text-sm text-muted-foreground mt-3">
+          {draws.length} tirages disponibles
+        </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {draws.map((draw) => (
-          <DrawCard key={draw.name} draw={draw} onClick={() => handleDrawClick(draw)} />
+        {draws.map((draw, idx) => (
+          <div
+            key={draw.name}
+            style={{ animationDelay: `${idx * 50}ms` }}
+            className="animate-fade-in"
+          >
+            <DrawCard draw={draw} onClick={() => handleDrawClick(draw)} />
+          </div>
         ))}
       </div>
     </div>

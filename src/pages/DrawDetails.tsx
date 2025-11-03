@@ -5,9 +5,9 @@ import { ArrowLeft, Database, Search, BarChart3, Brain, RefreshCw } from "lucide
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { NumberBall } from "@/components/NumberBall";
 import { NumberConsult } from "@/components/NumberConsult";
+import { PredictionPanel } from "@/components/PredictionPanel";
 import { useDrawResults, useRefreshResults } from "@/hooks/useDrawResults";
 import { useMostFrequentNumbers, useLeastFrequentNumbers } from "@/hooks/useNumberStatistics";
-import { useLatestPrediction } from "@/hooks/usePredictions";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -23,7 +23,6 @@ const DrawDetails = () => {
   const { data: results, isLoading: resultsLoading, refetch: refetchResults } = useDrawResults(decodedDrawName, 20);
   const { data: mostFrequent, isLoading: mostFrequentLoading } = useMostFrequentNumbers(decodedDrawName, 10);
   const { data: leastFrequent, isLoading: leastFrequentLoading } = useLeastFrequentNumbers(decodedDrawName, 10);
-  const { data: latestPrediction, isLoading: predictionLoading } = useLatestPrediction(decodedDrawName);
 
   const handleRefresh = async () => {
     try {
@@ -51,25 +50,32 @@ const DrawDetails = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-gradient-primary text-white py-8 px-4 shadow-lg">
-        <div className="max-w-7xl mx-auto">
+      <div className="bg-gradient-primary text-white py-12 px-4 shadow-lg relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-accent opacity-10"></div>
+        <div className="max-w-7xl mx-auto relative z-10">
           <Button
             variant="ghost"
-            className="text-white hover:bg-white/20 mb-4"
+            className="text-white hover:bg-white/20 mb-6 transition-all hover:scale-105"
             onClick={() => navigate("/")}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour
+            Retour à l'accueil
           </Button>
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">{decodedDrawName}</h1>
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="animate-fade-in">
+              <h1 className="text-4xl md:text-5xl font-bold mb-2">{decodedDrawName}</h1>
+              <p className="text-white/80 text-sm">
+                Analyse complète et prédictions intelligentes
+              </p>
+            </div>
             <Button
               variant="secondary"
               onClick={handleRefresh}
-              className="gap-2"
+              className="gap-2 shadow-lg hover:shadow-glow transition-all"
+              size="lg"
             >
-              <RefreshCw className="w-4 h-4" />
-              Actualiser
+              <RefreshCw className="w-5 h-5" />
+              Actualiser les données
             </Button>
           </div>
         </div>
@@ -232,61 +238,7 @@ const DrawDetails = () => {
           </TabsContent>
 
           <TabsContent value="prediction">
-            <Card className="bg-gradient-card border-border/50">
-              <CardHeader>
-                <CardTitle>Prédictions Intelligentes</CardTitle>
-                <CardDescription>
-                  Prédictions basées sur des algorithmes d'apprentissage automatique
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {predictionLoading ? (
-                    <p className="text-muted-foreground">Chargement...</p>
-                  ) : latestPrediction ? (
-                    <div className="p-6 bg-accent/10 border-2 border-accent/30 rounded-lg">
-                      <div className="mb-4">
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Prédiction du {format(new Date(latestPrediction.prediction_date), "d MMMM yyyy", { locale: fr })}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Modèle: <span className="font-medium">{latestPrediction.model_used}</span>
-                          {latestPrediction.confidence_score && (
-                            <> • Confiance: <span className="font-medium">{latestPrediction.confidence_score}%</span></>
-                          )}
-                        </p>
-                      </div>
-                      <div className="flex gap-3 flex-wrap mb-4">
-                        {latestPrediction.predicted_numbers.map((num, idx) => (
-                          <NumberBall key={`${num}-${idx}`} number={num} size="lg" />
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-muted/50 border border-muted rounded-lg">
-                      <p className="text-sm text-muted-foreground">
-                        Aucune prédiction disponible pour le moment. Les prédictions seront générées automatiquement 
-                        une fois que suffisamment de données historiques seront collectées.
-                      </p>
-                    </div>
-                  )}
-                  <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      <strong>Approche hybride multi-modèles:</strong>
-                    </p>
-                    <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
-                      <li><strong>LightGBM:</strong> Analyse statistique rapide des fréquences et écarts</li>
-                      <li><strong>CatBoost:</strong> Validation des interactions entre numéros</li>
-                      <li><strong>Transformers:</strong> Détection des tendances temporelles</li>
-                    </ul>
-                  </div>
-                  <p className="text-xs text-muted-foreground italic">
-                    ⚠️ Note : Les prédictions sont basées sur des analyses statistiques et ne garantissent pas de résultats. 
-                    La loterie reste un jeu de hasard.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <PredictionPanel drawName={decodedDrawName} />
           </TabsContent>
         </Tabs>
       </div>
