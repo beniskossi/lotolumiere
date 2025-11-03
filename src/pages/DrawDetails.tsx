@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { NumberBall } from "@/components/NumberBall";
 import { NumberConsult } from "@/components/NumberConsult";
 import { PredictionPanel } from "@/components/PredictionPanel";
+import { StatisticsCharts } from "@/components/StatisticsCharts";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useDrawResults, useRefreshResults } from "@/hooks/useDrawResults";
 import { useMostFrequentNumbers, useLeastFrequentNumbers } from "@/hooks/useNumberStatistics";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +54,9 @@ const DrawDetails = () => {
       {/* Header */}
       <div className="bg-gradient-primary text-white py-12 px-4 shadow-lg relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-accent opacity-10"></div>
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
         <div className="max-w-7xl mx-auto relative z-10">
           <Button
             variant="ghost"
@@ -167,6 +172,13 @@ const DrawDetails = () => {
 
           <TabsContent value="statistiques">
             <div className="space-y-6">
+              {mostFrequent && leastFrequent && mostFrequent.length > 0 && leastFrequent.length > 0 && (
+                <StatisticsCharts 
+                  mostFrequent={mostFrequent} 
+                  leastFrequent={leastFrequent}
+                  drawName={decodedDrawName}
+                />
+              )}
               <div className="grid md:grid-cols-2 gap-6">
                 <Card className="bg-gradient-card border-border/50">
                   <CardHeader>

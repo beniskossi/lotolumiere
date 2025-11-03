@@ -1,0 +1,299 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft, Trash2, Download, Upload, RefreshCw } from "lucide-react";
+import { useRefreshResults } from "@/hooks/useDrawResults";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DRAW_SCHEDULE } from "@/types/lottery";
+
+const Admin = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const refreshResults = useRefreshResults();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Formulaire d'ajout manuel
+  const [drawName, setDrawName] = useState("");
+  const [drawDate, setDrawDate] = useState("");
+  const [numbers, setNumbers] = useState(["", "", "", "", ""]);
+
+  // Récupérer tous les tirages pour le select
+  const allDraws = Object.values(DRAW_SCHEDULE).flat();
+
+  const handleNumberChange = (index: number, value: string) => {
+    const newNumbers = [...numbers];
+    newNumbers[index] = value;
+    setNumbers(newNumbers);
+  };
+
+  const handleAddResult = async () => {
+    if (!drawName || !drawDate) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const winningNumbers = numbers.map(n => parseInt(n)).filter(n => n >= 1 && n <= 90);
+    if (winningNumbers.length !== 5) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer 5 numéros valides entre 1 et 90",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const draw = allDraws.find(d => d.name === drawName);
+      const { error } = await supabase.from("draw_results").insert({
+        draw_name: drawName,
+        draw_day: draw?.day || "",
+        draw_time: draw?.time || "",
+        draw_date: drawDate,
+        winning_numbers: winningNumbers,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "✓ Résultat ajouté",
+        description: "Le tirage a été enregistré avec succès",
+      });
+
+      // Reset form
+      setDrawName("");
+      setDrawDate("");
+      setNumbers(["", "", "", "", ""]);
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible d'ajouter le résultat",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleScrapeResults = async () => {
+    setIsLoading(true);
+    try {
+      await refreshResults();
+      toast({
+        title: "✓ Scraping terminé",
+        description: "Les résultats ont été mis à jour",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Échec du scraping",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      const { data, error } = await supabase.from("draw_results").select("*").order("draw_date", { ascending: false });
+      
+      if (error) throw error;
+
+      const dataStr = JSON.stringify(data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `loto-bonheur-export-${new Date().toISOString().split("T")[0]}.json`;
+      link.click();
+
+      toast({
+        title: "✓ Export réussi",
+        description: "Les données ont été exportées",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Échec de l'export",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteOldResults = async () => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer les résultats de plus de 6 mois ?")) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const dateStr = sixMonthsAgo.toISOString().split("T")[0];
+
+      const { error } = await supabase
+        .from("draw_results")
+        .delete()
+        .lt("draw_date", dateStr);
+
+      if (error) throw error;
+
+      toast({
+        title: "✓ Nettoyage effectué",
+        description: "Les anciens résultats ont été supprimés",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Échec de la suppression",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="bg-gradient-primary text-white py-8 px-4 shadow-lg">
+        <div className="max-w-7xl mx-auto">
+          <Button
+            variant="ghost"
+            className="text-white hover:bg-white/20 mb-4"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Retour à l'accueil
+          </Button>
+          <h1 className="text-4xl font-bold">Administration</h1>
+          <p className="text-white/80 mt-2">Gestion des résultats et maintenance</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="bg-gradient-card border-border/50">
+            <CardHeader>
+              <CardTitle>Ajouter un Résultat Manuellement</CardTitle>
+              <CardDescription>
+                Entrez les informations du tirage
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="draw-name">Tirage</Label>
+                <Select value={drawName} onValueChange={setDrawName}>
+                  <SelectTrigger id="draw-name">
+                    <SelectValue placeholder="Sélectionnez un tirage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allDraws.map((draw) => (
+                      <SelectItem key={draw.name} value={draw.name}>
+                        {draw.name} - {draw.day} {draw.time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="draw-date">Date</Label>
+                <Input
+                  id="draw-date"
+                  type="date"
+                  value={drawDate}
+                  onChange={(e) => setDrawDate(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label>Numéros Gagnants (5 numéros entre 1-90)</Label>
+                <div className="grid grid-cols-5 gap-2 mt-2">
+                  {numbers.map((num, idx) => (
+                    <Input
+                      key={idx}
+                      type="number"
+                      min="1"
+                      max="90"
+                      value={num}
+                      onChange={(e) => handleNumberChange(idx, e.target.value)}
+                      placeholder={`N°${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                onClick={handleAddResult}
+                disabled={isLoading}
+                className="w-full"
+              >
+                Ajouter le Résultat
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-card border-border/50">
+            <CardHeader>
+              <CardTitle>Actions Rapides</CardTitle>
+              <CardDescription>
+                Opérations de maintenance
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button
+                onClick={handleScrapeResults}
+                disabled={isLoading}
+                className="w-full gap-2"
+                variant="default"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Scraper les Résultats
+              </Button>
+
+              <Button
+                onClick={handleExportData}
+                className="w-full gap-2"
+                variant="secondary"
+              >
+                <Download className="w-4 h-4" />
+                Exporter les Données (JSON)
+              </Button>
+
+              <Button
+                onClick={handleDeleteOldResults}
+                disabled={isLoading}
+                className="w-full gap-2"
+                variant="destructive"
+              >
+                <Trash2 className="w-4 h-4" />
+                Supprimer Résultats &gt; 6 mois
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="bg-accent/10 border-accent/30">
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">
+              <strong>⚠️ Note:</strong> Cette interface est réservée aux administrateurs. 
+              Toutes les modifications sont permanentes et affectent la base de données en temps réel.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;

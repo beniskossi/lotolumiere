@@ -1,4 +1,7 @@
 import { DaySection } from "@/components/DaySection";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { InstallButton } from "@/components/InstallButton";
+import { Footer } from "@/components/Footer";
 import { DRAW_SCHEDULE, DAYS_ORDER } from "@/types/lottery";
 import { Sparkles, TrendingUp, BarChart3, Database } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +12,10 @@ const Home = () => {
       {/* Hero Section */}
       <div className="bg-gradient-primary text-white py-16 px-4 mb-8 shadow-lg relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-accent opacity-10"></div>
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <InstallButton />
+          <ThemeToggle />
+        </div>
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex items-center gap-4 mb-6 animate-fade-in">
             <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-glow">
@@ -72,6 +79,8 @@ const Home = () => {
           <DaySection key={day} day={day} draws={DRAW_SCHEDULE[day]} />
         ))}
       </div>
+
+      <Footer />
     </div>
   );
 };
