@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { ArrowLeft, LayoutDashboard, TrendingUp } from "lucide-react";
 import { Footer } from "@/components/Footer";
+import { UserNav } from "@/components/UserNav";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -45,23 +46,26 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 space-y-8">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <LayoutDashboard className="w-8 h-8" />
-              Mon Dashboard
-            </h1>
-            <p className="text-muted-foreground">
-              Gérez vos favoris et suivez vos prédictions
-            </p>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-2">
+                <LayoutDashboard className="w-8 h-8" />
+                Mon Dashboard
+              </h1>
+              <p className="text-muted-foreground">
+                Gérez vos favoris et suivez vos prédictions
+              </p>
+            </div>
           </div>
+          <UserNav />
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">

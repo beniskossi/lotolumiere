@@ -10,6 +10,7 @@ import { useDrawResults } from "@/hooks/useDrawResults";
 import { DrawResultsSkeleton } from "@/components/LoadingSkeleton";
 import { NumberBall } from "@/components/NumberBall";
 import { DRAW_SCHEDULE } from "@/types/lottery";
+import { UserNav } from "@/components/UserNav";
 import {
   Table,
   TableBody,
@@ -37,14 +38,17 @@ const History = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <div className="bg-gradient-primary text-white py-8 px-4 shadow-lg">
         <div className="max-w-7xl mx-auto">
-          <Button
-            variant="ghost"
-            className="text-white hover:bg-white/20 mb-4"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour à l'accueil
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              className="text-white hover:bg-white/20"
+              onClick={() => navigate("/")}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour à l'accueil
+            </Button>
+            <UserNav />
+          </div>
           <div className="flex items-center gap-3 mb-2">
             <HistoryIcon className="w-10 h-10" />
             <h1 className="text-4xl font-bold">Historique des Tirages</h1>

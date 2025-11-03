@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { UserNav } from "@/components/UserNav";
 
 const Home = () => {
   const { user } = useAuth();
@@ -22,6 +23,7 @@ const Home = () => {
         <div className="absolute top-4 right-4 flex items-center gap-2">
           <InstallButton />
           <ThemeToggle />
+          {user && <UserNav />}
         </div>
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex items-center gap-4 mb-6 animate-fade-in">

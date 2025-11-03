@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { DrawResultsSkeleton, StatisticsSkeleton } from "@/components/LoadingSkeleton";
 import { PredictionComparison } from "@/components/PredictionComparison";
+import { UserNav } from "@/components/UserNav";
 
 const DrawDetails = () => {
   const { drawName } = useParams();
@@ -59,8 +60,9 @@ const DrawDetails = () => {
       {/* Header */}
       <div className="bg-gradient-primary text-white py-12 px-4 shadow-lg relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-accent opacity-10"></div>
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 flex items-center gap-2">
           <ThemeToggle />
+          <UserNav />
         </div>
         <div className="max-w-7xl mx-auto relative z-10">
           <Button
