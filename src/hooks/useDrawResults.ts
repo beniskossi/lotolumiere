@@ -36,7 +36,17 @@ export const useDrawResults = (drawName?: string, limit = 10) => {
 
 export const useRefreshResults = () => {
   return async () => {
-    const { data, error } = await supabase.functions.invoke("scrape-results");
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.access_token) {
+      throw new Error("Authentication required");
+    }
+
+    const { data, error } = await supabase.functions.invoke("scrape-results", {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`
+      }
+    });
     
     if (error) {
       console.error("Error refreshing results:", error);
