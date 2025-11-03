@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Trash2, Download, Upload, RefreshCw, LogOut, LogIn } from "lucide-react";
+import { ArrowLeft, Trash2, Download, Upload, RefreshCw, LogOut, LogIn, Database, TrendingUp, Calendar, AlertCircle } from "lucide-react";
 import { useRefreshResults } from "@/hooks/useDrawResults";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DRAW_SCHEDULE } from "@/types/lottery";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -31,8 +32,40 @@ const Admin = () => {
   const [drawDate, setDrawDate] = useState("");
   const [numbers, setNumbers] = useState(["", "", "", "", ""]);
 
+  // Statistiques
+  const [stats, setStats] = useState({
+    totalDraws: 0,
+    lastDrawDate: "",
+    totalNumbers: 0,
+  });
+
   // Récupérer tous les tirages pour le select
   const allDraws = Object.values(DRAW_SCHEDULE).flat();
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      loadStats();
+    }
+  }, [user, isAdmin]);
+
+  const loadStats = async () => {
+    try {
+      const { data: draws } = await supabase
+        .from("draw_results")
+        .select("*")
+        .order("draw_date", { ascending: false });
+
+      if (draws) {
+        setStats({
+          totalDraws: draws.length,
+          lastDrawDate: draws[0]?.draw_date || "N/A",
+          totalNumbers: draws.length * 5,
+        });
+      }
+    } catch (error) {
+      console.error("Error loading stats:", error);
+    }
+  };
 
   const handleNumberChange = (index: number, value: string) => {
     const newNumbers = [...numbers];
@@ -82,6 +115,9 @@ const Admin = () => {
       setDrawName("");
       setDrawDate("");
       setNumbers(["", "", "", "", ""]);
+      
+      // Reload stats
+      loadStats();
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -386,12 +422,67 @@ const Admin = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="bg-gradient-card border-border/50">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
+          <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardDescription className="flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                Total Tirages
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-primary">{stats.totalDraws}</div>
+              <p className="text-xs text-muted-foreground mt-1">Résultats enregistrés</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardDescription className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Dernier Tirage
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-primary">
+                {stats.lastDrawDate ? new Date(stats.lastDrawDate).toLocaleDateString('fr-FR') : "N/A"}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Date la plus récente</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardDescription className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                Total Numéros
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-primary">{stats.totalNumbers}</div>
+              <p className="text-xs text-muted-foreground mt-1">Numéros analysés</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Alert className="bg-accent/10 border-accent/50 animate-slide-up">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>⚠️ Attention:</strong> Cette interface est réservée aux administrateurs. 
+            Toutes les modifications sont permanentes et affectent la base de données en temps réel.
+          </AlertDescription>
+        </Alert>
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          <Card className="bg-gradient-card border-border/50 animate-slide-up hover:shadow-glow transition-all duration-300">
             <CardHeader>
-              <CardTitle>Ajouter un Résultat Manuellement</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="w-5 h-5 text-primary" />
+                Ajouter un Résultat
+              </CardTitle>
               <CardDescription>
-                Entrez les informations du tirage
+                Entrez les informations du tirage manuellement
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -448,74 +539,75 @@ const Admin = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-card border-border/50">
+          <Card className="bg-gradient-card border-border/50 animate-slide-up hover:shadow-glow transition-all duration-300">
             <CardHeader>
-              <CardTitle>Actions Rapides</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <RefreshCw className="w-5 h-5 text-primary" />
+                Actions Rapides
+              </CardTitle>
               <CardDescription>
-                Opérations de maintenance
+                Opérations de maintenance et gestion des données
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <Button
                 onClick={handleScrapeResults}
                 disabled={isLoading}
-                className="w-full gap-2"
+                className="w-full gap-2 group"
                 variant="default"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className={`w-4 h-4 group-hover:rotate-180 transition-transform duration-500 ${isLoading ? 'animate-spin' : ''}`} />
                 Scraper les Résultats
               </Button>
 
-              <Button
-                onClick={handleExportData}
-                className="w-full gap-2"
-                variant="secondary"
-              >
-                <Download className="w-4 h-4" />
-                Exporter les Données (JSON)
-              </Button>
-
-              <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json"
-                  onChange={handleImportData}
-                  className="hidden"
-                  id="import-file"
-                />
+              <div className="grid grid-cols-2 gap-3">
                 <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading}
-                  className="w-full gap-2"
-                  variant="outline"
+                  onClick={handleExportData}
+                  className="gap-2"
+                  variant="secondary"
                 >
-                  <Upload className="w-4 h-4" />
-                  Importer des Données (JSON)
+                  <Download className="w-4 h-4" />
+                  Exporter
                 </Button>
+
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportData}
+                    className="hidden"
+                    id="import-file"
+                  />
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isLoading}
+                    className="w-full gap-2"
+                    variant="outline"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Importer
+                  </Button>
+                </div>
               </div>
 
-              <Button
-                onClick={handleDeleteOldResults}
-                disabled={isLoading}
-                className="w-full gap-2"
-                variant="destructive"
-              >
-                <Trash2 className="w-4 h-4" />
-                Supprimer Résultats &gt; 6 mois
-              </Button>
+              <div className="pt-3 border-t border-border/50">
+                <Button
+                  onClick={handleDeleteOldResults}
+                  disabled={isLoading}
+                  className="w-full gap-2"
+                  variant="destructive"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Supprimer Résultats &gt; 6 mois
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  ⚠️ Action irréversible
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
-
-        <Card className="bg-accent/10 border-accent/30">
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">
-              <strong>⚠️ Note:</strong> Cette interface est réservée aux administrateurs. 
-              Toutes les modifications sont permanentes et affectent la base de données en temps réel.
-            </p>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
