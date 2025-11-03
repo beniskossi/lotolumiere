@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.generate-prediction]
 verify_jwt = false
 
+[functions.advanced-ai-prediction]
+verify_jwt = false
+
 [functions.seed-data]
 verify_jwt = false
 
