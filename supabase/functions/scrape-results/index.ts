@@ -54,41 +54,38 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("Received data:", JSON.stringify(data).substring(0, 200));
+    console.log("Received data structure:", JSON.stringify(data).substring(0, 500));
 
-    // Map draw names (adjust based on actual API response structure)
+    // Map draw names from API to our standardized names
     const drawNameMap: Record<string, string> = {
-      // Lundi
+      // Handle various name formats from API
+      "digital reveil": "Reveil",
       "reveil": "Reveil",
       "etoile": "Etoile",
+      "digital etoile": "Etoile",
       "akwaba": "Akwaba",
-      "monday_special": "Monday Special",
-      // Mardi
-      "la_matinale": "La Matinale",
+      "monday special": "Monday Special",
+      "la matinale": "La Matinale",
+      "matinale": "La Matinale",
       "emergence": "Emergence",
       "sika": "Sika",
-      "lucky_tuesday": "Lucky Tuesday",
-      // Mercredi
-      "premiere_heure": "Premiere Heure",
+      "lucky tuesday": "Lucky Tuesday",
+      "premiere heure": "Premiere Heure",
       "fortune": "Fortune",
       "baraka": "Baraka",
       "midweek": "Midweek",
-      // Jeudi
       "kado": "Kado",
       "privilege": "Privilege",
       "monni": "Monni",
-      "fortune_thursday": "Fortune Thursday",
-      // Vendredi
+      "fortune thursday": "Fortune Thursday",
       "cash": "Cash",
       "solution": "Solution",
       "wari": "Wari",
-      "friday_bonanza": "Friday Bonanza",
-      // Samedi
+      "friday bonanza": "Friday Bonanza",
       "soutra": "Soutra",
       "diamant": "Diamant",
       "moaye": "Moaye",
       "national": "National",
-      // Dimanche
       "benediction": "Benediction",
       "prestige": "Prestige",
       "awale": "Awale",
@@ -97,18 +94,78 @@ serve(async (req) => {
 
     const results: LotoBonheurResult[] = [];
     
-    // Parse API response (adjust based on actual structure)
-    if (Array.isArray(data)) {
-      for (const item of data) {
-        const drawName = drawNameMap[item.game?.toLowerCase().replace(/\s+/g, "_")] || item.game;
+    // Parse API response - handle the nested structure
+    if (data && data.drawsResultsWeekly && Array.isArray(data.drawsResultsWeekly)) {
+      console.log("Processing weekly draws...");
+      
+      for (const week of data.drawsResultsWeekly) {
+        if (!week.drawResultsDaily || !Array.isArray(week.drawResultsDaily)) continue;
         
-        if (drawName && item.numbers && Array.isArray(item.numbers)) {
-          results.push({
-            game: drawName,
-            date: item.date || new Date().toISOString().split("T")[0],
-            winningNumbers: item.numbers.slice(0, 5),
-            machineNumbers: item.machineNumbers?.slice(0, 5),
-          });
+        for (const dailyDraw of week.drawResultsDaily) {
+          const dateStr = dailyDraw.date; // Format: "lundi 03/11"
+          
+          // Parse date
+          let drawDate = new Date().toISOString().split("T")[0];
+          if (dateStr) {
+            const match = dateStr.match(/(\d{2})\/(\d{2})/);
+            if (match) {
+              const [_, day, month] = match;
+              const year = new Date().getFullYear();
+              drawDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }
+          }
+          
+          // Process all draw categories
+          const drawResults = dailyDraw.drawResults || {};
+          const allDraws = [
+            ...(drawResults.morningDraws || []),
+            ...(drawResults.afternoonDraws || []),
+            ...(drawResults.eveningDraws || []),
+            ...(drawResults.nightDraws || []),
+          ];
+          
+          for (const draw of allDraws) {
+            if (!draw.drawName || !draw.winningNumbers) continue;
+            
+            // Clean and match draw name
+            const cleanName = draw.drawName
+              .toLowerCase()
+              .replace(/digital\s+/gi, '')
+              .replace(/\s+\d+h$/i, '')
+              .trim();
+            
+            const mappedName = drawNameMap[cleanName];
+            if (!mappedName) {
+              console.log(`Unknown draw name: ${draw.drawName} (cleaned: ${cleanName})`);
+              continue;
+            }
+            
+            // Parse winning numbers
+            let winningNumbers: number[] = [];
+            if (typeof draw.winningNumbers === 'string') {
+              winningNumbers = draw.winningNumbers
+                .split(/[\s,;-]+/)
+                .map((n: string) => parseInt(n.trim()))
+                .filter((n: number) => !isNaN(n) && n >= 1 && n <= 90)
+                .slice(0, 5);
+            } else if (Array.isArray(draw.winningNumbers)) {
+              winningNumbers = draw.winningNumbers
+                .map((n: any) => typeof n === 'number' ? n : parseInt(String(n)))
+                .filter((n: number) => !isNaN(n) && n >= 1 && n <= 90)
+                .slice(0, 5);
+            }
+            
+            if (winningNumbers.length === 5) {
+              results.push({
+                game: mappedName,
+                date: drawDate,
+                winningNumbers,
+                machineNumbers: undefined, // API doesn't seem to provide machine numbers
+              });
+            } else {
+              console.log(`Invalid numbers for ${draw.drawName}: got ${winningNumbers.length} numbers`);
+            }
+          }
         }
       }
     }
