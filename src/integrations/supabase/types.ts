@@ -14,13 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      draw_results: {
+        Row: {
+          created_at: string | null
+          draw_date: string
+          draw_day: string
+          draw_name: string
+          draw_time: string
+          id: string
+          machine_numbers: number[] | null
+          updated_at: string | null
+          winning_numbers: number[]
+        }
+        Insert: {
+          created_at?: string | null
+          draw_date: string
+          draw_day: string
+          draw_name: string
+          draw_time: string
+          id?: string
+          machine_numbers?: number[] | null
+          updated_at?: string | null
+          winning_numbers: number[]
+        }
+        Update: {
+          created_at?: string | null
+          draw_date?: string
+          draw_day?: string
+          draw_name?: string
+          draw_time?: string
+          id?: string
+          machine_numbers?: number[] | null
+          updated_at?: string | null
+          winning_numbers?: number[]
+        }
+        Relationships: []
+      }
+      number_statistics: {
+        Row: {
+          associated_numbers: Json | null
+          days_since_last: number | null
+          draw_name: string
+          frequency: number | null
+          id: string
+          last_appearance: string | null
+          number: number
+          updated_at: string | null
+        }
+        Insert: {
+          associated_numbers?: Json | null
+          days_since_last?: number | null
+          draw_name: string
+          frequency?: number | null
+          id?: string
+          last_appearance?: string | null
+          number: number
+          updated_at?: string | null
+        }
+        Update: {
+          associated_numbers?: Json | null
+          days_since_last?: number | null
+          draw_name?: string
+          frequency?: number | null
+          id?: string
+          last_appearance?: string | null
+          number?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      predictions: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          draw_name: string
+          id: string
+          model_metadata: Json | null
+          model_used: string
+          predicted_numbers: number[]
+          prediction_date: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          draw_name: string
+          id?: string
+          model_metadata?: Json | null
+          model_used: string
+          predicted_numbers: number[]
+          prediction_date: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          draw_name?: string
+          id?: string
+          model_metadata?: Json | null
+          model_used?: string
+          predicted_numbers?: number[]
+          prediction_date?: string
+        }
+        Relationships: []
+      }
+      scraping_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          job_date: string
+          results_count: number | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          job_date: string
+          results_count?: number | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          job_date?: string
+          results_count?: number | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      validate_numbers_array: { Args: { numbers: number[] }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
