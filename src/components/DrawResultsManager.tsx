@@ -1,0 +1,281 @@
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useDrawResults, DrawResult } from "@/hooks/useDrawResults";
+import { NumberBall } from "@/components/NumberBall";
+import { Edit2, Trash2, Calendar, Clock } from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+export const DrawResultsManager = () => {
+  const { toast } = useToast();
+  const { data: results = [], refetch } = useDrawResults(undefined, 50);
+  const [editingResult, setEditingResult] = useState<DrawResult | null>(null);
+  const [deletingResult, setDeletingResult] = useState<DrawResult | null>(null);
+  const [editNumbers, setEditNumbers] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleEditClick = (result: DrawResult) => {
+    setEditingResult(result);
+    setEditNumbers(result.winning_numbers.map(n => n.toString()));
+  };
+
+  const handleEditNumberChange = (index: number, value: string) => {
+    const newNumbers = [...editNumbers];
+    newNumbers[index] = value;
+    setEditNumbers(newNumbers);
+  };
+
+  const handleUpdateResult = async () => {
+    if (!editingResult) return;
+
+    const winningNumbers = editNumbers.map(n => parseInt(n)).filter(n => n >= 1 && n <= 90);
+    if (winningNumbers.length !== 5) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer 5 numéros valides entre 1 et 90",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from("draw_results")
+        .update({ winning_numbers: winningNumbers })
+        .eq("id", editingResult.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "✓ Résultat modifié",
+        description: "Le résultat a été mis à jour avec succès",
+      });
+
+      setEditingResult(null);
+      refetch();
+    } catch (error) {
+      console.error("Error updating result:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier le résultat",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteResult = async () => {
+    if (!deletingResult) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from("draw_results")
+        .delete()
+        .eq("id", deletingResult.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "✓ Résultat supprimé",
+        description: "Le résultat a été supprimé avec succès",
+      });
+
+      setDeletingResult(null);
+      refetch();
+    } catch (error) {
+      console.error("Error deleting result:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le résultat",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <Card className="bg-gradient-card border-border/50 animate-fade-in">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Edit2 className="w-5 h-5 text-primary" />
+            Gérer les Résultats
+          </CardTitle>
+          <CardDescription>
+            Modifier ou supprimer les résultats des tirages ({results.length} résultats)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Tirage</TableHead>
+                  <TableHead>Numéros</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {results.map((result) => (
+                  <TableRow key={result.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm">
+                          {format(new Date(result.draw_date), "dd MMM yyyy", { locale: fr })}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{result.draw_name}</div>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          {result.draw_time}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 flex-wrap">
+                        {result.winning_numbers.map((num, idx) => (
+                          <NumberBall key={`${num}-${idx}`} number={num} size="sm" />
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditClick(result)}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setDeletingResult(result)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingResult} onOpenChange={() => setEditingResult(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le Résultat</DialogTitle>
+            <DialogDescription>
+              {editingResult && (
+                <>
+                  {editingResult.draw_name} - {format(new Date(editingResult.draw_date), "dd MMMM yyyy", { locale: fr })}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Numéros Gagnants</Label>
+              <div className="grid grid-cols-5 gap-2 mt-2">
+                {editNumbers.map((num, idx) => (
+                  <Input
+                    key={idx}
+                    type="number"
+                    min="1"
+                    max="90"
+                    value={num}
+                    onChange={(e) => handleEditNumberChange(idx, e.target.value)}
+                    placeholder={`N°${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingResult(null)}>
+              Annuler
+            </Button>
+            <Button onClick={handleUpdateResult} disabled={isLoading}>
+              {isLoading ? "Modification..." : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingResult} onOpenChange={() => setDeletingResult(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce résultat ?
+              {deletingResult && (
+                <div className="mt-2 p-3 bg-muted rounded-lg">
+                  <div className="font-medium">{deletingResult.draw_name}</div>
+                  <div className="text-sm">
+                    {format(new Date(deletingResult.draw_date), "dd MMMM yyyy", { locale: fr })}
+                  </div>
+                </div>
+              )}
+              Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteResult}
+              disabled={isLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isLoading ? "Suppression..." : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};

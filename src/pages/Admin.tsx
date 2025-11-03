@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Footer } from "@/components/Footer";
+import { DrawResultsManager } from "@/components/DrawResultsManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -608,6 +609,9 @@ const Admin = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Gestion des résultats */}
+          <DrawResultsManager />
         </div>
       </div>
 
