@@ -7,7 +7,7 @@ export const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <h3 className="font-bold text-foreground mb-3">Loto Bonheur</h3>
+            <h3 className="font-bold text-foreground mb-3">Loto Lumière</h3>
             <p className="text-sm text-muted-foreground">
               Application d'analyse avancée des résultats de loterie avec statistiques 
               et prédictions intelligentes.
@@ -57,7 +57,7 @@ export const Footer = () => {
 
         <div className="mt-8 pt-6 border-t border-border/50 text-center">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Loto Bonheur. Tous droits réservés.
+            © {new Date().getFullYear()} Loto Lumière. Tous droits réservés.
           </p>
           <p className="text-xs text-muted-foreground mt-2">
             ⚠️ La loterie est un jeu de hasard. Jouez de manière responsable.
