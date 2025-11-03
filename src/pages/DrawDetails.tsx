@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Database, Search, BarChart3, Brain, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { NumberBall } from "@/components/NumberBall";
+import { NumberConsult } from "@/components/NumberConsult";
 import { useDrawResults, useRefreshResults } from "@/hooks/useDrawResults";
 import { useMostFrequentNumbers, useLeastFrequentNumbers } from "@/hooks/useNumberStatistics";
 import { useLatestPrediction } from "@/hooks/usePredictions";
@@ -155,20 +156,7 @@ const DrawDetails = () => {
           </TabsContent>
 
           <TabsContent value="consulter">
-            <Card className="bg-gradient-card border-border/50">
-              <CardHeader>
-                <CardTitle>Consulter les Régularités</CardTitle>
-                <CardDescription>
-                  Analysez la fréquence d'apparition des numéros
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Cette fonctionnalité sera disponible prochainement. Elle vous permettra de voir
-                  les associations de numéros et leurs fréquences d'apparition.
-                </p>
-              </CardContent>
-            </Card>
+            <NumberConsult drawName={decodedDrawName} />
           </TabsContent>
 
           <TabsContent value="statistiques">
