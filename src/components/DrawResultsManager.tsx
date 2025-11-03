@@ -3,6 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -25,9 +31,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDrawResults, DrawResult } from "@/hooks/useDrawResults";
 import { NumberBall } from "@/components/NumberBall";
-import { Edit2, Trash2, Calendar, Clock } from "lucide-react";
+import { Edit2, Trash2, Calendar, Clock, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -43,11 +50,13 @@ export const DrawResultsManager = () => {
   const [editingResult, setEditingResult] = useState<DrawResult | null>(null);
   const [deletingResult, setDeletingResult] = useState<DrawResult | null>(null);
   const [editNumbers, setEditNumbers] = useState<string[]>([]);
+  const [editDate, setEditDate] = useState<Date | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleEditClick = (result: DrawResult) => {
     setEditingResult(result);
     setEditNumbers(result.winning_numbers.map(n => n.toString()));
+    setEditDate(new Date(result.draw_date));
   };
 
   const handleEditNumberChange = (index: number, value: string) => {
@@ -69,11 +78,23 @@ export const DrawResultsManager = () => {
       return;
     }
 
+    if (!editDate) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une date",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { error } = await supabase
         .from("draw_results")
-        .update({ winning_numbers: winningNumbers })
+        .update({ 
+          winning_numbers: winningNumbers,
+          draw_date: format(editDate, "yyyy-MM-dd")
+        })
         .eq("id", editingResult.id);
 
       if (error) throw error;
@@ -84,6 +105,7 @@ export const DrawResultsManager = () => {
       });
 
       setEditingResult(null);
+      setEditDate(undefined);
       refetch();
     } catch (error) {
       console.error("Error updating result:", error);
@@ -212,12 +234,40 @@ export const DrawResultsManager = () => {
             <DialogDescription>
               {editingResult && (
                 <>
-                  {editingResult.draw_name} - {format(new Date(editingResult.draw_date), "dd MMMM yyyy", { locale: fr })}
+                  {editingResult.draw_name}
                 </>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label>Date du Tirage</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal mt-2",
+                      !editDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {editDate ? format(editDate, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={editDate}
+                    onSelect={setEditDate}
+                    initialFocus
+                    locale={fr}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
             <div>
               <Label>Numéros Gagnants</Label>
               <div className="grid grid-cols-5 gap-2 mt-2">
