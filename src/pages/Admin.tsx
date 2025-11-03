@@ -11,12 +11,14 @@ import { useRefreshResults } from "@/hooks/useDrawResults";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DRAW_SCHEDULE } from "@/types/lottery";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const refreshResults = useRefreshResults();
   const { user, loading: authLoading, signIn, signOut } = useAuth();
+  const { isAdmin, loading: roleLoading } = useAdminRole(user?.id);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -236,10 +238,51 @@ const Admin = () => {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || roleLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">Chargement...</p>
+      </div>
+    );
+  }
+
+  // Check if user has admin role
+  if (user && !isAdmin) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="bg-gradient-primary text-white py-8 px-4 shadow-lg">
+          <div className="max-w-7xl mx-auto">
+            <Button
+              variant="ghost"
+              className="text-white hover:bg-white/20 mb-4"
+              onClick={() => navigate("/")}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour à l'accueil
+            </Button>
+            <h1 className="text-4xl font-bold">Accès Refusé</h1>
+            <p className="text-white/80 mt-2">Vous n'avez pas les permissions nécessaires</p>
+          </div>
+        </div>
+
+        <div className="max-w-md mx-auto px-4 py-16">
+          <Card className="bg-gradient-card border-border/50">
+            <CardHeader>
+              <CardTitle>Accès Administrateur Requis</CardTitle>
+              <CardDescription>
+                Cette page est réservée aux administrateurs. Contactez un administrateur si vous pensez que c'est une erreur.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => navigate("/")}
+                className="w-full"
+              >
+                Retour à l'accueil
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
