@@ -5,6 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -31,7 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDrawResults, DrawResult } from "@/hooks/useDrawResults";
 import { NumberBall } from "@/components/NumberBall";
-import { Edit2, Trash2, Calendar, Clock, CalendarIcon } from "lucide-react";
+import { Edit2, Trash2, Calendar, Clock, CalendarIcon, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -43,15 +50,45 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DRAW_SCHEDULE } from "@/types/lottery";
 
 export const DrawResultsManager = () => {
   const { toast } = useToast();
-  const { data: results = [], refetch } = useDrawResults(undefined, 50);
+  const [selectedDrawName, setSelectedDrawName] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const resultsPerPage = 20;
+  
+  const { data: allResults = [], refetch } = useDrawResults(undefined, 500);
+  
+  // Filter results based on selected draw
+  const filteredResults = selectedDrawName === "all" 
+    ? allResults 
+    : allResults.filter(r => r.draw_name === selectedDrawName);
+  
+  // Pagination
+  const totalPages = Math.ceil(filteredResults.length / resultsPerPage);
+  const startIndex = (currentPage - 1) * resultsPerPage;
+  const endIndex = startIndex + resultsPerPage;
+  const paginatedResults = filteredResults.slice(startIndex, endIndex);
+  
   const [editingResult, setEditingResult] = useState<DrawResult | null>(null);
   const [deletingResult, setDeletingResult] = useState<DrawResult | null>(null);
   const [editNumbers, setEditNumbers] = useState<string[]>([]);
   const [editDate, setEditDate] = useState<Date | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get unique draw names for filter
+  const drawNames = Array.from(new Set(allResults.map(r => r.draw_name))).sort();
+
+  // Reset to first page when filter changes
+  const handleDrawFilterChange = (value: string) => {
+    setSelectedDrawName(value);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
   const handleEditClick = (result: DrawResult) => {
     setEditingResult(result);
@@ -159,10 +196,36 @@ export const DrawResultsManager = () => {
             Gérer les Résultats
           </CardTitle>
           <CardDescription>
-            Modifier ou supprimer les résultats des tirages ({results.length} résultats)
+            Modifier ou supprimer les résultats des tirages
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select value={selectedDrawName} onValueChange={handleDrawFilterChange}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Filtrer par tirage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les tirages</SelectItem>
+                  {drawNames.map((drawName) => (
+                    <SelectItem key={drawName} value={drawName}>
+                      {drawName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="text-sm text-muted-foreground">
+              {filteredResults.length} résultat{filteredResults.length > 1 ? 's' : ''}
+              {selectedDrawName !== "all" && ` pour ${selectedDrawName}`}
+            </div>
+          </div>
+
+          {/* Table */}
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -174,55 +237,95 @@ export const DrawResultsManager = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {results.map((result) => (
-                  <TableRow key={result.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">
-                          {format(new Date(result.draw_date), "dd MMM yyyy", { locale: fr })}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{result.draw_name}</div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3" />
-                          {result.draw_time}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1 flex-wrap">
-                        {result.winning_numbers.map((num, idx) => (
-                          <NumberBall key={`${num}-${idx}`} number={num} size="sm" />
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditClick(result)}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => setDeletingResult(result)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                {paginatedResults.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                      Aucun résultat trouvé
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  paginatedResults.map((result) => (
+                    <TableRow key={result.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            {format(new Date(result.draw_date), "dd MMM yyyy", { locale: fr })}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{result.draw_name}</div>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            {result.draw_time}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1 flex-wrap">
+                          {result.winning_numbers.map((num, idx) => (
+                            <NumberBall key={`${num}-${idx}`} number={num} size="sm" />
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditClick(result)}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setDeletingResult(result)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage} sur {totalPages}
+                <span className="ml-2">
+                  ({startIndex + 1}-{Math.min(endIndex, filteredResults.length)} sur {filteredResults.length})
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Suivant
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
