@@ -149,6 +149,98 @@ export type Database = {
         }
         Relationships: []
       }
+      user_favorites: {
+        Row: {
+          created_at: string
+          draw_name: string
+          favorite_numbers: number[]
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          draw_name: string
+          favorite_numbers: number[]
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          draw_name?: string
+          favorite_numbers?: number[]
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_prediction_tracking: {
+        Row: {
+          id: string
+          marked_at: string
+          notes: string | null
+          prediction_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          marked_at?: string
+          notes?: string | null
+          prediction_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          marked_at?: string
+          notes?: string | null
+          prediction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_prediction_tracking_prediction_id_fkey"
+            columns: ["prediction_id"]
+            isOneToOne: false
+            referencedRelation: "predictions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string
+          has_completed_onboarding: boolean
+          id: string
+          notification_enabled: boolean
+          preferred_draw_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          has_completed_onboarding?: boolean
+          id?: string
+          notification_enabled?: boolean
+          preferred_draw_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          has_completed_onboarding?: boolean
+          id?: string
+          notification_enabled?: boolean
+          preferred_draw_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

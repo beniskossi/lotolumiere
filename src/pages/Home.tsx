@@ -5,12 +5,15 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { Footer } from "@/components/Footer";
 import { GlobalStatistics } from "@/components/GlobalStatistics";
 import { DRAW_SCHEDULE, DAYS_ORDER } from "@/types/lottery";
-import { Sparkles, TrendingUp, BarChart3, Database, History as HistoryIcon } from "lucide-react";
+import { Sparkles, TrendingUp, BarChart3, Database, History as HistoryIcon, LayoutDashboard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Home = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -71,7 +74,7 @@ const Home = () => {
       {/* Draws Section */}
       <div className="max-w-7xl mx-auto px-4 pb-12">
         {/* Navigation Links */}
-        <div className="flex gap-3 mb-8 animate-fade-in">
+        <div className="flex gap-3 mb-8 animate-fade-in flex-wrap">
           <Button
             variant="outline"
             asChild
@@ -92,6 +95,18 @@ const Home = () => {
               Historique
             </Link>
           </Button>
+          {user && (
+            <Button
+              variant="default"
+              asChild
+              className="gap-2"
+            >
+              <Link to="/dashboard">
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Link>
+            </Button>
+          )}
         </div>
 
         {/* Global Statistics */}

@@ -3,6 +3,7 @@ import { NumberBall } from "@/components/NumberBall";
 import { useAdvancedPrediction } from "@/hooks/useAdvancedPrediction";
 import { Loader2, Sparkles, Brain, BarChart3, Network, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EnhancedPredictionCharts } from "./EnhancedPredictionCharts";
 
 interface AdvancedPredictionPanelProps {
   drawName: string;
@@ -67,6 +68,10 @@ export const AdvancedPredictionPanel = ({ drawName }: AdvancedPredictionPanelPro
           </div>
         </CardHeader>
       </Card>
+
+      {predictions && predictions.length > 0 && (
+        <EnhancedPredictionCharts predictions={predictions} />
+      )}
 
       {predictions && predictions.length > 0 ? (
         <div className="grid gap-6">
