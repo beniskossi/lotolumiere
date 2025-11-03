@@ -13,6 +13,8 @@ import { useMostFrequentNumbers, useLeastFrequentNumbers } from "@/hooks/useNumb
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { DrawResultsSkeleton, StatisticsSkeleton } from "@/components/LoadingSkeleton";
+import { PredictionComparison } from "@/components/PredictionComparison";
 
 const DrawDetails = () => {
   const { drawName } = useParams();
@@ -110,59 +112,61 @@ const DrawDetails = () => {
 
           <TabsContent value="donnees">
             <div className="space-y-4">
-              <Card className="bg-gradient-card border-border/50">
-                <CardHeader>
-                  <CardTitle>Historique des Tirages</CardTitle>
-                  <CardDescription>
-                    Résultats récents pour {decodedDrawName}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {resultsLoading ? (
-                    <p className="text-muted-foreground">Chargement...</p>
-                  ) : results && results.length > 0 ? (
-                    results.map((result) => (
-                      <div
-                        key={result.id}
-                        className="p-4 rounded-lg bg-card border border-border/50 space-y-3"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-semibold text-muted-foreground">
-                            {format(new Date(result.draw_date), "EEEE d MMMM yyyy", { locale: fr })}
-                          </span>
-                          <span className="text-xs text-muted-foreground">{result.draw_time}</span>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground mb-2">
-                            Numéros Gagnants
-                          </p>
-                          <div className="flex gap-2 flex-wrap">
-                            {result.winning_numbers.map((num, idx) => (
-                              <NumberBall key={`${num}-${idx}`} number={num} size="md" />
-                            ))}
+              {resultsLoading ? (
+                <DrawResultsSkeleton />
+              ) : (
+                <Card className="bg-gradient-card border-border/50">
+                  <CardHeader>
+                    <CardTitle>Historique des Tirages</CardTitle>
+                    <CardDescription>
+                      Résultats récents pour {decodedDrawName}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {results && results.length > 0 ? (
+                      results.map((result) => (
+                        <div
+                          key={result.id}
+                          className="p-4 rounded-lg bg-card border border-border/50 space-y-3 hover:border-primary/50 transition-all"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-muted-foreground">
+                              {format(new Date(result.draw_date), "EEEE d MMMM yyyy", { locale: fr })}
+                            </span>
+                            <span className="text-xs text-muted-foreground">{result.draw_time}</span>
                           </div>
-                        </div>
-                        {result.machine_numbers && result.machine_numbers.length > 0 && (
                           <div>
                             <p className="text-xs font-medium text-muted-foreground mb-2">
-                              Numéros Machine
+                              Numéros Gagnants
                             </p>
                             <div className="flex gap-2 flex-wrap">
-                              {result.machine_numbers.map((num, idx) => (
-                                <NumberBall key={`${num}-${idx}`} number={num} size="sm" />
+                              {result.winning_numbers.map((num, idx) => (
+                                <NumberBall key={`${num}-${idx}`} number={num} size="md" />
                               ))}
                             </div>
                           </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground">
-                      Aucun résultat disponible. Cliquez sur "Actualiser" pour récupérer les derniers tirages.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+                          {result.machine_numbers && result.machine_numbers.length > 0 && (
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-2">
+                                Numéros Machine
+                              </p>
+                              <div className="flex gap-2 flex-wrap">
+                                {result.machine_numbers.map((num, idx) => (
+                                  <NumberBall key={`${num}-${idx}`} number={num} size="sm" />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Aucun résultat disponible. Cliquez sur "Actualiser" pour récupérer les derniers tirages.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
@@ -179,7 +183,10 @@ const DrawDetails = () => {
                   drawName={decodedDrawName}
                 />
               )}
-              <div className="grid md:grid-cols-2 gap-6">
+              {mostFrequentLoading || leastFrequentLoading ? (
+                <StatisticsSkeleton />
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
                 <Card className="bg-gradient-card border-border/50">
                   <CardHeader>
                     <CardTitle className="text-success">Numéros les Plus Fréquents</CardTitle>
@@ -246,11 +253,15 @@ const DrawDetails = () => {
                   </CardContent>
                 </Card>
               </div>
+              )}
             </div>
           </TabsContent>
 
           <TabsContent value="prediction">
-            <PredictionPanel drawName={decodedDrawName} />
+            <div className="space-y-6">
+              <PredictionPanel drawName={decodedDrawName} />
+              <PredictionComparison drawName={decodedDrawName} />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

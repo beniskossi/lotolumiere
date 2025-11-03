@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Brain, Sparkles, TrendingUp, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { PredictionSkeleton } from "@/components/LoadingSkeleton";
 
 interface PredictionPanelProps {
   drawName: string;
@@ -75,13 +76,11 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {predictionLoading ? (
-              <div className="p-8 text-center">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-primary" />
-                <p className="text-sm text-muted-foreground">Chargement...</p>
-              </div>
-            ) : latestPrediction ? (
+          {predictionLoading ? (
+            <PredictionSkeleton />
+          ) : (
+            <div className="space-y-4">
+              {latestPrediction ? (
               <div className="space-y-4">
                 <div className="p-6 bg-gradient-primary rounded-lg text-white">
                   <div className="mb-4">
@@ -157,8 +156,9 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
                   Générer la première prédiction
                 </Button>
               </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
