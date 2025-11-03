@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import Home from "./pages/Home";
 import DrawDetails from "./pages/DrawDetails";
+import Statistics from "./pages/Statistics";
+import History from "./pages/History";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -21,6 +23,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/tirage/:drawName" element={<DrawDetails />} />
+          <Route path="/statistiques" element={<Statistics />} />
+          <Route path="/historique" element={<History />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

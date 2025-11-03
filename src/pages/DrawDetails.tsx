@@ -10,6 +10,7 @@ import { StatisticsCharts } from "@/components/StatisticsCharts";
 import { AdvancedPredictionPanel } from "@/components/AdvancedPredictionPanel";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Footer } from "@/components/Footer";
 import { useDrawResults, useRefreshResults } from "@/hooks/useDrawResults";
 import { useMostFrequentNumbers, useLeastFrequentNumbers } from "@/hooks/useNumberStatistics";
 import { useToast } from "@/hooks/use-toast";
@@ -283,6 +284,8 @@ const DrawDetails = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Footer />
     </div>
   );
 };

@@ -13,6 +13,7 @@ import { DRAW_SCHEDULE } from "@/types/lottery";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Footer } from "@/components/Footer";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -609,6 +610,8 @@ const Admin = () => {
           </Card>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

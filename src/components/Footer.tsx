@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Settings, Github, Heart } from "lucide-react";
+import { Settings, Heart, BarChart3, History as HistoryIcon } from "lucide-react";
 
 export const Footer = () => {
   return (
@@ -20,6 +20,18 @@ export const Footer = () => {
               <li>
                 <Link to="/" className="text-muted-foreground hover:text-primary transition-colors">
                   Accueil
+                </Link>
+              </li>
+              <li>
+                <Link to="/statistiques" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                  <BarChart3 className="w-3 h-3" />
+                  Statistiques
+                </Link>
+              </li>
+              <li>
+                <Link to="/historique" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                  <HistoryIcon className="w-3 h-3" />
+                  Historique
                 </Link>
               </li>
               <li>

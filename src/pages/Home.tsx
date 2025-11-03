@@ -5,8 +5,10 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { Footer } from "@/components/Footer";
 import { GlobalStatistics } from "@/components/GlobalStatistics";
 import { DRAW_SCHEDULE, DAYS_ORDER } from "@/types/lottery";
-import { Sparkles, TrendingUp, BarChart3, Database } from "lucide-react";
+import { Sparkles, TrendingUp, BarChart3, Database, History as HistoryIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   return (
@@ -68,6 +70,30 @@ const Home = () => {
 
       {/* Draws Section */}
       <div className="max-w-7xl mx-auto px-4 pb-12">
+        {/* Navigation Links */}
+        <div className="flex gap-3 mb-8 animate-fade-in">
+          <Button
+            variant="outline"
+            asChild
+            className="gap-2"
+          >
+            <Link to="/statistiques">
+              <BarChart3 className="w-4 h-4" />
+              Statistiques
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            asChild
+            className="gap-2"
+          >
+            <Link to="/historique">
+              <HistoryIcon className="w-4 h-4" />
+              Historique
+            </Link>
+          </Button>
+        </div>
+
         {/* Global Statistics */}
         <div className="mb-12 animate-slide-up">
           <GlobalStatistics />
