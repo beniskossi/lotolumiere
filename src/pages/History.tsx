@@ -167,10 +167,25 @@ const History = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2 flex-wrap">
-                            {result.winning_numbers.map((num) => (
-                              <NumberBall key={num} number={num} size="sm" />
-                            ))}
+                          <div className="space-y-2">
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-1">Numéros Gagnants</p>
+                              <div className="flex gap-2 flex-wrap">
+                                {result.winning_numbers.map((num) => (
+                                  <NumberBall key={num} number={num} size="sm" />
+                                ))}
+                              </div>
+                            </div>
+                            {result.machine_numbers && result.machine_numbers.length > 0 && (
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground mb-1">Numéros Machine</p>
+                                <div className="flex gap-2 flex-wrap">
+                                  {result.machine_numbers.map((num, idx) => (
+                                    <NumberBall key={`${num}-${idx}`} number={num} size="sm" className="opacity-70" />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell className="text-right">

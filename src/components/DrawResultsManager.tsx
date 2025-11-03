@@ -264,10 +264,25 @@ export const DrawResultsManager = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-1 flex-wrap">
-                          {result.winning_numbers.map((num, idx) => (
-                            <NumberBall key={`${num}-${idx}`} number={num} size="sm" />
-                          ))}
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground mb-1">Gagnants</p>
+                            <div className="flex gap-1 flex-wrap">
+                              {result.winning_numbers.map((num, idx) => (
+                                <NumberBall key={`${num}-${idx}`} number={num} size="sm" />
+                              ))}
+                            </div>
+                          </div>
+                          {result.machine_numbers && result.machine_numbers.length > 0 && (
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-1">Machine</p>
+                              <div className="flex gap-1 flex-wrap">
+                                {result.machine_numbers.map((num, idx) => (
+                                  <NumberBall key={`machine-${num}-${idx}`} number={num} size="sm" className="opacity-70" />
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">

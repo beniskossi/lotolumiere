@@ -128,15 +128,29 @@ export const PredictionComparison = ({ drawName }: PredictionComparisonProps) =>
                   </div>
                 </div>
 
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">
-                    Résultat Réel
-                  </p>
-                  <div className="flex gap-2 flex-wrap">
-                    {comparison.draw.winning_numbers.map((num, idx) => (
-                      <NumberBall key={`${num}-${idx}`} number={num} size="md" />
-                    ))}
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
+                      Résultat Réel - Numéros Gagnants
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      {comparison.draw.winning_numbers.map((num, idx) => (
+                        <NumberBall key={`${num}-${idx}`} number={num} size="md" />
+                      ))}
+                    </div>
                   </div>
+                  {comparison.draw.machine_numbers && comparison.draw.machine_numbers.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">
+                        Numéros Machine
+                      </p>
+                      <div className="flex gap-2 flex-wrap">
+                        {comparison.draw.machine_numbers.map((num, idx) => (
+                          <NumberBall key={`machine-${num}-${idx}`} number={num} size="sm" className="opacity-70" />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-2">
