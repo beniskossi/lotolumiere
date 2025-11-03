@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,16 +6,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Trash2, Download, Upload, RefreshCw } from "lucide-react";
+import { ArrowLeft, Trash2, Download, Upload, RefreshCw, LogOut, LogIn } from "lucide-react";
 import { useRefreshResults } from "@/hooks/useDrawResults";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DRAW_SCHEDULE } from "@/types/lottery";
+import { useAuth } from "@/hooks/useAuth";
 
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const refreshResults = useRefreshResults();
+  const { user, loading: authLoading, signIn, signOut } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Formulaire de connexion
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   // Formulaire d'ajout manuel
   const [drawName, setDrawName] = useState("");
@@ -130,6 +137,39 @@ const Admin = () => {
     }
   };
 
+  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!Array.isArray(data)) {
+        throw new Error("Format JSON invalide");
+      }
+
+      // Insérer les données
+      const { error } = await supabase.from("draw_results").insert(data);
+      if (error) throw error;
+
+      toast({
+        title: "✓ Import réussi",
+        description: `${data.length} résultat(s) importé(s)`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Échec de l'import",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const handleDeleteOldResults = async () => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer les résultats de plus de 6 mois ?")) {
       return;
@@ -163,20 +203,142 @@ const Admin = () => {
     }
   };
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const { error } = await signIn(email, password);
+      if (error) throw error;
+      
+      toast({
+        title: "✓ Connexion réussie",
+        description: "Bienvenue dans l'interface d'administration",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur de connexion",
+        description: error.message || "Email ou mot de passe incorrect",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (!error) {
+      toast({
+        title: "Déconnexion réussie",
+        description: "À bientôt",
+      });
+      navigate("/");
+    }
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Chargement...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="bg-gradient-primary text-white py-8 px-4 shadow-lg">
+          <div className="max-w-7xl mx-auto">
+            <Button
+              variant="ghost"
+              className="text-white hover:bg-white/20 mb-4"
+              onClick={() => navigate("/")}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour à l'accueil
+            </Button>
+            <h1 className="text-4xl font-bold">Administration</h1>
+            <p className="text-white/80 mt-2">Connexion requise</p>
+          </div>
+        </div>
+
+        <div className="max-w-md mx-auto px-4 py-16">
+          <Card className="bg-gradient-card border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <LogIn className="w-5 h-5" />
+                Connexion Administrateur
+              </CardTitle>
+              <CardDescription>
+                Connectez-vous pour accéder à l'interface d'administration
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@lotobonheur.ci"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="password">Mot de passe</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full gap-2"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Se connecter
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="bg-gradient-primary text-white py-8 px-4 shadow-lg">
         <div className="max-w-7xl mx-auto">
-          <Button
-            variant="ghost"
-            className="text-white hover:bg-white/20 mb-4"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour à l'accueil
-          </Button>
-          <h1 className="text-4xl font-bold">Administration</h1>
-          <p className="text-white/80 mt-2">Gestion des résultats et maintenance</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <Button
+                variant="ghost"
+                className="text-white hover:bg-white/20 mb-4"
+                onClick={() => navigate("/")}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Retour à l'accueil
+              </Button>
+              <h1 className="text-4xl font-bold">Administration</h1>
+              <p className="text-white/80 mt-2">Gestion des résultats et maintenance</p>
+            </div>
+            <Button
+              variant="secondary"
+              onClick={handleLogout}
+              className="gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Déconnexion
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -269,6 +431,26 @@ const Admin = () => {
                 <Download className="w-4 h-4" />
                 Exporter les Données (JSON)
               </Button>
+
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportData}
+                  className="hidden"
+                  id="import-file"
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading}
+                  className="w-full gap-2"
+                  variant="outline"
+                >
+                  <Upload className="w-4 h-4" />
+                  Importer des Données (JSON)
+                </Button>
+              </div>
 
               <Button
                 onClick={handleDeleteOldResults}

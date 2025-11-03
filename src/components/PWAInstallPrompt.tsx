@@ -2,16 +2,23 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShowPrompt(true);
+      
+      // Vérifier si l'utilisateur a déjà vu le prompt
+      const hasSeenPrompt = localStorage.getItem("pwa-prompt-dismissed");
+      if (!hasSeenPrompt) {
+        setTimeout(() => setShowPrompt(true), 3000);
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handler);
@@ -28,9 +35,14 @@ export const PWAInstallPrompt = () => {
     const { outcome } = await deferredPrompt.userChoice;
 
     if (outcome === "accepted") {
-      setDeferredPrompt(null);
-      setShowPrompt(false);
+      toast({
+        title: "✓ Application installée",
+        description: "Loto Bonheur est maintenant disponible sur votre appareil",
+      });
     }
+
+    setDeferredPrompt(null);
+    setShowPrompt(false);
   };
 
   const handleDismiss = () => {
@@ -38,31 +50,49 @@ export const PWAInstallPrompt = () => {
     localStorage.setItem("pwa-prompt-dismissed", "true");
   };
 
-  if (!showPrompt || localStorage.getItem("pwa-prompt-dismissed")) {
+  if (!showPrompt) {
     return null;
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-md">
-      <Card className="bg-gradient-card border-border/50 shadow-lg">
-        <CardHeader className="relative pb-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-2 h-6 w-6"
-            onClick={handleDismiss}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          <CardTitle className="text-lg">Installer Loto Bonheur</CardTitle>
-          <CardDescription>
-            Accédez rapidement à l'application depuis votre écran d'accueil
-          </CardDescription>
+    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-fade-in">
+      <Card className="bg-gradient-primary text-white border-white/20 shadow-glow">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <CardTitle className="text-lg mb-1">
+                Installer Loto Bonheur
+              </CardTitle>
+              <CardDescription className="text-white/80 text-sm">
+                Accédez rapidement à l'app depuis votre écran d'accueil
+              </CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleDismiss}
+              className="text-white hover:bg-white/20 -mt-1 -mr-2"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent>
-          <Button onClick={handleInstall} className="w-full gap-2">
-            <Download className="h-4 w-4" />
-            Installer l'application
+        <CardContent className="space-y-2">
+          <Button
+            onClick={handleInstall}
+            className="w-full gap-2 bg-white text-primary hover:bg-white/90"
+            size="lg"
+          >
+            <Download className="w-5 h-5" />
+            Installer maintenant
+          </Button>
+          <Button
+            onClick={handleDismiss}
+            variant="ghost"
+            className="w-full text-white hover:bg-white/20"
+            size="sm"
+          >
+            Peut-être plus tard
           </Button>
         </CardContent>
       </Card>

@@ -1,6 +1,7 @@
 import { DaySection } from "@/components/DaySection";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallButton } from "@/components/InstallButton";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { Footer } from "@/components/Footer";
 import { DRAW_SCHEDULE, DAYS_ORDER } from "@/types/lottery";
 import { Sparkles, TrendingUp, BarChart3, Database } from "lucide-react";
@@ -81,6 +82,7 @@ const Home = () => {
       </div>
 
       <Footer />
+      <PWAInstallPrompt />
     </div>
   );
 };
