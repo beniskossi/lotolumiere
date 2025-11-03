@@ -26,7 +26,9 @@ const categoryColors = {
 };
 
 export const AdvancedPredictionPanel = ({ drawName }: AdvancedPredictionPanelProps) => {
-  const { data: predictions, isLoading, error } = useAdvancedPrediction(drawName);
+  const { data, isLoading, error } = useAdvancedPrediction(drawName);
+  const predictions = data?.predictions;
+  const warning = data?.warning;
 
   if (isLoading) {
     return (
@@ -68,6 +70,20 @@ export const AdvancedPredictionPanel = ({ drawName }: AdvancedPredictionPanelPro
           </div>
         </CardHeader>
       </Card>
+
+      {warning && (
+        <Card className="bg-warning/10 border-warning/50">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <div className="text-warning text-2xl">⚠️</div>
+              <div>
+                <p className="font-semibold text-warning mb-1">Attention</p>
+                <p className="text-sm text-muted-foreground">{warning}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {predictions && predictions.length > 0 && (
         <EnhancedPredictionCharts predictions={predictions} />

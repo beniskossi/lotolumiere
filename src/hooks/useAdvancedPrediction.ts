@@ -10,6 +10,11 @@ export interface AdvancedPrediction {
   category: "statistical" | "ml" | "bayesian" | "neural" | "variance";
 }
 
+interface AdvancedPredictionResponse {
+  predictions: AdvancedPrediction[];
+  warning?: string;
+}
+
 export const useAdvancedPrediction = (drawName: string) => {
   return useQuery({
     queryKey: ["advanced-prediction", drawName],
@@ -19,7 +24,7 @@ export const useAdvancedPrediction = (drawName: string) => {
       });
 
       if (error) throw error;
-      return data.predictions as AdvancedPrediction[];
+      return data as AdvancedPredictionResponse;
     },
     enabled: !!drawName,
   });

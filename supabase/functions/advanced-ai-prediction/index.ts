@@ -46,13 +46,41 @@ serve(async (req) => {
       .limit(300);
 
     if (error) throw error;
-    if (!results || results.length < 20) {
-      throw new Error("Pas assez de données historiques pour générer des prédictions avancées");
+    
+    // Si pas de résultats du tout, retourner des prédictions en mode dégradé
+    if (!results || results.length === 0) {
+      console.log(`Aucune donnée pour ${drawName}, génération de prédictions en mode dégradé`);
+      const predictions = generateFallbackPredictions(drawName);
+      return new Response(JSON.stringify({ 
+        predictions,
+        warning: "Aucune donnée historique - Prédictions générées en mode dégradé"
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Si moins de 5 résultats, utiliser uniquement le mode dégradé
+    if (results.length < 5) {
+      console.log(`Seulement ${results.length} résultats pour ${drawName}, mode dégradé activé`);
+      const predictions = generateFallbackPredictions(drawName);
+      return new Response(JSON.stringify({ 
+        predictions,
+        warning: `Données insuffisantes (${results.length} tirages) - Prédictions en mode dégradé`
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
+    // Générer les prédictions normalement
     const predictions = generateAdvancedPredictions(results as DrawResult[], drawName);
+    
+    // Ajouter un avertissement si moins de 20 résultats
+    const response: any = { predictions };
+    if (results.length < 20) {
+      response.warning = `Données limitées (${results.length} tirages) - Prédictions avec confiance réduite`;
+    }
 
-    return new Response(JSON.stringify({ predictions }), {
+    return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
@@ -131,11 +159,22 @@ function selectBalancedNumbers(candidates: number[], count: number): number[] {
   return selected.slice(0, count).sort((a, b) => a - b);
 }
 
+// Fonction pour générer toutes les prédictions en mode dégradé
+function generateFallbackPredictions(drawName: string): AdvancedPredictionResult[] {
+  return [
+    generateFallbackPrediction("Analyse Fréquentielle Pondérée", "statistical"),
+    generateFallbackPrediction("ML - Clustering k-means", "ml"),
+    generateFallbackPrediction("Inférence Bayésienne (Naive)", "bayesian"),
+    generateFallbackPrediction("Séries Temporelles (Régression)", "neural"),
+    generateFallbackPrediction("Analyse Variance & Corrélation", "variance"),
+  ];
+}
+
 // Algorithm 1: Weighted Frequency
 function weightedFrequencyPrediction(results: DrawResult[], drawName: string): AdvancedPredictionResult {
   const drawResults = results.filter((r) => r.draw_name === drawName).slice(0, 100);
-  if (drawResults.length < 20) {
-    return generateFallbackPrediction("Analyse Fréquentielle", "statistical");
+  if (drawResults.length < 5) {
+    return generateFallbackPrediction("Analyse Fréquentielle Pondérée", "statistical");
   }
 
   const weightedFreq: Record<number, number> = {};
@@ -176,8 +215,8 @@ function weightedFrequencyPrediction(results: DrawResult[], drawName: string): A
 // Algorithm 2: K-means Clustering
 function machineLearningPrediction(results: DrawResult[], drawName: string): AdvancedPredictionResult {
   const drawResults = results.filter((r) => r.draw_name === drawName).slice(0, 200);
-  if (drawResults.length < 50) {
-    return generateFallbackPrediction("Pattern ML", "ml");
+  if (drawResults.length < 10) {
+    return generateFallbackPrediction("ML - Clustering k-means", "ml");
   }
 
   const numClusters = 5;
@@ -244,8 +283,8 @@ function machineLearningPrediction(results: DrawResult[], drawName: string): Adv
 // Algorithm 3: Naive Bayes
 function bayesianPrediction(results: DrawResult[], drawName: string): AdvancedPredictionResult {
   const drawResults = results.filter((r) => r.draw_name === drawName).slice(0, 150);
-  if (drawResults.length < 30) {
-    return generateFallbackPrediction("Inférence Bayésienne", "bayesian");
+  if (drawResults.length < 5) {
+    return generateFallbackPrediction("Inférence Bayésienne (Naive)", "bayesian");
   }
 
   const totalDraws = drawResults.length;
@@ -285,8 +324,8 @@ function bayesianPrediction(results: DrawResult[], drawName: string): AdvancedPr
 // Algorithm 4: Time Series (Linear Regression)
 function neuralNetworkPrediction(results: DrawResult[], drawName: string): AdvancedPredictionResult {
   const drawResults = results.filter((r) => r.draw_name === drawName).slice(0, 300);
-  if (drawResults.length < 100) {
-    return generateFallbackPrediction("Analyse Temporelle", "neural");
+  if (drawResults.length < 10) {
+    return generateFallbackPrediction("Séries Temporelles (Régression)", "neural");
   }
 
   const numberPositions: Record<number, number[]> = {};
@@ -341,8 +380,8 @@ function neuralNetworkPrediction(results: DrawResult[], drawName: string): Advan
 // Algorithm 5: Variance & Correlation
 function varianceAnalysisPrediction(results: DrawResult[], drawName: string): AdvancedPredictionResult {
   const drawResults = results.filter((r) => r.draw_name === drawName).slice(0, 250);
-  if (drawResults.length < 50) {
-    return generateFallbackPrediction("Analyse de Variance", "variance");
+  if (drawResults.length < 10) {
+    return generateFallbackPrediction("Analyse Variance & Corrélation", "variance");
   }
 
   const dayGroups: Record<number, number[][]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
