@@ -74,6 +74,8 @@ export const DrawResultsManager = () => {
   const [editingResult, setEditingResult] = useState<DrawResult | null>(null);
   const [deletingResult, setDeletingResult] = useState<DrawResult | null>(null);
   const [editNumbers, setEditNumbers] = useState<string[]>([]);
+  const [editMachineNumbers, setEditMachineNumbers] = useState<string[]>([]);
+  const [showMachineNumbers, setShowMachineNumbers] = useState(false);
   const [editDate, setEditDate] = useState<Date | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -93,6 +95,8 @@ export const DrawResultsManager = () => {
   const handleEditClick = (result: DrawResult) => {
     setEditingResult(result);
     setEditNumbers(result.winning_numbers.map(n => n.toString()));
+    setEditMachineNumbers(result.machine_numbers?.map(n => n.toString()) || ["", "", "", "", ""]);
+    setShowMachineNumbers(!!result.machine_numbers && result.machine_numbers.length > 0);
     setEditDate(new Date(result.draw_date));
   };
 
@@ -100,6 +104,12 @@ export const DrawResultsManager = () => {
     const newNumbers = [...editNumbers];
     newNumbers[index] = value;
     setEditNumbers(newNumbers);
+  };
+
+  const handleEditMachineNumberChange = (index: number, value: string) => {
+    const newMachineNumbers = [...editMachineNumbers];
+    newMachineNumbers[index] = value;
+    setEditMachineNumbers(newMachineNumbers);
   };
 
   const handleUpdateResult = async () => {
@@ -110,6 +120,20 @@ export const DrawResultsManager = () => {
       toast({
         title: "Erreur",
         description: "Veuillez entrer 5 numéros valides entre 1 et 90",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate machine numbers if provided
+    const parsedMachineNumbers = showMachineNumbers 
+      ? editMachineNumbers.map(n => parseInt(n)).filter(n => n >= 1 && n <= 90)
+      : [];
+    
+    if (showMachineNumbers && parsedMachineNumbers.length > 0 && parsedMachineNumbers.length !== 5) {
+      toast({
+        title: "Erreur",
+        description: "Les numéros machine doivent être soit vides, soit 5 numéros valides entre 1 et 90",
         variant: "destructive",
       });
       return;
@@ -126,12 +150,20 @@ export const DrawResultsManager = () => {
 
     setIsLoading(true);
     try {
+      const updateData: any = { 
+        winning_numbers: winningNumbers,
+        draw_date: format(editDate, "yyyy-MM-dd")
+      };
+
+      if (parsedMachineNumbers.length === 5) {
+        updateData.machine_numbers = parsedMachineNumbers;
+      } else {
+        updateData.machine_numbers = null;
+      }
+
       const { error } = await supabase
         .from("draw_results")
-        .update({ 
-          winning_numbers: winningNumbers,
-          draw_date: format(editDate, "yyyy-MM-dd")
-        })
+        .update(updateData)
         .eq("id", editingResult.id);
 
       if (error) throw error;
@@ -143,6 +175,7 @@ export const DrawResultsManager = () => {
 
       setEditingResult(null);
       setEditDate(undefined);
+      setShowMachineNumbers(false);
       refetch();
     } catch (error) {
       console.error("Error updating result:", error);
@@ -401,6 +434,36 @@ export const DrawResultsManager = () => {
                   />
                 ))}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm text-muted-foreground">Numéros Machine (facultatif)</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowMachineNumbers(!showMachineNumbers)}
+                  className="h-auto py-1 px-2 text-xs"
+                >
+                  {showMachineNumbers ? "Masquer" : "Afficher"}
+                </Button>
+              </div>
+              {showMachineNumbers && (
+                <div className="grid grid-cols-5 gap-2">
+                  {editMachineNumbers.map((num, idx) => (
+                    <Input
+                      key={idx}
+                      type="number"
+                      min="1"
+                      max="90"
+                      value={num}
+                      onChange={(e) => handleEditMachineNumberChange(idx, e.target.value)}
+                      placeholder={`M°${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>

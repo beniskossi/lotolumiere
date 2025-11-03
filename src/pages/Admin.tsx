@@ -33,6 +33,8 @@ const Admin = () => {
   const [drawName, setDrawName] = useState("");
   const [drawDate, setDrawDate] = useState("");
   const [numbers, setNumbers] = useState(["", "", "", "", ""]);
+  const [machineNumbers, setMachineNumbers] = useState(["", "", "", "", ""]);
+  const [showMachineNumbers, setShowMachineNumbers] = useState(false);
 
   // Statistiques
   const [stats, setStats] = useState({
@@ -75,6 +77,12 @@ const Admin = () => {
     setNumbers(newNumbers);
   };
 
+  const handleMachineNumberChange = (index: number, value: string) => {
+    const newMachineNumbers = [...machineNumbers];
+    newMachineNumbers[index] = value;
+    setMachineNumbers(newMachineNumbers);
+  };
+
   const handleAddResult = async () => {
     if (!drawName || !drawDate) {
       toast({
@@ -95,16 +103,36 @@ const Admin = () => {
       return;
     }
 
+    // Validate machine numbers if provided
+    const parsedMachineNumbers = showMachineNumbers 
+      ? machineNumbers.map(n => parseInt(n)).filter(n => n >= 1 && n <= 90)
+      : [];
+    
+    if (showMachineNumbers && parsedMachineNumbers.length > 0 && parsedMachineNumbers.length !== 5) {
+      toast({
+        title: "Erreur",
+        description: "Les numéros machine doivent être soit vides, soit 5 numéros valides entre 1 et 90",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const draw = allDraws.find(d => d.name === drawName);
-      const { error } = await supabase.from("draw_results").insert({
+      const insertData: any = {
         draw_name: drawName,
         draw_day: draw?.day || "",
         draw_time: draw?.time || "",
         draw_date: drawDate,
         winning_numbers: winningNumbers,
-      });
+      };
+
+      if (parsedMachineNumbers.length === 5) {
+        insertData.machine_numbers = parsedMachineNumbers;
+      }
+
+      const { error } = await supabase.from("draw_results").insert(insertData);
 
       if (error) throw error;
 
@@ -117,6 +145,8 @@ const Admin = () => {
       setDrawName("");
       setDrawDate("");
       setNumbers(["", "", "", "", ""]);
+      setMachineNumbers(["", "", "", "", ""]);
+      setShowMachineNumbers(false);
       
       // Reload stats
       loadStats();
@@ -529,6 +559,36 @@ const Admin = () => {
                     />
                   ))}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm text-muted-foreground">Numéros Machine (facultatif)</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowMachineNumbers(!showMachineNumbers)}
+                    className="h-auto py-1 px-2 text-xs"
+                  >
+                    {showMachineNumbers ? "Masquer" : "Afficher"}
+                  </Button>
+                </div>
+                {showMachineNumbers && (
+                  <div className="grid grid-cols-5 gap-2">
+                    {machineNumbers.map((num, idx) => (
+                      <Input
+                        key={idx}
+                        type="number"
+                        min="1"
+                        max="90"
+                        value={num}
+                        onChange={(e) => handleMachineNumberChange(idx, e.target.value)}
+                        placeholder={`M°${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               <Button
