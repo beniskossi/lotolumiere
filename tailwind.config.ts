@@ -22,6 +22,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          glow: "hsl(var(--primary-glow))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -38,6 +39,11 @@ export default {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+          glow: "hsl(var(--accent-glow))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -57,6 +63,38 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        number: {
+          "1-9": "hsl(var(--num-1-9))",
+          "1-9-fg": "hsl(var(--num-1-9-fg))",
+          "10-19": "hsl(var(--num-10-19))",
+          "10-19-fg": "hsl(var(--num-10-19-fg))",
+          "20-29": "hsl(var(--num-20-29))",
+          "20-29-fg": "hsl(var(--num-20-29-fg))",
+          "30-39": "hsl(var(--num-30-39))",
+          "30-39-fg": "hsl(var(--num-30-39-fg))",
+          "40-49": "hsl(var(--num-40-49))",
+          "40-49-fg": "hsl(var(--num-40-49-fg))",
+          "50-59": "hsl(var(--num-50-59))",
+          "50-59-fg": "hsl(var(--num-50-59-fg))",
+          "60-69": "hsl(var(--num-60-69))",
+          "60-69-fg": "hsl(var(--num-60-69-fg))",
+          "70-79": "hsl(var(--num-70-79))",
+          "70-79-fg": "hsl(var(--num-70-79-fg))",
+          "80-90": "hsl(var(--num-80-90))",
+          "80-90-fg": "hsl(var(--num-80-90-fg))",
+        },
+      },
+      boxShadow: {
+        sm: "var(--shadow-sm)",
+        DEFAULT: "var(--shadow-md)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
+        glow: "var(--shadow-glow)",
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-accent": "var(--gradient-accent)",
+        "gradient-card": "var(--gradient-card)",
       },
       borderRadius: {
         lg: "var(--radius)",
