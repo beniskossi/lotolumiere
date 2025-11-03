@@ -1,13 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Database, Search, BarChart3, Brain, RefreshCw, Sparkles } from "lucide-react";
+import { ArrowLeft, Database, Search, BarChart3, Brain, RefreshCw, Sparkles, Info } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { NumberBall } from "@/components/NumberBall";
 import { NumberConsult } from "@/components/NumberConsult";
 import { PredictionPanel } from "@/components/PredictionPanel";
 import { StatisticsCharts } from "@/components/StatisticsCharts";
 import { AdvancedPredictionPanel } from "@/components/AdvancedPredictionPanel";
+import { HowItWorks } from "@/components/HowItWorks";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useDrawResults, useRefreshResults } from "@/hooks/useDrawResults";
 import { useMostFrequentNumbers, useLeastFrequentNumbers } from "@/hooks/useNumberStatistics";
@@ -92,7 +93,7 @@ const DrawDetails = () => {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="donnees" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className="grid w-full grid-cols-6 mb-8 h-auto flex-wrap">
             <TabsTrigger value="donnees" className="gap-2">
               <Database className="w-4 h-4" />
               Données
@@ -112,6 +113,10 @@ const DrawDetails = () => {
             <TabsTrigger value="ia-avancee" className="gap-2">
               <Sparkles className="w-4 h-4" />
               IA Avancée
+            </TabsTrigger>
+            <TabsTrigger value="aide" className="gap-2">
+              <Info className="w-4 h-4" />
+              Aide
             </TabsTrigger>
           </TabsList>
 
@@ -271,6 +276,10 @@ const DrawDetails = () => {
 
           <TabsContent value="ia-avancee">
             <AdvancedPredictionPanel drawName={decodedDrawName} />
+          </TabsContent>
+
+          <TabsContent value="aide">
+            <HowItWorks />
           </TabsContent>
         </Tabs>
       </div>

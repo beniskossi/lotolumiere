@@ -3,6 +3,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallButton } from "@/components/InstallButton";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { Footer } from "@/components/Footer";
+import { GlobalStatistics } from "@/components/GlobalStatistics";
 import { DRAW_SCHEDULE, DAYS_ORDER } from "@/types/lottery";
 import { Sparkles, TrendingUp, BarChart3, Database } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,7 +68,12 @@ const Home = () => {
 
       {/* Draws Section */}
       <div className="max-w-7xl mx-auto px-4 pb-12">
-        <div className="mb-8">
+        {/* Global Statistics */}
+        <div className="mb-12 animate-slide-up">
+          <GlobalStatistics />
+        </div>
+
+        <div className="mb-8 animate-fade-in">
           <h2 className="text-3xl font-bold text-foreground mb-3">
             Tous les Tirages
           </h2>
@@ -76,9 +82,13 @@ const Home = () => {
           </p>
         </div>
 
-        {DAYS_ORDER.map((day) => (
-          <DaySection key={day} day={day} draws={DRAW_SCHEDULE[day]} />
-        ))}
+        <div className="space-y-4">
+          {DAYS_ORDER.map((day, index) => (
+            <div key={day} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+              <DaySection day={day} draws={DRAW_SCHEDULE[day]} />
+            </div>
+          ))}
+        </div>
       </div>
 
       <Footer />
