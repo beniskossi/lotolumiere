@@ -47,7 +47,13 @@ serve(async (req) => {
     const apiUrl = "https://lotobonheur.ci/api/results";
     console.log("Fetching from:", apiUrl);
     
-    const response = await fetch(apiUrl);
+    const response = await fetch(apiUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json',
+        'Referer': 'https://lotobonheur.ci/resultats',
+      },
+    });
     
     if (!response.ok) {
       throw new Error(`API returned status: ${response.status}`);
@@ -55,18 +61,18 @@ serve(async (req) => {
 
     const data = await response.json();
     console.log("Received data structure:", JSON.stringify(data).substring(0, 500));
+    
+    if (!data.success) {
+      throw new Error('API response not successful');
+    }
 
-    // Map draw names from API to our standardized names
+    // Map draw names from API to our standardized names (case-insensitive keys)
     const drawNameMap: Record<string, string> = {
-      // Handle various name formats from API
-      "digital reveil": "Reveil",
       "reveil": "Reveil",
       "etoile": "Etoile",
-      "digital etoile": "Etoile",
       "akwaba": "Akwaba",
       "monday special": "Monday Special",
       "la matinale": "La Matinale",
-      "matinale": "La Matinale",
       "emergence": "Emergence",
       "sika": "Sika",
       "lucky tuesday": "Lucky Tuesday",
@@ -101,51 +107,52 @@ serve(async (req) => {
       for (const week of data.drawsResultsWeekly) {
         if (!week.drawResultsDaily || !Array.isArray(week.drawResultsDaily)) continue;
         
+        // Extract year from week.startDate (format: "dd/MM/yyyy")
+        let year = new Date().getFullYear();
+        if (week.startDate) {
+          const yearMatch = week.startDate.match(/\/(\d{4})$/);
+          if (yearMatch) {
+            year = parseInt(yearMatch[1]);
+          }
+        }
+        
         for (const dailyDraw of week.drawResultsDaily) {
           const dateStr = dailyDraw.date; // Format: "lundi 03/11"
           
-          // Parse date
+          // Parse date with extracted year
           let drawDate = new Date().toISOString().split("T")[0];
           if (dateStr) {
             const match = dateStr.match(/(\d{2})\/(\d{2})/);
             if (match) {
               const [_, day, month] = match;
-              const year = new Date().getFullYear();
               drawDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
             }
           }
           
-          // Process all draw categories
+          // Process standardDraws only
           const drawResults = dailyDraw.drawResults || {};
-          const allDraws = [
-            ...(drawResults.morningDraws || []),
-            ...(drawResults.afternoonDraws || []),
-            ...(drawResults.eveningDraws || []),
-            ...(drawResults.nightDraws || []),
-          ];
+          const allDraws = drawResults.standardDraws || [];
           
           for (const draw of allDraws) {
             if (!draw.drawName || !draw.winningNumbers) continue;
             
-            // Clean and match draw name
-            const cleanName = draw.drawName
-              .toLowerCase()
-              .replace(/digital\s+/gi, '')
-              .replace(/\s+\d+h$/i, '')
-              .trim();
-            
-            const mappedName = drawNameMap[cleanName];
-            if (!mappedName) {
-              console.log(`Unknown draw name: ${draw.drawName} (cleaned: ${cleanName})`);
+            // Skip invalid draws (those starting with '.')
+            if (typeof draw.winningNumbers === 'string' && draw.winningNumbers.startsWith('.')) {
               continue;
             }
             
-            // Parse winning numbers
+            // Match draw name directly (case-sensitive)
+            const mappedName = drawNameMap[draw.drawName.toLowerCase()];
+            if (!mappedName) {
+              console.log(`Unknown draw name: ${draw.drawName}`);
+              continue;
+            }
+            
+            // Parse winning numbers using regex
             let winningNumbers: number[] = [];
             if (typeof draw.winningNumbers === 'string') {
-              winningNumbers = draw.winningNumbers
-                .split(/[\s,;-]+/)
-                .map((n: string) => parseInt(n.trim()))
+              winningNumbers = (draw.winningNumbers.match(/\d+/g) || [])
+                .map((n: string) => parseInt(n))
                 .filter((n: number) => !isNaN(n) && n >= 1 && n <= 90)
                 .slice(0, 5);
             } else if (Array.isArray(draw.winningNumbers)) {
@@ -155,15 +162,27 @@ serve(async (req) => {
                 .slice(0, 5);
             }
             
+            // Parse machine numbers if available
+            let machineNumbers: number[] | undefined = undefined;
+            if (draw.machineNumbers && typeof draw.machineNumbers === 'string') {
+              const parsed = (draw.machineNumbers.match(/\d+/g) || [])
+                .map((n: string) => parseInt(n))
+                .filter((n: number) => !isNaN(n) && n >= 1 && n <= 90)
+                .slice(0, 5);
+              if (parsed.length === 5) {
+                machineNumbers = parsed;
+              }
+            }
+            
             if (winningNumbers.length === 5) {
               results.push({
                 game: mappedName,
                 date: drawDate,
                 winningNumbers,
-                machineNumbers: undefined, // API doesn't seem to provide machine numbers
+                machineNumbers,
               });
             } else {
-              console.log(`Invalid numbers for ${draw.drawName}: got ${winningNumbers.length} numbers`);
+              console.log(`Invalid numbers for ${draw.drawName}: got ${winningNumbers.length} numbers from ${draw.winningNumbers}`);
             }
           }
         }
