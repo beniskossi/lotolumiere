@@ -9,6 +9,7 @@ import { PredictionPanel } from "@/components/PredictionPanel";
 import { StatisticsCharts } from "@/components/StatisticsCharts";
 import { AdvancedPredictionPanel } from "@/components/AdvancedPredictionPanel";
 import { AdvancedStatisticsPanel } from "@/components/AdvancedStatisticsPanel";
+import { AlgorithmRankings } from "@/components/AlgorithmRankings";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Footer } from "@/components/Footer";
@@ -287,7 +288,10 @@ const DrawDetails = () => {
           </TabsContent>
 
           <TabsContent value="ia-avancee">
-            <AdvancedPredictionPanel drawName={decodedDrawName} />
+            <div className="space-y-6">
+              <AdvancedPredictionPanel drawName={decodedDrawName} />
+              <AlgorithmRankings drawName={decodedDrawName} />
+            </div>
           </TabsContent>
 
           <TabsContent value="aide">

@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, TrendingUp, BarChart3, PieChart as PieChartIcon, Sparkles, Activity } from "lucide-react";
+import { ArrowLeft, TrendingUp, BarChart3, PieChart as PieChartIcon, Sparkles, Activity, Trophy } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { StatisticsCharts } from "@/components/StatisticsCharts";
 import { AdvancedStatisticsPanel } from "@/components/AdvancedStatisticsPanel";
+import { AlgorithmRankings } from "@/components/AlgorithmRankings";
 import { useMostFrequentNumbers, useLeastFrequentNumbers, useMaxGapNumbers } from "@/hooks/useNumberStatistics";
 import { DRAW_SCHEDULE } from "@/types/lottery";
 import { StatisticsSkeleton } from "@/components/LoadingSkeleton";
@@ -82,7 +83,7 @@ const Statistics = () => {
           <StatisticsSkeleton />
         ) : (
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsList className="grid w-full grid-cols-4 mb-8">
               <TabsTrigger value="overview" className="gap-2">
                 <BarChart3 className="w-4 h-4" />
                 Vue d'ensemble
@@ -94,6 +95,10 @@ const Statistics = () => {
               <TabsTrigger value="advanced" className="gap-2">
                 <Sparkles className="w-4 h-4" />
                 Analyse Avancée
+              </TabsTrigger>
+              <TabsTrigger value="rankings" className="gap-2">
+                <Trophy className="w-4 h-4" />
+                Classement IA
               </TabsTrigger>
             </TabsList>
 
@@ -221,6 +226,10 @@ const Statistics = () => {
 
             <TabsContent value="advanced" className="animate-fade-in">
               <AdvancedStatisticsPanel drawName={selectedDraw} />
+            </TabsContent>
+
+            <TabsContent value="rankings" className="animate-fade-in">
+              <AlgorithmRankings drawName={selectedDraw} />
             </TabsContent>
           </Tabs>
         )}
