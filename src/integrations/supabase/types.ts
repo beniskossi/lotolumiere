@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      algorithm_performance: {
+        Row: {
+          accuracy_score: number
+          created_at: string
+          draw_date: string
+          draw_name: string
+          id: string
+          matches_count: number
+          model_used: string
+          predicted_numbers: number[]
+          prediction_date: string
+          winning_numbers: number[]
+        }
+        Insert: {
+          accuracy_score?: number
+          created_at?: string
+          draw_date: string
+          draw_name: string
+          id?: string
+          matches_count?: number
+          model_used: string
+          predicted_numbers: number[]
+          prediction_date: string
+          winning_numbers: number[]
+        }
+        Update: {
+          accuracy_score?: number
+          created_at?: string
+          draw_date?: string
+          draw_name?: string
+          id?: string
+          matches_count?: number
+          model_used?: string
+          predicted_numbers?: number[]
+          prediction_date?: string
+          winning_numbers?: number[]
+        }
+        Relationships: []
+      }
       draw_results: {
         Row: {
           created_at: string | null
@@ -291,9 +330,28 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      algorithm_rankings: {
+        Row: {
+          avg_accuracy: number | null
+          best_match: number | null
+          draw_name: string | null
+          excellent_predictions: number | null
+          first_prediction: string | null
+          good_predictions: number | null
+          last_prediction: string | null
+          model_used: string | null
+          perfect_predictions: number | null
+          total_matches: number | null
+          total_predictions: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      count_array_matches: {
+        Args: { arr1: number[]; arr2: number[] }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
