@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserFavoriteNumbers } from "@/components/UserFavoriteNumbers";
 import { TrackedPredictionsDisplay } from "@/components/TrackedPredictionsDisplay";
 import { PredictionComparison } from "@/components/PredictionComparison";
+import { PersonalizationSettings } from "@/components/PersonalizationSettings";
 import { Onboarding } from "@/components/Onboarding";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
@@ -109,10 +110,11 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="favorites" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="favorites">Mes Favoris</TabsTrigger>
             <TabsTrigger value="history">Historique</TabsTrigger>
             <TabsTrigger value="comparison">Comparaison</TabsTrigger>
+            <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
           
           <TabsContent value="favorites" className="space-y-4">
@@ -133,6 +135,20 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <PredictionComparison drawName="Midi" />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Personnalisation</CardTitle>
+                <CardDescription>
+                  Personnalisez votre expérience LOTO LUMIERE
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PersonalizationSettings />
               </CardContent>
             </Card>
           </TabsContent>

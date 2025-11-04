@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { NumberBall } from "@/components/NumberBall";
+import { PredictionShareButton } from "@/components/PredictionShareButton";
 import { useLatestPrediction } from "@/hooks/usePredictions";
 import { useGeneratePrediction } from "@/hooks/useGeneratePrediction";
 import { useToast } from "@/hooks/use-toast";
@@ -102,6 +103,15 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
                     {latestPrediction.predicted_numbers.map((num, idx) => (
                       <NumberBall key={`${num}-${idx}`} number={num} size="lg" />
                     ))}
+                  </div>
+
+                  <div className="flex justify-center mb-4">
+                    <PredictionShareButton
+                      predictionId={latestPrediction.id}
+                      drawName={drawName}
+                      numbers={latestPrediction.predicted_numbers}
+                      confidence={latestPrediction.confidence_score}
+                    />
                   </div>
 
                   {latestPrediction.confidence_score && (

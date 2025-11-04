@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Trash2, Download, Upload, RefreshCw, LogOut, LogIn, Database, TrendingUp, Calendar, AlertCircle } from "lucide-react";
+import { ArrowLeft, Trash2, Download, Upload, RefreshCw, LogOut, LogIn, Database, TrendingUp, Calendar, AlertCircle, Settings } from "lucide-react";
 import { useRefreshResults } from "@/hooks/useDrawResults";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DRAW_SCHEDULE } from "@/types/lottery";
@@ -15,6 +16,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Footer } from "@/components/Footer";
 import { DrawResultsManager } from "@/components/DrawResultsManager";
+import { AlgorithmManagement } from "@/components/AlgorithmManagement";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -506,173 +508,192 @@ const Admin = () => {
           </AlertDescription>
         </Alert>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          <Card className="bg-gradient-card border-border/50 animate-slide-up hover:shadow-glow transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="w-5 h-5 text-primary" />
-                Ajouter un Résultat
-              </CardTitle>
-              <CardDescription>
-                Entrez les informations du tirage manuellement
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="draw-name">Tirage</Label>
-                <Select value={drawName} onValueChange={setDrawName}>
-                  <SelectTrigger id="draw-name">
-                    <SelectValue placeholder="Sélectionnez un tirage" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allDraws.map((draw) => (
-                      <SelectItem key={draw.name} value={draw.name}>
-                        {draw.name} - {draw.day} {draw.time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <Tabs defaultValue="results" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="results" className="gap-2">
+              <Database className="w-4 h-4" />
+              Résultats
+            </TabsTrigger>
+            <TabsTrigger value="algorithms" className="gap-2">
+              <Settings className="w-4 h-4" />
+              Algorithmes
+            </TabsTrigger>
+          </TabsList>
 
-              <div>
-                <Label htmlFor="draw-date">Date</Label>
-                <Input
-                  id="draw-date"
-                  type="date"
-                  value={drawDate}
-                  onChange={(e) => setDrawDate(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Label>Numéros Gagnants (5 numéros entre 1-90)</Label>
-                <div className="grid grid-cols-5 gap-2 mt-2">
-                  {numbers.map((num, idx) => (
-                    <Input
-                      key={idx}
-                      type="number"
-                      min="1"
-                      max="90"
-                      value={num}
-                      onChange={(e) => handleNumberChange(idx, e.target.value)}
-                      placeholder={`N°${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm text-muted-foreground">Numéros Machine (facultatif)</Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowMachineNumbers(!showMachineNumbers)}
-                    className="h-auto py-1 px-2 text-xs"
-                  >
-                    {showMachineNumbers ? "Masquer" : "Afficher"}
-                  </Button>
-                </div>
-                {showMachineNumbers && (
-                  <div className="grid grid-cols-5 gap-2">
-                    {machineNumbers.map((num, idx) => (
-                      <Input
-                        key={idx}
-                        type="number"
-                        min="1"
-                        max="90"
-                        value={num}
-                        onChange={(e) => handleMachineNumberChange(idx, e.target.value)}
-                        placeholder={`M°${idx + 1}`}
-                      />
-                    ))}
+          <TabsContent value="results" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              <Card className="bg-gradient-card border-border/50 animate-slide-up hover:shadow-glow transition-all duration-300">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="w-5 h-5 text-primary" />
+                    Ajouter un Résultat
+                  </CardTitle>
+                  <CardDescription>
+                    Entrez les informations du tirage manuellement
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="draw-name">Tirage</Label>
+                    <Select value={drawName} onValueChange={setDrawName}>
+                      <SelectTrigger id="draw-name">
+                        <SelectValue placeholder="Sélectionnez un tirage" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allDraws.map((draw) => (
+                          <SelectItem key={draw.name} value={draw.name}>
+                            {draw.name} - {draw.day} {draw.time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-              </div>
 
-              <Button
-                onClick={handleAddResult}
-                disabled={isLoading}
-                className="w-full"
-              >
-                Ajouter le Résultat
-              </Button>
-            </CardContent>
-          </Card>
+                  <div>
+                    <Label htmlFor="draw-date">Date</Label>
+                    <Input
+                      id="draw-date"
+                      type="date"
+                      value={drawDate}
+                      onChange={(e) => setDrawDate(e.target.value)}
+                    />
+                  </div>
 
-          <Card className="bg-gradient-card border-border/50 animate-slide-up hover:shadow-glow transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <RefreshCw className="w-5 h-5 text-primary" />
-                Actions Rapides
-              </CardTitle>
-              <CardDescription>
-                Opérations de maintenance et gestion des données
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                onClick={handleScrapeResults}
-                disabled={isLoading}
-                className="w-full gap-2 group"
-                variant="default"
-              >
-                <RefreshCw className={`w-4 h-4 group-hover:rotate-180 transition-transform duration-500 ${isLoading ? 'animate-spin' : ''}`} />
-                Scraper les Résultats
-              </Button>
+                  <div>
+                    <Label>Numéros Gagnants (5 numéros entre 1-90)</Label>
+                    <div className="grid grid-cols-5 gap-2 mt-2">
+                      {numbers.map((num, idx) => (
+                        <Input
+                          key={idx}
+                          type="number"
+                          min="1"
+                          max="90"
+                          value={num}
+                          onChange={(e) => handleNumberChange(idx, e.target.value)}
+                          placeholder={`N°${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  onClick={handleExportData}
-                  className="gap-2"
-                  variant="secondary"
-                >
-                  <Download className="w-4 h-4" />
-                  Exporter
-                </Button>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm text-muted-foreground">Numéros Machine (facultatif)</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowMachineNumbers(!showMachineNumbers)}
+                        className="h-auto py-1 px-2 text-xs"
+                      >
+                        {showMachineNumbers ? "Masquer" : "Afficher"}
+                      </Button>
+                    </div>
+                    {showMachineNumbers && (
+                      <div className="grid grid-cols-5 gap-2">
+                        {machineNumbers.map((num, idx) => (
+                          <Input
+                            key={idx}
+                            type="number"
+                            min="1"
+                            max="90"
+                            value={num}
+                            onChange={(e) => handleMachineNumberChange(idx, e.target.value)}
+                            placeholder={`M°${idx + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-                <div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportData}
-                    className="hidden"
-                    id="import-file"
-                  />
                   <Button
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={handleAddResult}
                     disabled={isLoading}
-                    className="w-full gap-2"
-                    variant="outline"
+                    className="w-full"
                   >
-                    <Upload className="w-4 h-4" />
-                    Importer
+                    Ajouter le Résultat
                   </Button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              <div className="pt-3 border-t border-border/50">
-                <Button
-                  onClick={handleDeleteOldResults}
-                  disabled={isLoading}
-                  className="w-full gap-2"
-                  variant="destructive"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Supprimer Résultats &gt; 6 mois
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  ⚠️ Action irréversible
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="bg-gradient-card border-border/50 animate-slide-up hover:shadow-glow transition-all duration-300">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <RefreshCw className="w-5 h-5 text-primary" />
+                    Actions Rapides
+                  </CardTitle>
+                  <CardDescription>
+                    Opérations de maintenance et gestion des données
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button
+                    onClick={handleScrapeResults}
+                    disabled={isLoading}
+                    className="w-full gap-2 group"
+                    variant="default"
+                  >
+                    <RefreshCw className={`w-4 h-4 group-hover:rotate-180 transition-transform duration-500 ${isLoading ? 'animate-spin' : ''}`} />
+                    Scraper les Résultats
+                  </Button>
 
-          {/* Gestion des résultats */}
-          <DrawResultsManager />
-        </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      onClick={handleExportData}
+                      className="gap-2"
+                      variant="secondary"
+                    >
+                      <Download className="w-4 h-4" />
+                      Exporter
+                    </Button>
+
+                    <div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".json"
+                        onChange={handleImportData}
+                        className="hidden"
+                        id="import-file"
+                      />
+                      <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isLoading}
+                        className="w-full gap-2"
+                        variant="outline"
+                      >
+                        <Upload className="w-4 h-4" />
+                        Importer
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-border/50">
+                    <Button
+                      onClick={handleDeleteOldResults}
+                      disabled={isLoading}
+                      className="w-full gap-2"
+                      variant="destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Supprimer Résultats &gt; 6 mois
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      ⚠️ Action irréversible
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Gestion des résultats */}
+              <DrawResultsManager />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="algorithms" className="space-y-6">
+            <AlgorithmManagement />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Footer />

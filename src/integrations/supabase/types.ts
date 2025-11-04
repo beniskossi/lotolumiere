@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      algorithm_config: {
+        Row: {
+          algorithm_name: string
+          created_at: string
+          description: string | null
+          id: string
+          is_enabled: boolean
+          parameters: Json | null
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          algorithm_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_enabled?: boolean
+          parameters?: Json | null
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          algorithm_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_enabled?: boolean
+          parameters?: Json | null
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       algorithm_performance: {
         Row: {
           accuracy_score: number
@@ -121,6 +154,38 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      prediction_shares: {
+        Row: {
+          id: string
+          prediction_id: string
+          share_platform: string
+          shared_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          prediction_id: string
+          share_platform: string
+          shared_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          prediction_id?: string
+          share_platform?: string
+          shared_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prediction_shares_prediction_id_fkey"
+            columns: ["prediction_id"]
+            isOneToOne: false
+            referencedRelation: "predictions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       predictions: {
         Row: {
@@ -280,28 +345,40 @@ export type Database = {
       user_preferences: {
         Row: {
           created_at: string
+          custom_layout: Json | null
           has_completed_onboarding: boolean
           id: string
           notification_enabled: boolean
+          preferred_algorithm: string | null
           preferred_draw_name: string | null
+          theme_accent_color: string | null
+          theme_primary_color: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          custom_layout?: Json | null
           has_completed_onboarding?: boolean
           id?: string
           notification_enabled?: boolean
+          preferred_algorithm?: string | null
           preferred_draw_name?: string | null
+          theme_accent_color?: string | null
+          theme_primary_color?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          custom_layout?: Json | null
           has_completed_onboarding?: boolean
           id?: string
           notification_enabled?: boolean
+          preferred_algorithm?: string | null
           preferred_draw_name?: string | null
+          theme_accent_color?: string | null
+          theme_primary_color?: string | null
           updated_at?: string
           user_id?: string
         }
