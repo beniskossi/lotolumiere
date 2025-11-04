@@ -1,13 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Database, Search, BarChart3, Brain, RefreshCw, Sparkles, Info } from "lucide-react";
+import { ArrowLeft, Database, Search, BarChart3, Brain, RefreshCw, Sparkles, Info, Activity } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { NumberBall } from "@/components/NumberBall";
 import { NumberConsult } from "@/components/NumberConsult";
 import { PredictionPanel } from "@/components/PredictionPanel";
 import { StatisticsCharts } from "@/components/StatisticsCharts";
 import { AdvancedPredictionPanel } from "@/components/AdvancedPredictionPanel";
+import { AdvancedStatisticsPanel } from "@/components/AdvancedStatisticsPanel";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Footer } from "@/components/Footer";
@@ -96,7 +97,7 @@ const DrawDetails = () => {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="donnees" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8 h-auto flex-wrap">
+          <TabsList className="grid w-full grid-cols-7 mb-8 h-auto flex-wrap">
             <TabsTrigger value="donnees" className="gap-2">
               <Database className="w-4 h-4" />
               Données
@@ -108,6 +109,10 @@ const DrawDetails = () => {
             <TabsTrigger value="statistiques" className="gap-2">
               <BarChart3 className="w-4 h-4" />
               Statistiques
+            </TabsTrigger>
+            <TabsTrigger value="stats-avancees" className="gap-2">
+              <Activity className="w-4 h-4" />
+              Stats Avancées
             </TabsTrigger>
             <TabsTrigger value="prediction" className="gap-2">
               <Brain className="w-4 h-4" />
@@ -268,6 +273,10 @@ const DrawDetails = () => {
               </div>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="stats-avancees">
+            <AdvancedStatisticsPanel drawName={decodedDrawName} />
           </TabsContent>
 
           <TabsContent value="prediction">

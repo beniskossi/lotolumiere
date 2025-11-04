@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, TrendingUp, BarChart3, PieChart as PieChartIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, TrendingUp, BarChart3, PieChart as PieChartIcon, Sparkles, Activity } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { StatisticsCharts } from "@/components/StatisticsCharts";
+import { AdvancedStatisticsPanel } from "@/components/AdvancedStatisticsPanel";
 import { useMostFrequentNumbers, useLeastFrequentNumbers } from "@/hooks/useNumberStatistics";
 import { DRAW_SCHEDULE } from "@/types/lottery";
 import { StatisticsSkeleton } from "@/components/LoadingSkeleton";
@@ -78,81 +80,116 @@ const Statistics = () => {
         {loading ? (
           <StatisticsSkeleton />
         ) : (
-          <>
-            <div className="grid md:grid-cols-2 gap-6 animate-slide-up">
-              <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-success">
-                    <TrendingUp className="w-5 h-5" />
-                    Numéros Chauds
-                  </CardTitle>
-                  <CardDescription>
-                    Les 10 numéros les plus fréquents
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-5 gap-3">
-                    {topNumbers.map((stat, idx) => (
-                      <div
-                        key={stat.number}
-                        className="relative flex flex-col items-center gap-2 p-3 rounded-lg bg-success/10 border border-success/30 hover:scale-105 transition-transform"
-                      >
-                        <div className="absolute -top-2 -right-2 bg-success text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                          {idx + 1}
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsTrigger value="overview" className="gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Vue d'ensemble
+              </TabsTrigger>
+              <TabsTrigger value="charts" className="gap-2">
+                <Activity className="w-4 h-4" />
+                Graphiques
+              </TabsTrigger>
+              <TabsTrigger value="advanced" className="gap-2">
+                <Sparkles className="w-4 h-4" />
+                Analyse Avancée
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6 animate-slide-up">
+                <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-success">
+                      <TrendingUp className="w-5 h-5" />
+                      Numéros Chauds
+                    </CardTitle>
+                    <CardDescription>
+                      Les 10 numéros les plus fréquents
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-5 gap-3">
+                      {topNumbers.map((stat, idx) => (
+                        <div
+                          key={stat.number}
+                          className="relative flex flex-col items-center gap-2 p-3 rounded-lg bg-success/10 border border-success/30 hover:scale-105 transition-transform"
+                        >
+                          <div className="absolute -top-2 -right-2 bg-success text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                            {idx + 1}
+                          </div>
+                          <div className="text-2xl font-bold text-success">
+                            {stat.number}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {stat.frequency}x
+                          </div>
                         </div>
-                        <div className="text-2xl font-bold text-success">
-                          {stat.number}
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-primary">
+                      <PieChartIcon className="w-5 h-5" />
+                      Numéros Froids
+                    </CardTitle>
+                    <CardDescription>
+                      Les 10 numéros les plus en retard
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-5 gap-3">
+                      {coldNumbers.map((stat, idx) => (
+                        <div
+                          key={stat.number}
+                          className="relative flex flex-col items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/30 hover:scale-105 transition-transform"
+                        >
+                          <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                            {idx + 1}
+                          </div>
+                          <div className="text-2xl font-bold text-primary">
+                            {stat.number}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {stat.days_since_last}j
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {stat.frequency}x
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="bg-gradient-primary text-white border-0">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-4">
+                    <Sparkles className="w-12 h-12" />
+                    <div>
+                      <h3 className="text-xl font-bold mb-1">Découvrez l'Analyse Avancée</h3>
+                      <p className="text-white/80 text-sm">
+                        Explorez les paires fréquentes, triplets, patterns temporels et bien plus encore
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
 
-              <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-primary">
-                    <PieChartIcon className="w-5 h-5" />
-                    Numéros Froids
-                  </CardTitle>
-                  <CardDescription>
-                    Les 10 numéros les plus en retard
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-5 gap-3">
-                    {coldNumbers.map((stat, idx) => (
-                      <div
-                        key={stat.number}
-                        className="relative flex flex-col items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/30 hover:scale-105 transition-transform"
-                      >
-                        <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                          {idx + 1}
-                        </div>
-                        <div className="text-2xl font-bold text-primary">
-                          {stat.number}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {stat.days_since_last}j
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="animate-fade-in">
+            <TabsContent value="charts" className="animate-fade-in">
               <StatisticsCharts
                 mostFrequent={mostFrequent}
                 leastFrequent={leastFrequent}
                 drawName={selectedDraw}
               />
-            </div>
-          </>
+            </TabsContent>
+
+            <TabsContent value="advanced" className="animate-fade-in">
+              <AdvancedStatisticsPanel drawName={selectedDraw} />
+            </TabsContent>
+          </Tabs>
         )}
       </div>
 
