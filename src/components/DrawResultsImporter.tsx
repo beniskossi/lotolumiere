@@ -28,9 +28,14 @@ export const DrawResultsImporter = ({ onImportComplete }: { onImportComplete?: (
 
   const allDraws = Object.values(DRAW_SCHEDULE).flat();
 
+  const normalizeDrawName = (name: string) => {
+    return name.toLowerCase().replace(/\s+/g, '');
+  };
+
   const getDrawScheduleInfo = (drawName: string) => {
-    const draw = allDraws.find(d => d.name.toLowerCase() === drawName.toLowerCase());
-    return draw ? { day: draw.day, time: draw.time } : { day: "", time: "" };
+    const normalizedInput = normalizeDrawName(drawName);
+    const draw = allDraws.find(d => normalizeDrawName(d.name) === normalizedInput);
+    return draw ? { day: draw.day, time: draw.time, exactName: draw.name } : { day: "", time: "", exactName: drawName };
   };
 
   const parseTextInput = (text: string): ParsedResult[] => {
@@ -65,7 +70,7 @@ export const DrawResultsImporter = ({ onImportComplete }: { onImportComplete?: (
       const scheduleInfo = getDrawScheduleInfo(drawName);
       
       results.push({
-        draw_name: drawName,
+        draw_name: scheduleInfo.exactName, // Use exact name from schedule
         draw_date: normalizedDate,
         winning_numbers: numbers,
         machine_numbers: machineNumbers?.length === 5 ? machineNumbers : undefined,
@@ -110,7 +115,7 @@ export const DrawResultsImporter = ({ onImportComplete }: { onImportComplete?: (
       const scheduleInfo = getDrawScheduleInfo(drawName);
       
       results.push({
-        draw_name: drawName,
+        draw_name: scheduleInfo.exactName, // Use exact name from schedule
         draw_date: normalizedDate,
         winning_numbers: numbers,
         machine_numbers: machineNumbers?.length === 5 ? machineNumbers : undefined,
