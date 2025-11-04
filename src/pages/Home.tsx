@@ -4,6 +4,7 @@ import { InstallButton } from "@/components/InstallButton";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { Footer } from "@/components/Footer";
 import { GlobalStatistics } from "@/components/GlobalStatistics";
+import { AlgorithmRankings } from "@/components/AlgorithmRankings";
 import { DRAW_SCHEDULE, DAYS_ORDER } from "@/types/lottery";
 import { Sparkles, TrendingUp, BarChart3, Database, History as HistoryIcon, LayoutDashboard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -120,6 +121,11 @@ const Home = () => {
         {/* Global Statistics */}
         <div className="mb-8 sm:mb-12 animate-slide-up">
           <GlobalStatistics />
+        </div>
+
+        {/* Algorithm Rankings */}
+        <div className="mb-8 sm:mb-12 animate-slide-up">
+          <AlgorithmRankings />
         </div>
 
         <div className="mb-6 sm:mb-8 animate-fade-in">
