@@ -30,46 +30,47 @@ const Statistics = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="bg-gradient-primary text-white py-8 px-4 shadow-lg">
+      <div className="bg-gradient-primary text-white py-6 sm:py-8 px-3 sm:px-4 shadow-lg safe-area-top">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
             <Button
               variant="ghost"
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 touch-target"
               onClick={() => navigate("/")}
+              size="sm"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour à l'accueil
+              <ArrowLeft className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Retour à l'accueil</span>
             </Button>
             <UserNav />
           </div>
-          <div className="flex items-center gap-3 mb-2">
-            <BarChart3 className="w-10 h-10" />
-            <h1 className="text-4xl font-bold">Statistiques Avancées</h1>
+          <div className="flex items-center gap-2 sm:gap-3 mb-2">
+            <BarChart3 className="w-8 h-8 sm:w-10 sm:h-10" />
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Statistiques Avancées</h1>
           </div>
-          <p className="text-white/80 mt-2">
+          <p className="text-white/80 mt-2 text-sm sm:text-base">
             Analyse complète des tendances et fréquences des numéros
           </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 flex-1">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8 flex-1">
         <Card className="bg-gradient-card border-border/50 animate-fade-in">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               Sélectionner un Tirage
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Choisissez le tirage pour analyser les statistiques
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Select value={selectedDraw} onValueChange={setSelectedDraw}>
-              <SelectTrigger className="max-w-md">
+              <SelectTrigger className="w-full sm:max-w-md touch-target">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[60vh] overflow-y-auto">
                 {allDraws.map((draw) => (
                   <SelectItem key={draw.name} value={draw.name}>
                     {draw.name} - {draw.day} {draw.time}
@@ -84,51 +85,55 @@ const Statistics = () => {
           <StatisticsSkeleton />
         ) : (
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-8">
-              <TabsTrigger value="overview" className="gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Vue d'ensemble
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 sm:mb-8 h-auto">
+              <TabsTrigger value="overview" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+                <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Vue d'ensemble</span>
+                <span className="xs:hidden">Vue</span>
               </TabsTrigger>
-              <TabsTrigger value="charts" className="gap-2">
-                <Activity className="w-4 h-4" />
-                Graphiques
+              <TabsTrigger value="charts" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+                <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Graphiques</span>
+                <span className="xs:hidden">Graph.</span>
               </TabsTrigger>
-              <TabsTrigger value="advanced" className="gap-2">
-                <Sparkles className="w-4 h-4" />
-                Analyse Avancée
+              <TabsTrigger value="advanced" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Analyse Avancée</span>
+                <span className="xs:hidden">Analyse</span>
               </TabsTrigger>
-              <TabsTrigger value="rankings" className="gap-2">
-                <Trophy className="w-4 h-4" />
-                Classement IA
+              <TabsTrigger value="rankings" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+                <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Classement IA</span>
+                <span className="xs:hidden">IA</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6 animate-slide-up">
+            <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 animate-slide-up">
                 <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-success">
-                      <TrendingUp className="w-5 h-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-success text-base sm:text-lg">
+                      <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
                       Numéros Chauds
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">
                       Les 10 numéros les plus fréquents
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-5 gap-3">
+                    <div className="grid grid-cols-3 xs:grid-cols-5 gap-2 sm:gap-3">
                       {topNumbers.map((stat, idx) => (
                         <div
                           key={stat.number}
-                          className="relative flex flex-col items-center gap-2 p-3 rounded-lg bg-success/10 border border-success/30 hover:scale-105 transition-transform"
+                          className="relative flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-lg bg-success/10 border border-success/30 hover:scale-105 active:scale-95 transition-transform touch-target"
                         >
-                          <div className="absolute -top-2 -right-2 bg-success text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                          <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-success text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[10px] sm:text-xs font-bold">
                             {idx + 1}
                           </div>
-                          <div className="text-2xl font-bold text-success">
+                          <div className="text-xl sm:text-2xl font-bold text-success">
                             {stat.number}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-[10px] sm:text-xs text-muted-foreground">
                             {stat.frequency}x
                           </div>
                         </div>
@@ -138,29 +143,29 @@ const Statistics = () => {
                 </Card>
 
                 <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-primary">
-                      <PieChartIcon className="w-5 h-5" />
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-primary text-base sm:text-lg">
+                      <PieChartIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                       Numéros Froids
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">
                       Les 10 numéros les plus en retard
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-5 gap-3">
+                    <div className="grid grid-cols-3 xs:grid-cols-5 gap-2 sm:gap-3">
                       {coldNumbers.map((stat, idx) => (
                         <div
                           key={stat.number}
-                          className="relative flex flex-col items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/30 hover:scale-105 transition-transform"
+                          className="relative flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-lg bg-primary/10 border border-primary/30 hover:scale-105 active:scale-95 transition-transform touch-target"
                         >
-                          <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                          <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-primary text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[10px] sm:text-xs font-bold">
                             {idx + 1}
                           </div>
-                          <div className="text-2xl font-bold text-primary">
+                          <div className="text-xl sm:text-2xl font-bold text-primary">
                             {stat.number}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-[10px] sm:text-xs text-muted-foreground">
                             {stat.days_since_last}j
                           </div>
                         </div>
@@ -171,30 +176,30 @@ const Statistics = () => {
               </div>
 
               <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-destructive">
-                    <Activity className="w-5 h-5" />
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="flex items-center gap-2 text-destructive text-base sm:text-lg">
+                    <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
                     Écarts Maximums
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">
                     Les 10 numéros avec les plus grands écarts d'apparition
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-5 gap-3">
+                  <div className="grid grid-cols-3 xs:grid-cols-5 gap-2 sm:gap-3">
                     {maxGapNumbers.map((stat, idx) => (
                       <div
                         key={stat.number}
-                        className="relative flex flex-col items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 hover:scale-105 transition-transform"
+                        className="relative flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-lg bg-destructive/10 border border-destructive/30 hover:scale-105 active:scale-95 transition-transform touch-target"
                       >
-                        <div className="absolute -top-2 -right-2 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                        <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-destructive text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[10px] sm:text-xs font-bold">
                           {idx + 1}
                         </div>
-                        <div className="text-2xl font-bold text-destructive">
+                        <div className="text-xl sm:text-2xl font-bold text-destructive">
                           {stat.number}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {stat.days_since_last} jours
+                        <div className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                          {stat.days_since_last}j
                         </div>
                       </div>
                     ))}
@@ -203,30 +208,30 @@ const Statistics = () => {
               </Card>
 
               <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-success">
-                    <Activity className="w-5 h-5" />
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="flex items-center gap-2 text-success text-base sm:text-lg">
+                    <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
                     Écarts Minimums
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">
                     Les 10 numéros avec les plus petits écarts d'apparition
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-5 gap-3">
+                  <div className="grid grid-cols-3 xs:grid-cols-5 gap-2 sm:gap-3">
                     {minGapNumbers.map((stat, idx) => (
                       <div
                         key={stat.number}
-                        className="relative flex flex-col items-center gap-2 p-3 rounded-lg bg-success/10 border border-success/30 hover:scale-105 transition-transform"
+                        className="relative flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-lg bg-success/10 border border-success/30 hover:scale-105 active:scale-95 transition-transform touch-target"
                       >
-                        <div className="absolute -top-2 -right-2 bg-success text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                        <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-success text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[10px] sm:text-xs font-bold">
                           {idx + 1}
                         </div>
-                        <div className="text-2xl font-bold text-success">
+                        <div className="text-xl sm:text-2xl font-bold text-success">
                           {stat.number}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {stat.days_since_last} jours
+                        <div className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                          {stat.days_since_last}j
                         </div>
                       </div>
                     ))}
