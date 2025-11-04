@@ -9,7 +9,7 @@ import { Footer } from "@/components/Footer";
 import { StatisticsCharts } from "@/components/StatisticsCharts";
 import { AdvancedStatisticsPanel } from "@/components/AdvancedStatisticsPanel";
 import { AlgorithmRankings } from "@/components/AlgorithmRankings";
-import { useMostFrequentNumbers, useLeastFrequentNumbers, useMaxGapNumbers } from "@/hooks/useNumberStatistics";
+import { useMostFrequentNumbers, useLeastFrequentNumbers, useMaxGapNumbers, useMinGapNumbers } from "@/hooks/useNumberStatistics";
 import { DRAW_SCHEDULE } from "@/types/lottery";
 import { StatisticsSkeleton } from "@/components/LoadingSkeleton";
 import { UserNav } from "@/components/UserNav";
@@ -22,8 +22,9 @@ const Statistics = () => {
   const { data: mostFrequent = [], isLoading: loadingMost } = useMostFrequentNumbers(selectedDraw, 90);
   const { data: leastFrequent = [], isLoading: loadingLeast } = useLeastFrequentNumbers(selectedDraw, 90);
   const { data: maxGapNumbers = [], isLoading: loadingGap } = useMaxGapNumbers(selectedDraw, 10);
+  const { data: minGapNumbers = [], isLoading: loadingMinGap } = useMinGapNumbers(selectedDraw, 10);
 
-  const loading = loadingMost || loadingLeast || loadingGap;
+  const loading = loadingMost || loadingLeast || loadingGap || loadingMinGap;
   const topNumbers = mostFrequent.slice(0, 10);
   const coldNumbers = leastFrequent.slice(0, 10);
 
@@ -190,6 +191,38 @@ const Statistics = () => {
                           {idx + 1}
                         </div>
                         <div className="text-2xl font-bold text-destructive">
+                          {stat.number}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {stat.days_since_last} jours
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-success">
+                    <Activity className="w-5 h-5" />
+                    Écarts Minimums
+                  </CardTitle>
+                  <CardDescription>
+                    Les 10 numéros avec les plus petits écarts d'apparition
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-5 gap-3">
+                    {minGapNumbers.map((stat, idx) => (
+                      <div
+                        key={stat.number}
+                        className="relative flex flex-col items-center gap-2 p-3 rounded-lg bg-success/10 border border-success/30 hover:scale-105 transition-transform"
+                      >
+                        <div className="absolute -top-2 -right-2 bg-success text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                          {idx + 1}
+                        </div>
+                        <div className="text-2xl font-bold text-success">
                           {stat.number}
                         </div>
                         <div className="text-xs text-muted-foreground">

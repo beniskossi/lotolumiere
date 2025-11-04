@@ -80,3 +80,21 @@ export const useMaxGapNumbers = (drawName: string, limit = 10) => {
     },
   });
 };
+
+export const useMinGapNumbers = (drawName: string, limit = 10) => {
+  return useQuery({
+    queryKey: ["min-gap-numbers", drawName, limit],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("number_statistics")
+        .select("*")
+        .eq("draw_name", drawName)
+        .gt("frequency", 0)
+        .order("days_since_last", { ascending: true })
+        .limit(limit);
+
+      if (error) throw error;
+      return data as NumberStatistic[];
+    },
+  });
+};

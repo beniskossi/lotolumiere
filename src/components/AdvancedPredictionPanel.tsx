@@ -15,6 +15,9 @@ const categoryIcons = {
   bayesian: Network,
   neural: TrendingUp,
   variance: Sparkles,
+  lightgbm: Brain,
+  catboost: Brain,
+  transformer: Network,
 };
 
 const categoryColors = {
@@ -23,6 +26,9 @@ const categoryColors = {
   bayesian: "bg-green-500/10 text-green-500 border-green-500/20",
   neural: "bg-orange-500/10 text-orange-500 border-orange-500/20",
   variance: "bg-pink-500/10 text-pink-500 border-pink-500/20",
+  lightgbm: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  catboost: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+  transformer: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
 };
 
 export const AdvancedPredictionPanel = ({ drawName }: AdvancedPredictionPanelProps) => {
@@ -64,7 +70,7 @@ export const AdvancedPredictionPanel = ({ drawName }: AdvancedPredictionPanelPro
             <div>
               <CardTitle className="text-2xl">Prédictions IA Avancées</CardTitle>
               <CardDescription className="text-white/80">
-                5 algorithmes d'intelligence artificielle pour maximiser vos chances
+                8 algorithmes d'intelligence artificielle pour maximiser vos chances
               </CardDescription>
             </div>
           </div>

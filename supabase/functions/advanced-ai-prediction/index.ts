@@ -18,7 +18,7 @@ interface AdvancedPredictionResult {
   algorithm: string;
   factors: string[];
   score: number;
-  category: "statistical" | "ml" | "bayesian" | "neural" | "variance";
+  category: "statistical" | "ml" | "bayesian" | "neural" | "variance" | "lightgbm" | "catboost" | "transformer";
 }
 
 serve(async (req) => {
@@ -167,6 +167,9 @@ function generateFallbackPredictions(drawName: string): AdvancedPredictionResult
     generateFallbackPrediction("Inférence Bayésienne (Naive)", "bayesian"),
     generateFallbackPrediction("Séries Temporelles (Régression)", "neural"),
     generateFallbackPrediction("Analyse Variance & Corrélation", "variance"),
+    generateFallbackPrediction("LightGBM-like (Gradient Boosting)", "lightgbm"),
+    generateFallbackPrediction("CatBoost-like (Categorical Boost)", "catboost"),
+    generateFallbackPrediction("Transformers-like (Attention)", "transformer"),
   ];
 }
 
@@ -454,6 +457,152 @@ function calculatePairCorrelation(results: DrawResult[], num1: number, num2: num
   return numerator / denominator;
 }
 
+// Algorithm 6: LightGBM-like (Gradient Boosting)
+function lightgbmPrediction(results: DrawResult[], drawName: string): AdvancedPredictionResult {
+  const drawResults = results.filter((r) => r.draw_name === drawName).slice(0, 200);
+  if (drawResults.length < 10) {
+    return generateFallbackPrediction("LightGBM-like (Gradient Boosting)", "lightgbm");
+  }
+
+  // Simule un gradient boosting en calculant des résidus
+  const numberFeatures: Record<number, { freq: number; avgPosition: number; recentAppearances: number }> = {};
+  for (let i = 1; i <= 90; i++) {
+    numberFeatures[i] = { freq: 0, avgPosition: 0, recentAppearances: 0 };
+  }
+
+  drawResults.forEach((result, idx) => {
+    const recency = Math.exp(-idx * 0.03); // Poids décroissant
+    result.winning_numbers.forEach((num, pos) => {
+      numberFeatures[num].freq += recency;
+      numberFeatures[num].avgPosition += pos * recency;
+      if (idx < 20) numberFeatures[num].recentAppearances += 1;
+    });
+  });
+
+  // Score combiné (gradient boosting simulé)
+  const scores: Record<number, number> = {};
+  for (let i = 1; i <= 90; i++) {
+    const feat = numberFeatures[i];
+    scores[i] = feat.freq * 0.5 + feat.recentAppearances * 0.3 + (5 - feat.avgPosition / Math.max(feat.freq, 1)) * 0.2;
+  }
+
+  const prediction = Object.entries(scores)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([num]) => parseInt(num));
+
+  const confidence = Math.min(0.88, Math.max(...Object.values(scores)) / 10);
+
+  return {
+    numbers: prediction.sort((a, b) => a - b),
+    confidence,
+    algorithm: "LightGBM-like (Gradient Boosting)",
+    factors: ["Gradient boosting", "Features engineered", "Récence pondérée"],
+    score: confidence * 0.88,
+    category: "lightgbm",
+  };
+}
+
+// Algorithm 7: CatBoost-like (Categorical Boosting)
+function catboostPrediction(results: DrawResult[], drawName: string): AdvancedPredictionResult {
+  const drawResults = results.filter((r) => r.draw_name === drawName).slice(0, 250);
+  if (drawResults.length < 10) {
+    return generateFallbackPrediction("CatBoost-like (Categorical Boost)", "catboost");
+  }
+
+  // Simule CatBoost avec des caractéristiques catégorielles (groupes de couleurs)
+  const categoryScores: Record<number, number> = {};
+  for (let i = 1; i <= 90; i++) categoryScores[i] = 0;
+
+  drawResults.forEach((result, idx) => {
+    const weight = 1 / (1 + idx * 0.02); // Décroissance douce
+    result.winning_numbers.forEach((num) => {
+      const colorGroup = getNumberColorGroup(num);
+      // Bonus pour la catégorie
+      categoryScores[num] += weight * 1.2;
+      
+      // Propagation aux numéros du même groupe
+      for (let j = 1; j <= 90; j++) {
+        if (getNumberColorGroup(j) === colorGroup) {
+          categoryScores[j] += weight * 0.1;
+        }
+      }
+    });
+  });
+
+  const prediction = Object.entries(categoryScores)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([num]) => parseInt(num));
+
+  const confidence = Math.min(0.87, Math.max(...Object.values(categoryScores)) / 20);
+
+  return {
+    numbers: prediction.sort((a, b) => a - b),
+    confidence,
+    algorithm: "CatBoost-like (Categorical Boost)",
+    factors: ["Boosting catégoriel", "Groupes de couleurs", "Propagation"],
+    score: confidence * 0.87,
+    category: "catboost",
+  };
+}
+
+// Algorithm 8: Transformers-like (Self-Attention)
+function transformerPrediction(results: DrawResult[], drawName: string): AdvancedPredictionResult {
+  const drawResults = results.filter((r) => r.draw_name === drawName).slice(0, 100);
+  if (drawResults.length < 10) {
+    return generateFallbackPrediction("Transformers-like (Attention)", "transformer");
+  }
+
+  // Simule un mécanisme d'attention entre les numéros
+  const attentionMatrix: Record<number, Record<number, number>> = {};
+  for (let i = 1; i <= 90; i++) {
+    attentionMatrix[i] = {};
+    for (let j = 1; j <= 90; j++) {
+      attentionMatrix[i][j] = 0;
+    }
+  }
+
+  // Calcule les co-occurrences (attention entre paires)
+  drawResults.forEach((result) => {
+    result.winning_numbers.forEach((num1) => {
+      result.winning_numbers.forEach((num2) => {
+        if (num1 !== num2) {
+          attentionMatrix[num1][num2] += 1;
+        }
+      });
+    });
+  });
+
+  // Score d'attention agrégé
+  const attentionScores: Record<number, number> = {};
+  for (let i = 1; i <= 90; i++) {
+    attentionScores[i] = Object.values(attentionMatrix[i]).reduce((sum, val) => sum + val, 0);
+  }
+
+  // Normalisation softmax-like
+  const maxScore = Math.max(...Object.values(attentionScores));
+  for (let i = 1; i <= 90; i++) {
+    attentionScores[i] = Math.exp(attentionScores[i] / (maxScore + 1));
+  }
+
+  const prediction = Object.entries(attentionScores)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([num]) => parseInt(num));
+
+  const confidence = Math.min(0.89, Math.max(...Object.values(attentionScores)) * 0.5);
+
+  return {
+    numbers: prediction.sort((a, b) => a - b),
+    confidence,
+    algorithm: "Transformers-like (Attention)",
+    factors: ["Self-attention", "Co-occurrence matrix", "Softmax normalization"],
+    score: confidence * 0.89,
+    category: "transformer",
+  };
+}
+
 function generateAdvancedPredictions(results: DrawResult[], drawName: string): AdvancedPredictionResult[] {
   return [
     weightedFrequencyPrediction(results, drawName),
@@ -461,5 +610,8 @@ function generateAdvancedPredictions(results: DrawResult[], drawName: string): A
     bayesianPrediction(results, drawName),
     neuralNetworkPrediction(results, drawName),
     varianceAnalysisPrediction(results, drawName),
+    lightgbmPrediction(results, drawName),
+    catboostPrediction(results, drawName),
+    transformerPrediction(results, drawName),
   ].sort((a, b) => b.score - a.score);
 }
