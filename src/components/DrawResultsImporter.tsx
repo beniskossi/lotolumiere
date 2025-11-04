@@ -45,16 +45,34 @@ export const DrawResultsImporter = ({ onImportComplete }: { onImportComplete?: (
     for (const line of lines) {
       if (!line.trim()) continue;
       
-      // Format attendu: "Tirage,Date,N1,N2,N3,N4,N5[,M1,M2,M3,M4,M5]"
-      // ou: "Tirage Date N1 N2 N3 N4 N5 [M1 M2 M3 M4 M5]"
-      const parts = line.split(/[,\s]+/).map(p => p.trim());
+      // First, try to identify the draw name from known draws
+      let matchedDraw: { name: string; day: string; time: string } | null = null;
+      let remainingText = line.trim();
       
-      if (parts.length < 7) continue; // Minimum: nom + date + 5 numéros
+      // Try to match draw names (longest first to handle "Lucky Tuesday" before "Lucky")
+      const sortedDraws = [...allDraws].sort((a, b) => b.name.length - a.name.length);
+      for (const draw of sortedDraws) {
+        const normalizedLine = normalizeDrawName(line);
+        const normalizedDrawName = normalizeDrawName(draw.name);
+        if (normalizedLine.startsWith(normalizedDrawName)) {
+          matchedDraw = draw;
+          // Remove draw name from the beginning
+          const regex = new RegExp(`^${draw.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'i');
+          remainingText = line.replace(regex, '').trim();
+          break;
+        }
+      }
       
-      const drawName = parts[0];
-      const drawDate = parts[1]; // Format: YYYY-MM-DD ou DD/MM/YYYY
-      const numbers = parts.slice(2, 7).map(n => parseInt(n));
-      const machineNumbers = parts.length >= 12 ? parts.slice(7, 12).map(n => parseInt(n)) : undefined;
+      if (!matchedDraw) continue;
+      
+      // Parse remaining parts: Date N1 N2 N3 N4 N5 [M1 M2 M3 M4 M5]
+      const parts = remainingText.split(/[,\s]+/).map(p => p.trim());
+      
+      if (parts.length < 6) continue; // Minimum: date + 5 numéros
+      
+      const drawDate = parts[0]; // Format: YYYY-MM-DD ou DD/MM/YYYY
+      const numbers = parts.slice(1, 6).map(n => parseInt(n));
+      const machineNumbers = parts.length >= 11 ? parts.slice(6, 11).map(n => parseInt(n)) : undefined;
       
       // Valider les numéros
       if (numbers.some(n => isNaN(n) || n < 1 || n > 90) || numbers.length !== 5) continue;
@@ -67,15 +85,13 @@ export const DrawResultsImporter = ({ onImportComplete }: { onImportComplete?: (
         normalizedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
       }
       
-      const scheduleInfo = getDrawScheduleInfo(drawName);
-      
       results.push({
-        draw_name: scheduleInfo.exactName, // Use exact name from schedule
+        draw_name: matchedDraw.name,
         draw_date: normalizedDate,
         winning_numbers: numbers,
         machine_numbers: machineNumbers?.length === 5 ? machineNumbers : undefined,
-        draw_day: scheduleInfo.day,
-        draw_time: scheduleInfo.time,
+        draw_day: matchedDraw.day,
+        draw_time: matchedDraw.time,
       });
     }
     
@@ -98,7 +114,7 @@ export const DrawResultsImporter = ({ onImportComplete }: { onImportComplete?: (
       
       if (parts.length < 7) continue;
       
-      const drawName = parts[0];
+      const inputDrawName = parts[0];
       const drawDate = parts[1];
       const numbers = parts.slice(2, 7).map(n => parseInt(n));
       const machineNumbers = parts.length >= 12 ? parts.slice(7, 12).map(n => parseInt(n)) : undefined;
@@ -112,10 +128,10 @@ export const DrawResultsImporter = ({ onImportComplete }: { onImportComplete?: (
         normalizedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
       }
       
-      const scheduleInfo = getDrawScheduleInfo(drawName);
+      const scheduleInfo = getDrawScheduleInfo(inputDrawName);
       
       results.push({
-        draw_name: scheduleInfo.exactName, // Use exact name from schedule
+        draw_name: scheduleInfo.exactName,
         draw_date: normalizedDate,
         winning_numbers: numbers,
         machine_numbers: machineNumbers?.length === 5 ? machineNumbers : undefined,
