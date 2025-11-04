@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Footer } from "@/components/Footer";
 import { DrawResultsManager } from "@/components/DrawResultsManager";
 import { AlgorithmManagement } from "@/components/AlgorithmManagement";
+import { DrawResultsImporter } from "@/components/DrawResultsImporter";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -684,6 +685,9 @@ const Admin = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Import facilité */}
+              <DrawResultsImporter onImportComplete={loadStats} />
 
               {/* Gestion des résultats */}
               <DrawResultsManager />
