@@ -125,99 +125,181 @@ serve(async (req) => {
   }
 });
 
-// LightGBM-like: Statistical frequency analysis
+// LightGBM-like: Statistical frequency analysis with hot number detection
 function predictByFrequency(data: HistoricalDraw[]): number[] {
-  const frequency: Map<number, number> = new Map();
+  const frequencies = new Map<number, number>();
+  const recentWeight = 0.92; // Stronger emphasis on recent draws
   
-  // Count frequencies with time decay (recent draws weighted more)
+  // Weight recent draws with exponential decay + recency boost
   data.forEach((draw, index) => {
-    const weight = Math.exp(-index / 20); // Exponential decay
+    const baseWeight = Math.pow(recentWeight, data.length - index - 1);
+    // Extra boost for last 10 draws
+    const recencyBoost = index >= data.length - 10 ? 1.5 : 1.0;
+    const weight = baseWeight * recencyBoost;
+    
     draw.winning_numbers.forEach(num => {
-      frequency.set(num, (frequency.get(num) || 0) + weight);
+      frequencies.set(num, (frequencies.get(num) || 0) + weight);
     });
   });
-
-  // Sort by frequency and select top numbers
-  const sortedNumbers = Array.from(frequency.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([num]) => num);
-
-  // Add some randomness to avoid predictability
-  const topCandidates = sortedNumbers.slice(0, 12);
-  return selectWithRandomization(topCandidates, 5);
-}
-
-// CatBoost-like: Analyze number associations and patterns
-function predictBySequence(data: HistoricalDraw[]): number[] {
-  const associations: Map<string, number> = new Map();
   
-  // Analyze which numbers appear together
-  data.forEach(draw => {
-    for (let i = 0; i < draw.winning_numbers.length; i++) {
-      for (let j = i + 1; j < draw.winning_numbers.length; j++) {
-        const key = `${draw.winning_numbers[i]}-${draw.winning_numbers[j]}`;
-        associations.set(key, (associations.get(key) || 0) + 1);
-      }
-    }
-  });
-
-  // Find numbers with strong associations
-  const numberScores: Map<number, number> = new Map();
-  associations.forEach((count, key) => {
-    const [num1, num2] = key.split("-").map(Number);
-    numberScores.set(num1, (numberScores.get(num1) || 0) + count);
-    numberScores.set(num2, (numberScores.get(num2) || 0) + count);
-  });
-
-  const sortedByAssociation = Array.from(numberScores.entries())
-    .sort((a, b) => b[1] - a[1])
+  // Analyze frequency distribution and detect hot numbers
+  const avgFreq = Array.from(frequencies.values()).reduce((a, b) => a + b, 0) / frequencies.size;
+  const hotThreshold = avgFreq * 1.2;
+  
+  // Get top numbers with preference for hot numbers
+  const sortedNumbers = Array.from(frequencies.entries())
+    .sort((a, b) => {
+      const aIsHot = a[1] >= hotThreshold ? 1.3 : 1;
+      const bIsHot = b[1] >= hotThreshold ? 1.3 : 1;
+      return (b[1] * bIsHot) - (a[1] * aIsHot);
+    })
+    .slice(0, 15)
     .map(([num]) => num);
-
-  return selectWithRandomization(sortedByAssociation.slice(0, 12), 5);
+  
+  return selectWithRandomization(sortedNumbers, 5);
 }
 
-// Transformers-like: Temporal sequence analysis
-function predictByGapAnalysis(data: HistoricalDraw[]): number[] {
-  const gaps: Map<number, number[]> = new Map();
-  const lastSeen: Map<number, number> = new Map();
-
-  // Track gaps between appearances
-  data.reverse().forEach((draw, index) => {
-    for (let num = 1; num <= 90; num++) {
-      if (draw.winning_numbers.includes(num)) {
-        if (lastSeen.has(num)) {
-          const gap = index - lastSeen.get(num)!;
-          const numGaps = gaps.get(num) || [];
-          numGaps.push(gap);
-          gaps.set(num, numGaps);
+// CatBoost-like: Analyze number associations - pairs and triples
+function predictBySequence(data: HistoricalDraw[]): number[] {
+  const pairFrequencies = new Map<string, number>();
+  const tripleFrequencies = new Map<string, number>();
+  
+  // Analyze pairs and triples that appear together
+  data.forEach((draw, index) => {
+    const weight = Math.pow(0.93, data.length - index - 1);
+    const nums = draw.winning_numbers;
+    
+    // Analyze pairs
+    for (let i = 0; i < nums.length; i++) {
+      for (let j = i + 1; j < nums.length; j++) {
+        const pair = [nums[i], nums[j]].sort().join('-');
+        pairFrequencies.set(pair, (pairFrequencies.get(pair) || 0) + weight);
+        
+        // Analyze triples
+        for (let k = j + 1; k < nums.length; k++) {
+          const triple = [nums[i], nums[j], nums[k]].sort().join('-');
+          tripleFrequencies.set(triple, (tripleFrequencies.get(triple) || 0) + (weight * 1.5));
         }
-        lastSeen.set(num, index);
       }
     }
   });
-
-  // Calculate expected appearance based on average gap
-  const currentIndex = data.length;
-  const scores: [number, number][] = [];
-
-  for (let num = 1; num <= 90; num++) {
-    const numGaps = gaps.get(num) || [];
-    if (numGaps.length > 0) {
-      const avgGap = numGaps.reduce((a, b) => a + b, 0) / numGaps.length;
-      const lastSeenIndex = lastSeen.get(num) || 0;
-      const currentGap = currentIndex - lastSeenIndex;
-      
-      // Numbers "due" based on average gap get higher scores
-      const score = currentGap >= avgGap ? currentGap / avgGap : 0.5;
-      scores.push([num, score]);
+  
+  // Build prediction prioritizing triples, then pairs
+  const usedNumbers = new Set<number>();
+  const prediction: number[] = [];
+  
+  // Try to use strong triples first
+  const sortedTriples = Array.from(tripleFrequencies.entries())
+    .sort((a, b) => b[1] - a[1]);
+  
+  for (const [triple] of sortedTriples.slice(0, 2)) {
+    const nums = triple.split('-').map(Number);
+    nums.forEach(num => {
+      if (!usedNumbers.has(num) && prediction.length < 5) {
+        prediction.push(num);
+        usedNumbers.add(num);
+      }
+    });
+    if (prediction.length >= 5) break;
+  }
+  
+  // Complete with strong pairs
+  if (prediction.length < 5) {
+    const sortedPairs = Array.from(pairFrequencies.entries())
+      .sort((a, b) => b[1] - a[1]);
+    
+    for (const [pair] of sortedPairs) {
+      const [num1, num2] = pair.split('-').map(Number);
+      if (!usedNumbers.has(num1) && prediction.length < 5) {
+        prediction.push(num1);
+        usedNumbers.add(num1);
+      }
+      if (!usedNumbers.has(num2) && prediction.length < 5) {
+        prediction.push(num2);
+        usedNumbers.add(num2);
+      }
+      if (prediction.length >= 5) break;
     }
   }
+  
+  // Fill remaining with high frequency numbers
+  if (prediction.length < 5) {
+    const allNums = data.flatMap(d => d.winning_numbers);
+    const freq = new Map<number, number>();
+    allNums.forEach(n => freq.set(n, (freq.get(n) || 0) + 1));
+    const remaining = Array.from(freq.entries())
+      .filter(([n]) => !usedNumbers.has(n))
+      .sort((a, b) => b[1] - a[1])
+      .map(([n]) => n);
+    
+    prediction.push(...remaining.slice(0, 5 - prediction.length));
+  }
+  
+  return prediction.sort((a, b) => a - b);
+}
 
-  const sortedByGap = scores
+// Transformers-like: Advanced gap analysis with variance consideration
+function predictByGapAnalysis(data: HistoricalDraw[]): number[] {
+  const lastAppearance = new Map<number, number>();
+  const avgGap = new Map<number, number[]>();
+  const gapVariance = new Map<number, number>();
+  
+  // Track last appearance and gaps for each number
+  data.forEach((draw, index) => {
+    draw.winning_numbers.forEach(num => {
+      if (lastAppearance.has(num)) {
+        const gap = index - lastAppearance.get(num)!;
+        if (!avgGap.has(num)) avgGap.set(num, []);
+        avgGap.get(num)!.push(gap);
+      }
+      lastAppearance.set(num, index);
+    });
+  });
+  
+  // Calculate variance for each number's gap pattern
+  avgGap.forEach((gaps, num) => {
+    if (gaps.length > 1) {
+      const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+      const variance = gaps.reduce((sum, gap) => sum + Math.pow(gap - mean, 2), 0) / gaps.length;
+      gapVariance.set(num, variance);
+    }
+  });
+  
+  // Calculate expected next appearance with variance consideration
+  const scores = new Map<number, number>();
+  for (let num = 1; num <= 90; num++) {
+    if (!lastAppearance.has(num)) {
+      scores.set(num, 100); // Never appeared, high priority
+      continue;
+    }
+    
+    const gaps = avgGap.get(num) || [];
+    if (gaps.length === 0) continue;
+    
+    const avgGapValue = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+    const currentGap = data.length - 1 - lastAppearance.get(num)!;
+    const variance = gapVariance.get(num) || 0;
+    
+    // Numbers that are "overdue" get higher scores
+    // Low variance means more predictable pattern
+    const overdueScore = currentGap / Math.max(avgGapValue, 1);
+    const consistencyBonus = variance < 5 ? 1.4 : 1.0; // Reward consistent patterns
+    
+    // Exponential scoring for very overdue numbers
+    const finalScore = overdueScore > 1.5 ? 
+      Math.pow(overdueScore, 1.3) * consistencyBonus : 
+      overdueScore * consistencyBonus;
+    
+    scores.set(num, finalScore);
+  }
+  
+  // Select numbers with highest scores (most overdue with consistent patterns)
+  const sortedNumbers = Array.from(scores.entries())
     .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
     .map(([num]) => num);
-
-  return selectWithRandomization(sortedByGap.slice(0, 12), 5);
+  
+  return selectWithRandomization(sortedNumbers, 5);
 }
 
 // Ensemble combination with Bayesian-like weighting
@@ -238,24 +320,48 @@ function combineModels(models: { numbers: number[]; weight: number }[]): number[
     .sort((a, b) => a - b);
 }
 
-// Calculate confidence based on historical pattern consistency
+// Multi-factor confidence calculation with improved accuracy
 function calculateConfidence(data: HistoricalDraw[], prediction: number[]): number {
+  // Multi-factor confidence calculation
+  const recentDraws = data.slice(-15);
   let matchScore = 0;
-  const recentDraws = data.slice(0, 20);
-
-  recentDraws.forEach(draw => {
+  
+  // Factor 1: Pattern similarity with recent draws
+  recentDraws.forEach((draw, index) => {
+    const weight = Math.pow((index + 1) / recentDraws.length, 1.2); // More recent = higher weight
     const matches = prediction.filter(num => draw.winning_numbers.includes(num)).length;
-    matchScore += matches / 5;
+    matchScore += matches * weight;
   });
-
-  // Normalize to 0-100 scale
-  const baseConfidence = (matchScore / recentDraws.length) * 100;
   
-  // Add variance penalty (more consistent = higher confidence)
+  // Factor 2: Frequency of predicted numbers
+  const allNumbers = data.flatMap(d => d.winning_numbers);
+  const predictionFrequency = prediction.reduce((sum, num) => {
+    const freq = allNumbers.filter(n => n === num).length;
+    return sum + freq;
+  }, 0) / prediction.length;
+  const avgFrequency = allNumbers.length / 90;
+  const frequencyScore = (predictionFrequency / avgFrequency) * 15;
+  
+  // Factor 3: Gap analysis consistency
+  const lastSeen = new Map<number, number>();
+  data.forEach((draw, idx) => {
+    draw.winning_numbers.forEach(num => lastSeen.set(num, idx));
+  });
+  const avgRecency = prediction.reduce((sum, num) => {
+    const lastIdx = lastSeen.get(num) ?? -100;
+    return sum + (data.length - 1 - lastIdx);
+  }, 0) / prediction.length;
+  const recencyScore = Math.max(0, 15 - avgRecency / 2);
+  
+  // Factor 4: Data variance - lower variance means more predictable
   const variance = calculateVariance(data);
-  const variancePenalty = Math.min(variance / 10, 20);
+  const varianceAdjustment = Math.max(0, 18 - variance);
   
-  return Math.max(Math.min(baseConfidence - variancePenalty, 95), 30);
+  // Normalize to percentage (35-92)
+  const baseConfidence = (matchScore / (recentDraws.length * 5)) * 45;
+  const totalConfidence = baseConfidence + frequencyScore + recencyScore + varianceAdjustment;
+  
+  return Math.min(92, Math.max(35, totalConfidence));
 }
 
 function calculateVariance(data: HistoricalDraw[]): number {

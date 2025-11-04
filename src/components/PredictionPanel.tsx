@@ -105,15 +105,20 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
                   </div>
 
                   {latestPrediction.confidence_score && (
-                    <div className="mt-4">
+                    <div className="space-y-3 mt-4">
                       <div className="flex items-center justify-between text-xs mb-1">
                         <span>Niveau de confiance</span>
-                        <span>{latestPrediction.confidence_score.toFixed(1)}%</span>
+                        <span className="font-bold">{latestPrediction.confidence_score.toFixed(1)}%</span>
                       </div>
                       <Progress 
                         value={latestPrediction.confidence_score} 
                         className="h-2 bg-white/20"
                       />
+                      <div className="text-xs opacity-80">
+                        {latestPrediction.confidence_score >= 75 ? "🔥 Confiance élevée" : 
+                         latestPrediction.confidence_score >= 60 ? "✓ Confiance moyenne" : 
+                         "⚠️ Confiance modérée"}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -174,27 +179,27 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
             <div className="flex gap-3">
               <div className="w-2 h-2 mt-2 rounded-full bg-primary flex-shrink-0" />
               <div>
-                <p className="font-semibold text-primary">LightGBM</p>
+                <p className="font-semibold text-primary">Analyse de Fréquence Pondérée</p>
                 <p className="text-xs text-muted-foreground">
-                  Analyse statistique rapide des fréquences et écarts temporels
+                  Détection des numéros chauds avec boost de récence et seuil d'activité
                 </p>
               </div>
             </div>
             <div className="flex gap-3">
               <div className="w-2 h-2 mt-2 rounded-full bg-success flex-shrink-0" />
               <div>
-                <p className="font-semibold text-success">CatBoost</p>
+                <p className="font-semibold text-success">Patterns de Séquence</p>
                 <p className="text-xs text-muted-foreground">
-                  Validation des interactions et associations entre numéros
+                  Analyse des paires et triplets fréquents pour identifier les associations
                 </p>
               </div>
             </div>
             <div className="flex gap-3">
               <div className="w-2 h-2 mt-2 rounded-full bg-accent flex-shrink-0" />
               <div>
-                <p className="font-semibold text-accent">Transformers</p>
+                <p className="font-semibold text-accent">Gap Analysis Avancée</p>
                 <p className="text-xs text-muted-foreground">
-                  Détection des tendances et motifs temporels à long terme
+                  Prédiction basée sur les écarts temporels et la variance des patterns
                 </p>
               </div>
             </div>
