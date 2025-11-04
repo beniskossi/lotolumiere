@@ -11,6 +11,7 @@ import Statistics from "./pages/Statistics";
 import History from "./pages/History";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
+import Consult from "./pages/Consult";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -55,6 +56,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Statistics />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/consulter"
+            element={
+              <ProtectedRoute>
+                <Consult />
               </ProtectedRoute>
             }
           />

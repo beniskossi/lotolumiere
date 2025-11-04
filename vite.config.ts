@@ -26,6 +26,8 @@ export default defineConfig(({ mode }) => ({
         orientation: "portrait-primary",
         scope: "/",
         start_url: "/",
+        categories: ["productivity", "utilities"],
+        lang: "fr-FR",
         icons: [
           {
             src: "/icon-192.png",
@@ -39,6 +41,36 @@ export default defineConfig(({ mode }) => ({
             type: "image/png",
             purpose: "any maskable"
           }
+        ],
+        shortcuts: [
+          {
+            name: "Statistiques",
+            short_name: "Stats",
+            description: "Voir les statistiques avancées",
+            url: "/statistiques",
+            icons: [{ src: "/icon-192.png", sizes: "192x192" }]
+          },
+          {
+            name: "Consulter un Numéro",
+            short_name: "Consulter",
+            description: "Analyser un numéro spécifique",
+            url: "/consulter",
+            icons: [{ src: "/icon-192.png", sizes: "192x192" }]
+          },
+          {
+            name: "Historique",
+            short_name: "Historique",
+            description: "Voir l'historique des tirages",
+            url: "/historique",
+            icons: [{ src: "/icon-192.png", sizes: "192x192" }]
+          },
+          {
+            name: "Dashboard",
+            short_name: "Dashboard",
+            description: "Mon espace personnel",
+            url: "/dashboard",
+            icons: [{ src: "/icon-192.png", sizes: "192x192" }]
+          }
         ]
       },
       workbox: {
@@ -50,12 +82,13 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: "supabase-api-cache",
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 5 * 60, // 5 minutes
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60, // 1 hour for offline support
               },
               cacheableResponse: {
                 statuses: [0, 200]
-              }
+              },
+              networkTimeoutSeconds: 10
             }
           },
           {
@@ -64,12 +97,16 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: "supabase-functions-cache",
               expiration: {
-                maxEntries: 20,
-                maxAgeSeconds: 2 * 60, // 2 minutes
-              }
+                maxEntries: 30,
+                maxAgeSeconds: 30 * 60, // 30 minutes
+              },
+              networkTimeoutSeconds: 15
             }
           }
-        ]
+        ],
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true
       },
       devOptions: {
         enabled: false

@@ -96,6 +96,18 @@ const Home = () => {
             className="gap-2 flex-1 sm:flex-initial touch-target"
             size="sm"
           >
+            <Link to="/consulter">
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden xs:inline">Consulter</span>
+              <span className="xs:hidden">Cons.</span>
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            asChild
+            className="gap-2 flex-1 sm:flex-initial touch-target"
+            size="sm"
+          >
             <Link to="/historique">
               <HistoryIcon className="w-4 h-4" />
               <span className="hidden xs:inline">Historique</span>

@@ -24,5 +24,35 @@
   "categories": ["productivity", "utilities"],
   "lang": "fr-FR",
   "dir": "ltr",
-  "screenshots": []
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Statistiques",
+      "short_name": "Stats",
+      "description": "Voir les statistiques avancées",
+      "url": "/statistiques",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Consulter un Numéro",
+      "short_name": "Consulter",
+      "description": "Analyser un numéro spécifique",
+      "url": "/consulter",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Historique",
+      "short_name": "Historique",
+      "description": "Voir l'historique des tirages",
+      "url": "/historique",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Mon espace personnel",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }
