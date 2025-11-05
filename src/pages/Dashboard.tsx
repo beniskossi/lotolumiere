@@ -8,6 +8,7 @@ import { TrackedPredictionsDisplay } from "@/components/TrackedPredictionsDispla
 import { PredictionComparison } from "@/components/PredictionComparison";
 import { PersonalizationSettings } from "@/components/PersonalizationSettings";
 import { Onboarding } from "@/components/Onboarding";
+import { DetailedRankingsDisplay } from "@/components/DetailedRankingsDisplay";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { ArrowLeft, LayoutDashboard, TrendingUp } from "lucide-react";
@@ -110,10 +111,11 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="favorites" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="favorites">Mes Favoris</TabsTrigger>
             <TabsTrigger value="history">Historique</TabsTrigger>
             <TabsTrigger value="comparison">Comparaison</TabsTrigger>
+            <TabsTrigger value="rankings">Classements</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
           
@@ -137,6 +139,10 @@ export default function Dashboard() {
                 <PredictionComparison drawName="Midi" />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="rankings" className="space-y-4">
+            <DetailedRankingsDisplay />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">

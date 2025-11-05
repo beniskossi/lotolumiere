@@ -423,6 +423,27 @@ export type Database = {
         }
         Relationships: []
       }
+      algorithm_rankings_detailed: {
+        Row: {
+          accuracy_stddev: number | null
+          avg_accuracy: number | null
+          best_match: number | null
+          consistency_score: number | null
+          draw_name: string | null
+          excellent_predictions: number | null
+          first_prediction: string | null
+          good_predictions: number | null
+          last_prediction: string | null
+          model_used: string | null
+          outstanding_predictions: number | null
+          overall_score: number | null
+          perfect_predictions: number | null
+          total_matches: number | null
+          total_predictions: number | null
+          worst_match: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       count_array_matches: {
@@ -436,6 +457,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_algorithm_rankings: { Args: never; Returns: undefined }
       validate_numbers_array: { Args: { numbers: number[] }; Returns: boolean }
     }
     Enums: {
