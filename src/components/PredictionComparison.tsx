@@ -47,6 +47,70 @@ export const PredictionComparison = ({ drawName }: PredictionComparisonProps) =>
     };
   };
 
+  // Get unique algorithms - MUST be before early returns
+  const algorithms = useMemo(() => {
+    if (!predictions) return [];
+    const unique = [...new Set(predictions.map(p => p.model_used))];
+    return unique;
+  }, [predictions]);
+
+  // Filter predictions by algorithm - MUST be before early returns
+  const filteredPredictions = useMemo(() => {
+    if (!predictions) return [];
+    if (selectedAlgorithm === "all") return predictions;
+    return predictions.filter(p => p.model_used === selectedAlgorithm);
+  }, [predictions, selectedAlgorithm]);
+
+  // Calculate overall statistics with sorting - MUST be before early returns
+  const validComparisons = useMemo(() => {
+    const comparisons = filteredPredictions
+      ?.map(p => ({
+        ...comparePredictionWithResult(p, p.prediction_date),
+        prediction: p
+      }))
+      .filter(c => c.result) || [];
+
+    // Sort comparisons
+    if (sortBy === "accuracy") {
+      return comparisons.sort((a, b) => (b.accuracy || 0) - (a.accuracy || 0));
+    } else if (sortBy === "matches") {
+      return comparisons.sort((a, b) => (b.matches || 0) - (a.matches || 0));
+    }
+    // Default: sort by date
+    return comparisons.sort((a, b) => 
+      new Date(b.prediction.prediction_date).getTime() - new Date(a.prediction.prediction_date).getTime()
+    );
+  }, [filteredPredictions, sortBy, results]);
+
+  const totalAccuracy = useMemo(() => 
+    validComparisons.length > 0 
+      ? validComparisons.reduce((sum, c) => sum + (c.accuracy || 0), 0) / validComparisons.length 
+      : 0,
+    [validComparisons]
+  );
+
+  const totalMatches = useMemo(() => 
+    validComparisons.reduce((sum, c) => sum + (c.matches || 0), 0),
+    [validComparisons]
+  );
+
+  const bestPrediction = useMemo(() => 
+    validComparisons.length > 0 
+      ? Math.max(...validComparisons.map(c => c.matches || 0)) 
+      : 0,
+    [validComparisons]
+  );
+
+  // Chart data - MUST be before early returns
+  const chartData = useMemo(() => {
+    return validComparisons.slice(0, 20).reverse().map((comp, idx) => ({
+      name: format(new Date(comp.prediction.prediction_date), "dd/MM", { locale: fr }),
+      accuracy: comp.accuracy?.toFixed(1),
+      matches: comp.matches,
+    }));
+  }, [validComparisons]);
+
+  // NOW we can do early returns after all hooks are called
   if (predictionsLoading || resultsLoading) {
     return (
       <Card className="bg-gradient-card border-border/50">
@@ -68,58 +132,6 @@ export const PredictionComparison = ({ drawName }: PredictionComparisonProps) =>
       </Card>
     );
   }
-
-  // Get unique algorithms
-  const algorithms = useMemo(() => {
-    if (!predictions) return [];
-    const unique = [...new Set(predictions.map(p => p.model_used))];
-    return unique;
-  }, [predictions]);
-
-  // Filter predictions by algorithm
-  const filteredPredictions = useMemo(() => {
-    if (!predictions) return [];
-    if (selectedAlgorithm === "all") return predictions;
-    return predictions.filter(p => p.model_used === selectedAlgorithm);
-  }, [predictions, selectedAlgorithm]);
-
-  // Calculate overall statistics with sorting
-  const validComparisons = useMemo(() => {
-    const comparisons = filteredPredictions
-      ?.map(p => ({
-        ...comparePredictionWithResult(p, p.prediction_date),
-        prediction: p
-      }))
-      .filter(c => c.result) || [];
-
-    // Sort comparisons
-    if (sortBy === "accuracy") {
-      return comparisons.sort((a, b) => (b.accuracy || 0) - (a.accuracy || 0));
-    } else if (sortBy === "matches") {
-      return comparisons.sort((a, b) => (b.matches || 0) - (a.matches || 0));
-    }
-    // Default: sort by date
-    return comparisons.sort((a, b) => 
-      new Date(b.prediction.prediction_date).getTime() - new Date(a.prediction.prediction_date).getTime()
-    );
-  }, [filteredPredictions, sortBy]);
-
-  const totalAccuracy = validComparisons.length > 0 
-    ? validComparisons.reduce((sum, c) => sum + (c.accuracy || 0), 0) / validComparisons.length 
-    : 0;
-  const totalMatches = validComparisons.reduce((sum, c) => sum + (c.matches || 0), 0);
-  const bestPrediction = validComparisons.length > 0 
-    ? Math.max(...validComparisons.map(c => c.matches || 0)) 
-    : 0;
-
-  // Chart data
-  const chartData = useMemo(() => {
-    return validComparisons.slice(0, 20).reverse().map((comp, idx) => ({
-      name: format(new Date(comp.prediction.prediction_date), "dd/MM", { locale: fr }),
-      accuracy: comp.accuracy?.toFixed(1),
-      matches: comp.matches,
-    }));
-  }, [validComparisons]);
 
   // Export function
   const handleExport = () => {
