@@ -69,22 +69,61 @@ serve(async (req) => {
       { numbers: gapAnalysisPrediction, weight: 0.25 }
     ]);
 
-    // Calculate confidence score
-    const confidenceScore = calculateConfidence(historicalData as HistoricalDraw[], combinedPrediction);
-
     // Store prediction in database
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const predictionDate = tomorrow.toISOString().split("T")[0];
 
-    const { error: insertError } = await supabase
-      .from("predictions")
-      .upsert({
+    // Calculate confidence scores for each model
+    const frequencyConfidence = calculateConfidence(historicalData as HistoricalDraw[], frequencyPrediction);
+    const sequenceConfidence = calculateConfidence(historicalData as HistoricalDraw[], sequencePrediction);
+    const gapAnalysisConfidence = calculateConfidence(historicalData as HistoricalDraw[], gapAnalysisPrediction);
+    const hybridConfidence = calculateConfidence(historicalData as HistoricalDraw[], combinedPrediction);
+
+    // Create predictions for each model
+    const predictions = [
+      {
+        draw_name: drawName,
+        prediction_date: predictionDate,
+        predicted_numbers: frequencyPrediction,
+        confidence_score: frequencyConfidence,
+        model_used: "LightGBM-like (Weighted Frequency)",
+        model_metadata: {
+          historical_draws_analyzed: historicalData.length,
+          algorithm: "frequency",
+          timestamp: new Date().toISOString()
+        }
+      },
+      {
+        draw_name: drawName,
+        prediction_date: predictionDate,
+        predicted_numbers: sequencePrediction,
+        confidence_score: sequenceConfidence,
+        model_used: "CatBoost-like (Pattern Sequence)",
+        model_metadata: {
+          historical_draws_analyzed: historicalData.length,
+          algorithm: "sequence",
+          timestamp: new Date().toISOString()
+        }
+      },
+      {
+        draw_name: drawName,
+        prediction_date: predictionDate,
+        predicted_numbers: gapAnalysisPrediction,
+        confidence_score: gapAnalysisConfidence,
+        model_used: "Transformers-like (Gap Analysis)",
+        model_metadata: {
+          historical_draws_analyzed: historicalData.length,
+          algorithm: "gap_analysis",
+          timestamp: new Date().toISOString()
+        }
+      },
+      {
         draw_name: drawName,
         prediction_date: predictionDate,
         predicted_numbers: combinedPrediction,
-        confidence_score: confidenceScore,
-        model_used: "Hybrid (LightGBM-like + CatBoost-like + Transformers-like)",
+        confidence_score: hybridConfidence,
+        model_used: "Hybrid (Ensemble Model)",
         model_metadata: {
           historical_draws_analyzed: historicalData.length,
           frequency_component: frequencyPrediction,
@@ -92,12 +131,18 @@ serve(async (req) => {
           gap_analysis_component: gapAnalysisPrediction,
           timestamp: new Date().toISOString()
         }
-      }, {
+      }
+    ];
+
+    // Insert all predictions
+    const { error: insertError } = await supabase
+      .from("predictions")
+      .upsert(predictions, {
         onConflict: "draw_name,prediction_date,model_used"
       });
 
     if (insertError) {
-      console.error("Error inserting prediction:", insertError);
+      console.error("Error inserting predictions:", insertError);
       throw insertError;
     }
 
@@ -106,8 +151,11 @@ serve(async (req) => {
         success: true,
         drawName,
         predictionDate,
-        predictedNumbers: combinedPrediction,
-        confidenceScore,
+        predictions: predictions.map(p => ({
+          model: p.model_used,
+          numbers: p.predicted_numbers,
+          confidence: p.confidence_score
+        })),
         drawsAnalyzed: historicalData.length
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
