@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { NumberBall } from "@/components/NumberBall";
 import { useAdvancedPrediction } from "@/hooks/useAdvancedPrediction";
-import { Loader2, Sparkles, Brain, BarChart3, Network, TrendingUp } from "lucide-react";
+import { Loader2, Sparkles, Brain, BarChart3, Network, TrendingUp, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EnhancedPredictionCharts } from "./EnhancedPredictionCharts";
 
@@ -18,6 +18,7 @@ const categoryIcons = {
   lightgbm: Brain,
   catboost: Brain,
   transformer: Network,
+  arima: Activity,
 };
 
 const categoryColors = {
@@ -29,6 +30,7 @@ const categoryColors = {
   lightgbm: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
   catboost: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
   transformer: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  arima: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
 };
 
 export const AdvancedPredictionPanel = ({ drawName }: AdvancedPredictionPanelProps) => {
@@ -68,9 +70,9 @@ export const AdvancedPredictionPanel = ({ drawName }: AdvancedPredictionPanelPro
           <div className="flex items-center gap-3">
             <Sparkles className="w-8 h-8" />
             <div>
-              <CardTitle className="text-2xl">Prédictions IA Avancées</CardTitle>
+          <CardTitle className="text-2xl">Prédictions IA Avancées</CardTitle>
               <CardDescription className="text-white/80">
-                8 algorithmes d'intelligence artificielle pour maximiser vos chances
+                9 algorithmes d'intelligence artificielle pour maximiser vos chances
               </CardDescription>
             </div>
           </div>
