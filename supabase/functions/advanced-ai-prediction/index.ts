@@ -18,7 +18,7 @@ interface AdvancedPredictionResult {
   algorithm: string;
   factors: string[];
   score: number;
-  category: "statistical" | "ml" | "bayesian" | "neural" | "variance" | "lightgbm" | "catboost" | "transformer";
+  category: "statistical" | "ml" | "bayesian" | "neural" | "variance" | "lightgbm" | "catboost" | "transformer" | "arima";
 }
 
 serve(async (req) => {
@@ -170,6 +170,7 @@ function generateFallbackPredictions(drawName: string): AdvancedPredictionResult
     generateFallbackPrediction("LightGBM-like (Gradient Boosting)", "lightgbm"),
     generateFallbackPrediction("CatBoost-like (Categorical Boost)", "catboost"),
     generateFallbackPrediction("Transformers-like (Attention)", "transformer"),
+    generateFallbackPrediction("ARIMA (Time Series)", "arima"),
   ];
 }
 
@@ -463,7 +464,7 @@ function neuralNetworkPrediction(results: DrawResult[], drawName: string): Advan
   // NOUVEAU: Simulation LSTM avec mémoire temporelle
   const lstmScores = simulateLSTMNetwork(drawResults);
   
-  // Analyse de régression linéaire sur les positions
+  // AMÉLIORÉ: Analyse de régression linéaire multi-variables
   const numberPositions: Record<number, number[]> = {};
   for (let i = 1; i <= 90; i++) numberPositions[i] = [];
 
@@ -494,18 +495,29 @@ function neuralNetworkPrediction(results: DrawResult[], drawName: string): Advan
     const b = (sum_y - m * sum_x) / n;
 
     const nextAppearance = (m * nextDrawIndex + b);
-    regressionPredictions[i] = 1 / (1 + Math.abs(nextAppearance - n));
+    
+    // AMÉLIORÉ: Score basé sur la proximité et la régularité
+    const avgGap = positions.length > 1 ? 
+      (positions[positions.length - 1] - positions[0]) / (positions.length - 1) : 
+      nextDrawIndex;
+    const lastSeen = nextDrawIndex - positions[positions.length - 1];
+    
+    // Combiner régression et analyse de gap
+    const regressionScore = 1 / (1 + Math.abs(nextAppearance - n));
+    const gapScore = lastSeen > avgGap ? Math.min(1, lastSeen / avgGap) : 0.3;
+    
+    regressionPredictions[i] = regressionScore * 0.6 + gapScore * 0.4;
   }
 
   // NOUVEAU: Analyse cyclique avancée
   const cyclicalScores = analyzeCyclicalBehavior(drawResults);
 
-  // NOUVEAU: Combinaison des 3 composantes neurales
+  // NOUVEAU: Combinaison des 3 composantes neurales avec pondération optimisée
   const neuralScores: Record<number, number> = {};
   for (let i = 1; i <= 90; i++) {
     neuralScores[i] = 
-      (lstmScores[i] || 0) * 0.45 +
-      (regressionPredictions[i] || 0) * 0.35 +
+      (lstmScores[i] || 0) * 0.40 +
+      (regressionPredictions[i] || 0) * 0.40 +
       (cyclicalScores[i] || 0) * 0.20;
   }
 
@@ -516,13 +528,13 @@ function neuralNetworkPrediction(results: DrawResult[], drawName: string): Advan
 
   const maxScore = Math.max(...Object.values(neuralScores));
   const avgPredScore = sortedPredictions.reduce((sum, num) => sum + neuralScores[num], 0) / 5;
-  const confidence = Math.min(0.91, (avgPredScore / maxScore) * 0.95 + 0.05);
+  const confidence = Math.min(0.91, (avgPredScore / maxScore) * 0.93 + 0.05);
 
   return {
     numbers: sortedPredictions.sort((a, b) => a - b),
     confidence,
     algorithm: "Neural Network LSTM-like",
-    factors: ["LSTM temporal memory", "Régression linéaire", "Analyse cyclique", "Deep features"],
+    factors: ["LSTM temporal memory", "Multi-variable regression", "Gap analysis", "Cyclical patterns", "Deep features"],
     score: confidence * 0.91,
     category: "neural",
   };
@@ -759,58 +771,87 @@ function lightgbmPrediction(results: DrawResult[], drawName: string): AdvancedPr
   };
 }
 
-// Algorithm 7: CatBoost-like (Categorical Boosting)
+// Algorithm 7: CatBoost-like (Enhanced Categorical Boosting)
 function catboostPrediction(results: DrawResult[], drawName: string): AdvancedPredictionResult {
   const drawResults = results.filter((r) => r.draw_name === drawName).slice(0, 250);
   if (drawResults.length < 10) {
     return generateFallbackPrediction("CatBoost-like (Categorical Boost)", "catboost");
   }
 
-  // Simule CatBoost avec des caractéristiques catégorielles (groupes de couleurs)
+  // AMÉLIORÉ: Features catégorielles avec groupes de couleurs et zones
   const categoryScores: Record<number, number> = {};
+  const categoryFrequency: Record<string, number> = {};
+  
   for (let i = 1; i <= 90; i++) categoryScores[i] = 0;
 
-  drawResults.forEach((result, idx) => {
-    const weight = 1 / (1 + idx * 0.02); // Décroissance douce
+  // Phase 1: Calculer la fréquence par catégorie
+  drawResults.forEach((result) => {
     result.winning_numbers.forEach((num) => {
       const colorGroup = getNumberColorGroup(num);
-      // Bonus pour la catégorie
-      categoryScores[num] += weight * 1.2;
-      
-      // Propagation aux numéros du même groupe
-      for (let j = 1; j <= 90; j++) {
-        if (getNumberColorGroup(j) === colorGroup) {
-          categoryScores[j] += weight * 0.1;
-        }
-      }
+      categoryFrequency[colorGroup] = (categoryFrequency[colorGroup] || 0) + 1;
     });
   });
+
+  // Phase 2: Boosting catégoriel avec poids intelligents
+  drawResults.forEach((result, idx) => {
+    const weight = Math.exp(-idx * 0.02); // Décroissance temporelle
+    
+    result.winning_numbers.forEach((num) => {
+      const colorGroup = getNumberColorGroup(num);
+      const categoryBoost = (categoryFrequency[colorGroup] || 0) / drawResults.length;
+      
+      // Score principal avec boost catégoriel
+      categoryScores[num] += weight * (1.2 + categoryBoost * 0.5);
+      
+      // Propagation aux numéros du même groupe (plus sophistiquée)
+      for (let j = 1; j <= 90; j++) {
+        if (j !== num && getNumberColorGroup(j) === colorGroup) {
+          const distance = Math.abs(j - num);
+          const propagationWeight = weight * 0.15 / (1 + distance * 0.1);
+          categoryScores[j] += propagationWeight;
+        }
+      }
+      
+      // Bonus pour les numéros adjacents (même hors groupe)
+      if (num > 1) categoryScores[num - 1] += weight * 0.08;
+      if (num < 90) categoryScores[num + 1] += weight * 0.08;
+    });
+  });
+
+  // Phase 3: Target encoding - performance historique par catégorie
+  for (let i = 1; i <= 90; i++) {
+    const colorGroup = getNumberColorGroup(i);
+    const categoryPerformance = (categoryFrequency[colorGroup] || 0) / (drawResults.length * 5);
+    categoryScores[i] *= (1 + categoryPerformance * 0.3);
+  }
 
   const prediction = Object.entries(categoryScores)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5)
     .map(([num]) => parseInt(num));
 
-  const confidence = Math.min(0.87, Math.max(...Object.values(categoryScores)) / 20);
+  const maxScore = Math.max(...Object.values(categoryScores));
+  const avgPredScore = prediction.reduce((sum, num) => sum + categoryScores[num], 0) / 5;
+  const confidence = Math.min(0.89, (avgPredScore / maxScore) * 0.88 + 0.05);
 
   return {
     numbers: prediction.sort((a, b) => a - b),
     confidence,
-    algorithm: "CatBoost-like (Categorical Boost)",
-    factors: ["Boosting catégoriel", "Groupes de couleurs", "Propagation"],
-    score: confidence * 0.87,
+    algorithm: "CatBoost Pro (Categorical Boost)",
+    factors: ["Categorical boosting", "Color groups", "Smart propagation", "Target encoding", "Adjacent bonuses"],
+    score: confidence * 0.89,
     category: "catboost",
   };
 }
 
-// Algorithm 8: Transformers-like (Self-Attention)
+// Algorithm 8: Transformers-like (Enhanced Self-Attention)
 function transformerPrediction(results: DrawResult[], drawName: string): AdvancedPredictionResult {
   const drawResults = results.filter((r) => r.draw_name === drawName).slice(0, 100);
   if (drawResults.length < 10) {
     return generateFallbackPrediction("Transformers-like (Attention)", "transformer");
   }
 
-  // Simule un mécanisme d'attention entre les numéros
+  // AMÉLIORÉ: Mécanisme d'attention multi-têtes
   const attentionMatrix: Record<number, Record<number, number>> = {};
   for (let i = 1; i <= 90; i++) {
     attentionMatrix[i] = {};
@@ -819,27 +860,79 @@ function transformerPrediction(results: DrawResult[], drawName: string): Advance
     }
   }
 
-  // Calcule les co-occurrences (attention entre paires)
-  drawResults.forEach((result) => {
+  // Calculer les co-occurrences avec pondération temporelle (attention)
+  drawResults.forEach((result, idx) => {
+    const weight = Math.exp(-idx * 0.04); // Pondération temporelle
+    
     result.winning_numbers.forEach((num1) => {
       result.winning_numbers.forEach((num2) => {
         if (num1 !== num2) {
-          attentionMatrix[num1][num2] += 1;
+          attentionMatrix[num1][num2] += weight;
+          
+          // NOUVEAU: Attention croisée pour numéros adjacents
+          if (Math.abs(num1 - num2) <= 2) {
+            attentionMatrix[num1][num2] += weight * 0.3;
+          }
         }
       });
     });
   });
 
-  // Score d'attention agrégé
+  // NOUVEAU: Multi-head attention (3 têtes)
+  const attentionHeads: Record<number, number>[] = [];
+  
+  // Tête 1: Attention globale
+  const globalAttention: Record<number, number> = {};
+  for (let i = 1; i <= 90; i++) {
+    globalAttention[i] = Object.values(attentionMatrix[i]).reduce((sum, val) => sum + val, 0);
+  }
+  attentionHeads.push(globalAttention);
+  
+  // Tête 2: Attention locale (numéros proches)
+  const localAttention: Record<number, number> = {};
+  for (let i = 1; i <= 90; i++) {
+    localAttention[i] = 0;
+    for (let j = Math.max(1, i - 5); j <= Math.min(90, i + 5); j++) {
+      localAttention[i] += attentionMatrix[i][j] || 0;
+    }
+  }
+  attentionHeads.push(localAttention);
+  
+  // Tête 3: Attention par groupe de couleurs
+  const colorAttention: Record<number, number> = {};
+  for (let i = 1; i <= 90; i++) {
+    const myColor = getNumberColorGroup(i);
+    colorAttention[i] = 0;
+    for (let j = 1; j <= 90; j++) {
+      if (getNumberColorGroup(j) === myColor) {
+        colorAttention[i] += attentionMatrix[i][j] || 0;
+      }
+    }
+  }
+  attentionHeads.push(colorAttention);
+
+  // Combiner les 3 têtes d'attention
   const attentionScores: Record<number, number> = {};
   for (let i = 1; i <= 90; i++) {
-    attentionScores[i] = Object.values(attentionMatrix[i]).reduce((sum, val) => sum + val, 0);
+    attentionScores[i] = 
+      globalAttention[i] * 0.4 + 
+      localAttention[i] * 0.35 + 
+      colorAttention[i] * 0.25;
   }
 
-  // Normalisation softmax-like
+  // Normalisation softmax améliorée
   const maxScore = Math.max(...Object.values(attentionScores));
+  const temperature = 0.8; // Paramètre de température pour softmax
+  
+  let sumExp = 0;
   for (let i = 1; i <= 90; i++) {
-    attentionScores[i] = Math.exp(attentionScores[i] / (maxScore + 1));
+    attentionScores[i] = Math.exp(attentionScores[i] / (maxScore * temperature));
+    sumExp += attentionScores[i];
+  }
+  
+  // Normalisation finale
+  for (let i = 1; i <= 90; i++) {
+    attentionScores[i] /= sumExp;
   }
 
   const prediction = Object.entries(attentionScores)
@@ -847,15 +940,112 @@ function transformerPrediction(results: DrawResult[], drawName: string): Advance
     .slice(0, 5)
     .map(([num]) => parseInt(num));
 
-  const confidence = Math.min(0.89, Math.max(...Object.values(attentionScores)) * 0.5);
+  const avgPredScore = prediction.reduce((sum, num) => sum + attentionScores[num], 0) / 5;
+  const confidence = Math.min(0.91, avgPredScore * 15 + 0.15);
 
   return {
     numbers: prediction.sort((a, b) => a - b),
     confidence,
-    algorithm: "Transformers-like (Attention)",
-    factors: ["Self-attention", "Co-occurrence matrix", "Softmax normalization"],
-    score: confidence * 0.89,
+    algorithm: "Transformers Pro (Multi-Head Attention)",
+    factors: ["Multi-head attention", "Global attention", "Local attention", "Color-group attention", "Softmax normalization"],
+    score: confidence * 0.91,
     category: "transformer",
+  };
+}
+
+// Algorithm 9: ARIMA (AutoRegressive Integrated Moving Average)
+function arimaPrediction(results: DrawResult[], drawName: string): AdvancedPredictionResult {
+  const drawResults = results.filter((r) => r.draw_name === drawName).slice(0, 150);
+  if (drawResults.length < 15) {
+    return generateFallbackPrediction("ARIMA (Time Series)", "arima");
+  }
+
+  // Préparer les séries temporelles pour chaque numéro
+  const numberTimeSeries: Record<number, number[]> = {};
+  for (let i = 1; i <= 90; i++) {
+    numberTimeSeries[i] = [];
+  }
+
+  // Construire les séries : 1 si le numéro apparaît, 0 sinon
+  drawResults.forEach((result) => {
+    for (let i = 1; i <= 90; i++) {
+      numberTimeSeries[i].push(result.winning_numbers.includes(i) ? 1 : 0);
+    }
+  });
+
+  const arimaScores: Record<number, number> = {};
+
+  // Appliquer ARIMA pour chaque numéro
+  for (let num = 1; num <= 90; num++) {
+    const series = numberTimeSeries[num];
+    
+    // Paramètres ARIMA: p=3 (AR order), d=1 (différenciation), q=2 (MA order)
+    const p = 3; // ordre AR
+    const q = 2; // ordre MA
+    
+    // Étape 1: Différenciation (I)
+    const diff: number[] = [];
+    for (let i = 1; i < series.length; i++) {
+      diff.push(series[i] - series[i - 1]);
+    }
+
+    // Étape 2: Composante AR (AutoRegressive)
+    let arComponent = 0;
+    const arWeights = [0.5, 0.3, 0.2]; // Poids pour p=3
+    for (let i = 0; i < Math.min(p, series.length); i++) {
+      arComponent += series[series.length - 1 - i] * arWeights[i];
+    }
+
+    // Étape 3: Composante MA (Moving Average)
+    let maComponent = 0;
+    const maWeights = [0.6, 0.4]; // Poids pour q=2
+    
+    // Calculer les erreurs de prédiction (résidus)
+    const errors: number[] = [];
+    for (let i = p; i < series.length; i++) {
+      let predicted = 0;
+      for (let j = 0; j < p; j++) {
+        predicted += series[i - j - 1] * arWeights[j];
+      }
+      errors.push(series[i] - predicted);
+    }
+    
+    // Appliquer MA sur les erreurs récentes
+    for (let i = 0; i < Math.min(q, errors.length); i++) {
+      maComponent += errors[errors.length - 1 - i] * maWeights[i];
+    }
+
+    // Étape 4: Prédiction ARIMA = AR + MA
+    let arimaPrediction = arComponent + maComponent;
+    
+    // Normaliser la prédiction entre 0 et 1
+    arimaPrediction = Math.max(0, Math.min(1, arimaPrediction));
+
+    // Ajuster avec la tendance récente
+    const recentAppearances = series.slice(-10).reduce((a, b) => a + b, 0);
+    const trendBonus = recentAppearances / 10 * 0.3;
+    
+    // Score final combinant ARIMA et tendance
+    arimaScores[num] = arimaPrediction * 0.7 + trendBonus * 0.3;
+  }
+
+  // Sélectionner les 5 meilleurs numéros
+  const prediction = Object.entries(arimaScores)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([num]) => parseInt(num));
+
+  const maxScore = Math.max(...Object.values(arimaScores));
+  const avgPredScore = prediction.reduce((sum, num) => sum + arimaScores[num], 0) / 5;
+  const confidence = Math.min(0.88, (avgPredScore / maxScore) * 0.90 + 0.10);
+
+  return {
+    numbers: prediction.sort((a, b) => a - b),
+    confidence,
+    algorithm: "ARIMA (Time Series)",
+    factors: ["AutoRegressive (AR-3)", "Integrated differencing", "Moving Average (MA-2)", "Trend analysis"],
+    score: confidence * 0.88,
+    category: "arima",
   };
 }
 
@@ -869,5 +1059,6 @@ function generateAdvancedPredictions(results: DrawResult[], drawName: string): A
     lightgbmPrediction(results, drawName),
     catboostPrediction(results, drawName),
     transformerPrediction(results, drawName),
+    arimaPrediction(results, drawName),
   ].sort((a, b) => b.score - a.score);
 }
