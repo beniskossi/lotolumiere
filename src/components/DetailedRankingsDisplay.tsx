@@ -52,16 +52,18 @@ export const DetailedRankingsDisplay = () => {
     score: r.overall_score,
     précision: r.avg_accuracy,
     consistance: r.consistency_score,
+    "F1-Score": r.f1_score,
+    rappel: r.recall_rate,
   }));
 
   // Prepare radar chart data
   const radarData = rankings.slice(0, 5).map(r => ({
     algorithm: r.model_used.substring(0, 15),
     'Score Global': r.overall_score,
-    'Précision Moy.': r.avg_accuracy,
+    'Précision': r.precision_rate,
+    'Rappel': r.recall_rate,
+    'F1-Score': r.f1_score,
     'Consistance': r.consistency_score,
-    'Meilleur Match': r.best_match * 20,
-    'Taux Excellent': (r.excellent_predictions / r.total_predictions) * 100,
   }));
 
   const getRankIcon = (index: number) => {
@@ -157,8 +159,9 @@ export const DetailedRankingsDisplay = () => {
                 />
                 <Legend />
                 <Bar dataKey="score" fill="hsl(var(--primary))" name="Score Global" />
-                <Bar dataKey="précision" fill="hsl(var(--accent))" name="Précision Moyenne" />
-                <Bar dataKey="consistance" fill="hsl(var(--secondary))" name="Consistance" />
+                <Bar dataKey="précision" fill="hsl(var(--accent))" name="Précision" />
+                <Bar dataKey="rappel" fill="hsl(var(--secondary))" name="Rappel" />
+                <Bar dataKey="F1-Score" fill="hsl(var(--success))" name="F1-Score" />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -232,21 +235,29 @@ export const DetailedRankingsDisplay = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
                     <div className="bg-background/50 p-2 rounded">
                       <div className="flex items-center gap-1 mb-1">
                         <Target className="w-3 h-3 text-primary" />
-                        <p className="text-xs text-muted-foreground">Précision Moy.</p>
+                        <p className="text-xs text-muted-foreground">Précision</p>
                       </div>
-                      <p className="text-lg font-semibold">{ranking.avg_accuracy.toFixed(1)}%</p>
+                      <p className="text-lg font-semibold">{ranking.precision_rate.toFixed(1)}%</p>
                     </div>
 
                     <div className="bg-background/50 p-2 rounded">
                       <div className="flex items-center gap-1 mb-1">
-                        <TrendingUp className="w-3 h-3 text-accent" />
-                        <p className="text-xs text-muted-foreground">Consistance</p>
+                        <Target className="w-3 h-3 text-accent" />
+                        <p className="text-xs text-muted-foreground">Rappel</p>
                       </div>
-                      <p className="text-lg font-semibold">{ranking.consistency_score.toFixed(0)}</p>
+                      <p className="text-lg font-semibold">{ranking.recall_rate.toFixed(1)}%</p>
+                    </div>
+
+                    <div className="bg-background/50 p-2 rounded">
+                      <div className="flex items-center gap-1 mb-1">
+                        <TrendingUp className="w-3 h-3 text-success" />
+                        <p className="text-xs text-muted-foreground">F1-Score</p>
+                      </div>
+                      <p className="text-lg font-semibold">{ranking.f1_score.toFixed(1)}</p>
                     </div>
 
                     <div className="bg-background/50 p-2 rounded">
@@ -316,9 +327,10 @@ export const DetailedRankingsDisplay = () => {
             Le <strong>Score Global</strong> est calculé selon :
           </p>
           <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2">
-            <li>40% - Précision moyenne des prédictions</li>
-            <li>30% - Taux de prédictions excellentes (≥3 numéros)</li>
-            <li>20% - Meilleure performance atteinte</li>
+            <li>35% - Précision moyenne des prédictions</li>
+            <li>25% - Taux de prédictions excellentes (≥3 numéros)</li>
+            <li>15% - Meilleure performance atteinte</li>
+            <li>15% - F1-Score (balance précision/rappel)</li>
             <li>10% - Score de consistance (régularité)</li>
           </ul>
         </CardContent>

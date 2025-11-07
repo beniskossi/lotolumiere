@@ -18,6 +18,9 @@ export interface DetailedRanking {
   first_prediction: string;
   last_prediction: string;
   consistency_score: number;
+  precision_rate: number;
+  recall_rate: number;
+  f1_score: number;
   overall_score: number;
 }
 

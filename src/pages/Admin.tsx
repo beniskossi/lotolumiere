@@ -18,6 +18,7 @@ import { Footer } from "@/components/Footer";
 import { DrawResultsManager } from "@/components/DrawResultsManager";
 import { AlgorithmManagement } from "@/components/AlgorithmManagement";
 import { DrawResultsImporter } from "@/components/DrawResultsImporter";
+import { AlgorithmTraining } from "@/components/AlgorithmTraining";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -510,14 +511,18 @@ const Admin = () => {
         </Alert>
 
         <Tabs defaultValue="results" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="results" className="gap-2">
               <Database className="w-4 h-4" />
               Résultats
             </TabsTrigger>
             <TabsTrigger value="algorithms" className="gap-2">
               <Settings className="w-4 h-4" />
-              Algorithmes
+              Configuration
+            </TabsTrigger>
+            <TabsTrigger value="training" className="gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Entraînement
             </TabsTrigger>
           </TabsList>
 
@@ -696,6 +701,10 @@ const Admin = () => {
 
           <TabsContent value="algorithms" className="space-y-6">
             <AlgorithmManagement />
+          </TabsContent>
+
+          <TabsContent value="training" className="space-y-6">
+            <AlgorithmTraining />
           </TabsContent>
         </Tabs>
       </div>

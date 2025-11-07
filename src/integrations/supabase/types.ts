@@ -86,6 +86,45 @@ export type Database = {
         }
         Relationships: []
       }
+      algorithm_training_history: {
+        Row: {
+          algorithm_name: string
+          created_at: string
+          id: string
+          new_parameters: Json | null
+          new_weight: number
+          performance_improvement: number | null
+          previous_parameters: Json | null
+          previous_weight: number
+          training_date: string
+          training_metrics: Json | null
+        }
+        Insert: {
+          algorithm_name: string
+          created_at?: string
+          id?: string
+          new_parameters?: Json | null
+          new_weight: number
+          performance_improvement?: number | null
+          previous_parameters?: Json | null
+          previous_weight: number
+          training_date?: string
+          training_metrics?: Json | null
+        }
+        Update: {
+          algorithm_name?: string
+          created_at?: string
+          id?: string
+          new_parameters?: Json | null
+          new_weight?: number
+          performance_improvement?: number | null
+          previous_parameters?: Json | null
+          previous_weight?: number
+          training_date?: string
+          training_metrics?: Json | null
+        }
+        Relationships: []
+      }
       draw_results: {
         Row: {
           created_at: string | null
@@ -431,6 +470,7 @@ export type Database = {
           consistency_score: number | null
           draw_name: string | null
           excellent_predictions: number | null
+          f1_score: number | null
           first_prediction: string | null
           good_predictions: number | null
           last_prediction: string | null
@@ -438,6 +478,8 @@ export type Database = {
           outstanding_predictions: number | null
           overall_score: number | null
           perfect_predictions: number | null
+          precision_rate: number | null
+          recall_rate: number | null
           total_matches: number | null
           total_predictions: number | null
           worst_match: number | null
