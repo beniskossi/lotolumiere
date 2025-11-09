@@ -7,7 +7,7 @@ export interface AdvancedPrediction {
   algorithm: string;
   factors: string[];
   score: number;
-  category: "statistical" | "ml" | "bayesian" | "neural" | "variance" | "lightgbm" | "catboost" | "transformer";
+  category: "statistical" | "ml" | "bayesian" | "neural" | "variance" | "lightgbm" | "catboost" | "transformer" | "arima";
 }
 
 interface AdvancedPredictionResponse {

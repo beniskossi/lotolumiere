@@ -75,19 +75,23 @@ Système de cache simple et efficace :
 - Logger structuré
 
 ### 4. `_shared/algorithms.ts`
-5 algorithmes modulaires :
-- Analyse fréquentielle pondérée
-- K-means clustering
-- Inférence Bayésienne
-- Neural Network (LSTM)
-- Analyse de variance
+9 algorithmes modulaires complets :
+1. Analyse fréquentielle pondérée (Statistical)
+2. K-means clustering (ML)
+3. Inférence Bayésienne (Bayesian)
+4. Neural Network LSTM (Neural)
+5. Analyse de variance (Variance)
+6. LightGBM - Gradient Boosting (LightGBM)
+7. CatBoost - Categorical Boosting (CatBoost)
+8. Transformer - Multi-Head Attention (Transformer)
+9. ARIMA - Time Series Forecasting (ARIMA)
 
 ### 5. `advanced-ai-prediction-v2/index.ts`
 Version optimisée de l'edge function :
 - Utilise le cache intelligent
 - Gestion d'erreurs robuste
 - Métriques de qualité
-- 5 algorithmes principaux
+- **9 algorithmes complets** (Statistical, ML, Bayesian, Neural, Variance, LightGBM, CatBoost, Transformer, ARIMA)
 - Logging détaillé
 
 ### 6. `generate-prediction-v2/index.ts`
@@ -146,25 +150,56 @@ import { log, calculateDataQuality } from "../_shared/utils.ts";
 3. Ajuster les paramètres de cache si nécessaire
 
 ### Long terme (1 mois+)
-1. Ajouter plus d'algorithmes (LightGBM, CatBoost, Transformers, ARIMA)
+1. ✅ Tous les algorithmes principaux implémentés (9 algorithmes)
 2. Implémenter un cache distribué (Redis/Upstash)
 3. Ajouter des tests unitaires
 4. Créer un dashboard de monitoring
+5. Améliorer les embeddings du Transformer
+6. Optimiser l'hyperparamétrage automatique
 
 ## Algorithmes disponibles
 
-### Actuellement implémentés (v2)
-1. **Statistical** - Analyse fréquentielle pondérée
-2. **ML** - K-means clustering
-3. **Bayesian** - Inférence bayésienne avec lissage Laplace
-4. **Neural** - Simulation LSTM avec mémoire temporelle
-5. **Variance** - Analyse ANOVA avec corrélations
+### Implémentés et actifs (v2)
+1. ✅ **Statistical** - Analyse fréquentielle pondérée avec décroissance exponentielle
+2. ✅ **ML** - K-means clustering avec 5 clusters et 15 itérations
+3. ✅ **Bayesian** - Inférence bayésienne avec lissage de Laplace (α=0.5)
+4. ✅ **Neural** - Simulation LSTM avec mémoire court/long terme
+5. ✅ **Variance** - Analyse ANOVA avec patterns par jour de la semaine
+6. ✅ **LightGBM** - Gradient Boosting avec 5 features engineered et 10 arbres
+   - Fréquence récente (20 derniers tirages)
+   - Fréquence globale
+   - Jours depuis dernière apparition
+   - Coefficient de variation des gaps
+   - Co-occurrence avec numéros fréquents
+7. ✅ **CatBoost** - Categorical Boosting avec target encoding
+   - Categorical features: Dizaine, Parité, Position, Fréquence
+   - Ordered boosting avec correction des résidus
+   - Pondération par décade et groupe de numéros
+8. ✅ **Transformer** - Multi-Head Attention (3 têtes)
+   - Embeddings 8-dimensionnels avec patterns temporels
+   - Self-attention mechanism avec produit scalaire
+   - 3 têtes: Fréquence récente, Cycles, Global
+   - Co-occurrence weighting
+9. ✅ **ARIMA** - Time Series Forecasting ARIMA(3,1,2)
+   - Composante AutoRegressive (AR) p=3
+   - Composante Moving Average (MA) q=2
+   - Différenciation d=1 pour stationnarité
+   - Composante saisonnière (période 7 jours)
+   - Analyse de tendance
 
-### À implémenter (Future)
-6. **LightGBM** - Gradient boosting avec feature engineering
-7. **CatBoost** - Categorical boosting avec groupes de couleurs
-8. **Transformer** - Multi-head attention mechanism
-9. **ARIMA** - Time series autoregressive model
+### Caractéristiques des algorithmes
+
+| Algorithme | Min. Data | Confidence | Category | Spécialité |
+|------------|-----------|------------|----------|------------|
+| Statistical | 5 | 0.85 | statistical | Patterns historiques |
+| K-means | 10 | 0.88 | ml | Clustering géométrique |
+| Bayesian | 5 | 0.85 | bayesian | Probabilités conditionnelles |
+| Neural | 10 | 0.91 | neural | Mémoire temporelle |
+| Variance | 10 | 0.85 | variance | Stabilité statistique |
+| LightGBM | 20 | 0.89 | lightgbm | Feature engineering |
+| CatBoost | 20 | 0.87 | catboost | Categorical features |
+| Transformer | 30 | 0.90 | transformer | Attention mechanism |
+| ARIMA | 30 | 0.86 | arima | Séries temporelles |
 
 ## Maintenance
 

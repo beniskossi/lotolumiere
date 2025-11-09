@@ -9,6 +9,10 @@ import {
   bayesianInferenceAlgorithm,
   neuralNetworkAlgorithm,
   varianceAnalysisAlgorithm,
+  lightGBMAlgorithm,
+  catBoostAlgorithm,
+  transformerAlgorithm,
+  arimaAlgorithm,
   generateFallbackPrediction,
 } from "../_shared/algorithms.ts";
 
@@ -185,6 +189,38 @@ async function generateAllPredictions(
     predictions.push(generateFallbackPrediction("Analyse Variance", "variance"));
   }
 
+  try {
+    // Algorithme 6: LightGBM
+    predictions.push(lightGBMAlgorithm(results));
+  } catch (e) {
+    log("warn", "LightGBM algorithm failed", { error: e });
+    predictions.push(generateFallbackPrediction("LightGBM", "lightgbm"));
+  }
+
+  try {
+    // Algorithme 7: CatBoost
+    predictions.push(catBoostAlgorithm(results));
+  } catch (e) {
+    log("warn", "CatBoost algorithm failed", { error: e });
+    predictions.push(generateFallbackPrediction("CatBoost", "catboost"));
+  }
+
+  try {
+    // Algorithme 8: Transformer
+    predictions.push(transformerAlgorithm(results));
+  } catch (e) {
+    log("warn", "Transformer algorithm failed", { error: e });
+    predictions.push(generateFallbackPrediction("Transformer", "transformer"));
+  }
+
+  try {
+    // Algorithme 9: ARIMA
+    predictions.push(arimaAlgorithm(results));
+  } catch (e) {
+    log("warn", "ARIMA algorithm failed", { error: e });
+    predictions.push(generateFallbackPrediction("ARIMA", "arima"));
+  }
+
   // Ajuster les scores en fonction de la qualité des données
   predictions.forEach(pred => {
     pred.confidence *= (0.5 + dataQuality * 0.3 + freshness * 0.2);
@@ -215,5 +251,9 @@ function generateAllFallbacks(): PredictionResult[] {
     generateFallbackPrediction("Inférence Bayésienne", "bayesian"),
     generateFallbackPrediction("Neural Network", "neural"),
     generateFallbackPrediction("Analyse Variance", "variance"),
+    generateFallbackPrediction("LightGBM", "lightgbm"),
+    generateFallbackPrediction("CatBoost", "catboost"),
+    generateFallbackPrediction("Transformer", "transformer"),
+    generateFallbackPrediction("ARIMA", "arima"),
   ];
 }
