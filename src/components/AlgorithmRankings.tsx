@@ -49,13 +49,36 @@ export const AlgorithmRankings = ({ drawName }: AlgorithmRankingsProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <p className="text-muted-foreground mb-4">
-              Lancez une évaluation pour voir les performances des algorithmes
+          <div className="text-center py-8 space-y-4">
+            <div className="space-y-2">
+              <p className="text-muted-foreground">
+                9 algorithmes avancés disponibles:
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {[
+                  "Analyse Fréquentielle",
+                  "ML K-means",
+                  "Inférence Bayésienne",
+                  "Neural Network",
+                  "Analyse Variance",
+                  "LightGBM",
+                  "CatBoost",
+                  "Transformer",
+                  "ARIMA",
+                ].map((algo) => (
+                  <Badge key={algo} variant="outline" className="text-xs">
+                    {algo}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Lancez une évaluation pour comparer leurs performances
             </p>
             <Button
               onClick={handleEvaluate}
               disabled={evaluateMutation.isPending}
+              size="lg"
             >
               {evaluateMutation.isPending ? (
                 <>
@@ -65,7 +88,7 @@ export const AlgorithmRankings = ({ drawName }: AlgorithmRankingsProps) => {
               ) : (
                 <>
                   <Target className="w-4 h-4 mr-2" />
-                  Évaluer les Prédictions
+                  Évaluer tous les Algorithmes
                 </>
               )}
             </Button>

@@ -18,6 +18,7 @@ import { Footer } from "@/components/Footer";
 import { DrawResultsManager } from "@/components/DrawResultsManager";
 import { AlgorithmManagement } from "@/components/AlgorithmManagement";
 import { DrawResultsImporter } from "@/components/DrawResultsImporter";
+import { AlgorithmPerformanceTracker } from "@/components/AlgorithmPerformanceTracker";
 import { AlgorithmTraining } from "@/components/AlgorithmTraining";
 
 const Admin = () => {
@@ -511,10 +512,14 @@ const Admin = () => {
         </Alert>
 
         <Tabs defaultValue="results" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="results" className="gap-2">
               <Database className="w-4 h-4" />
               Résultats
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Performance
             </TabsTrigger>
             <TabsTrigger value="algorithms" className="gap-2">
               <Settings className="w-4 h-4" />
@@ -697,6 +702,10 @@ const Admin = () => {
               {/* Gestion des résultats */}
               <DrawResultsManager />
             </div>
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-6">
+            <AlgorithmPerformanceTracker />
           </TabsContent>
 
           <TabsContent value="algorithms" className="space-y-6">

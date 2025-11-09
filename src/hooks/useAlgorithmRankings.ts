@@ -87,8 +87,18 @@ export const useEvaluatePredictions = () => {
       return data;
     },
     onSuccess: (data) => {
-      toast.success(`${data.evaluatedCount} prédictions évaluées avec succès`);
+      const newCount = data.newEvaluations || 0;
+      const totalCount = data.evaluatedCount || 0;
+      
+      if (newCount > 0) {
+        toast.success(`${newCount} nouvelles évaluations sur ${totalCount} prédictions`);
+      } else {
+        toast.info(`${totalCount} prédictions déjà évaluées`);
+      }
+      
+      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ["algorithm-rankings"] });
+      queryClient.invalidateQueries({ queryKey: ["detailed-rankings"] });
       queryClient.invalidateQueries({ queryKey: ["algorithm-performance-history"] });
     },
     onError: (error) => {

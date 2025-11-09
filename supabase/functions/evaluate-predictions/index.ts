@@ -33,12 +33,13 @@ serve(async (req) => {
 
     const { drawName } = await req.json();
 
-    console.log(`Evaluating predictions for: ${drawName || "all draws"}`);
+    console.log(`🔍 Evaluating predictions for: ${drawName || "all draws"}`);
 
-    // Get all draw results
+    // Get all draw results sorted by date (most recent first)
     let resultsQuery = supabase
       .from("draw_results")
-      .select("id, draw_name, draw_date, winning_numbers");
+      .select("id, draw_name, draw_date, winning_numbers")
+      .order("draw_date", { ascending: false });
 
     if (drawName) {
       resultsQuery = resultsQuery.eq("draw_name", drawName);
@@ -54,24 +55,35 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Found ${results.length} draw results to evaluate`);
+    console.log(`📊 Found ${results.length} draw results to evaluate`);
 
     let evaluatedCount = 0;
+    let newEvaluations = 0;
+    const algorithmStats: Record<string, { evaluated: number; bestMatch: number }> = {};
 
-    // For each result, find predictions made before the draw date
+    // For each result, find ALL predictions made before the draw date
     for (const result of results as DrawResult[]) {
+      console.log(`\n🎯 Processing draw: ${result.draw_name} on ${result.draw_date}`);
+      
+      // Get ALL predictions for this draw made before the result date
       const { data: predictions, error: predictionsError } = await supabase
         .from("predictions")
-        .select("id, draw_name, prediction_date, predicted_numbers, model_used")
+        .select("id, draw_name, prediction_date, predicted_numbers, model_used, confidence_score")
         .eq("draw_name", result.draw_name)
-        .lte("prediction_date", result.draw_date);
+        .lte("prediction_date", result.draw_date)
+        .order("prediction_date", { ascending: false });
 
       if (predictionsError) {
-        console.error(`Error fetching predictions: ${predictionsError.message}`);
+        console.error(`❌ Error fetching predictions: ${predictionsError.message}`);
         continue;
       }
 
-      if (!predictions || predictions.length === 0) continue;
+      if (!predictions || predictions.length === 0) {
+        console.log(`⚠️ No predictions found for ${result.draw_name} before ${result.draw_date}`);
+        continue;
+      }
+
+      console.log(`📈 Found ${predictions.length} predictions to evaluate`);
 
       // Evaluate each prediction
       for (const prediction of predictions as Prediction[]) {
@@ -82,6 +94,26 @@ serve(async (req) => {
 
         // Calculate accuracy score (0-100)
         const accuracyScore = (matches / 5) * 100;
+
+        // Track algorithm stats
+        if (!algorithmStats[prediction.model_used]) {
+          algorithmStats[prediction.model_used] = { evaluated: 0, bestMatch: 0 };
+        }
+        algorithmStats[prediction.model_used].evaluated++;
+        algorithmStats[prediction.model_used].bestMatch = Math.max(
+          algorithmStats[prediction.model_used].bestMatch,
+          matches
+        );
+
+        // Check if evaluation already exists
+        const { data: existing } = await supabase
+          .from("algorithm_performance")
+          .select("id")
+          .eq("draw_name", result.draw_name)
+          .eq("model_used", prediction.model_used)
+          .eq("prediction_date", prediction.prediction_date)
+          .eq("draw_date", result.draw_date)
+          .single();
 
         // Insert or update performance record
         const { error: insertError } = await supabase
@@ -100,25 +132,46 @@ serve(async (req) => {
           });
 
         if (insertError) {
-          console.error(`Error inserting performance: ${insertError.message}`);
+          console.error(`❌ Error inserting performance: ${insertError.message}`);
         } else {
           evaluatedCount++;
+          if (!existing) {
+            newEvaluations++;
+            console.log(`✅ ${prediction.model_used}: ${matches}/5 matches (${accuracyScore.toFixed(1)}%)`);
+          }
         }
       }
     }
 
-    console.log(`Successfully evaluated ${evaluatedCount} predictions`);
+    // Refresh materialized views to update rankings
+    console.log("\n🔄 Refreshing algorithm rankings...");
+    const { error: refreshError } = await supabase.rpc("refresh_algorithm_rankings");
+    if (refreshError) {
+      console.error(`⚠️ Warning: Could not refresh rankings: ${refreshError.message}`);
+    } else {
+      console.log("✅ Rankings refreshed successfully");
+    }
+
+    // Log summary by algorithm
+    console.log("\n📊 Evaluation Summary by Algorithm:");
+    Object.entries(algorithmStats).forEach(([algo, stats]) => {
+      console.log(`  • ${algo}: ${stats.evaluated} evaluations, best: ${stats.bestMatch}/5`);
+    });
+
+    console.log(`\n🎉 Successfully evaluated ${evaluatedCount} predictions (${newEvaluations} new)`);
 
     return new Response(
       JSON.stringify({
         success: true,
         evaluatedCount,
-        message: `Evaluated ${evaluatedCount} predictions`,
+        newEvaluations,
+        algorithmStats,
+        message: `Evaluated ${evaluatedCount} predictions (${newEvaluations} new)`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Error in evaluate-predictions:", error);
+    console.error("❌ Error in evaluate-predictions:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       {
