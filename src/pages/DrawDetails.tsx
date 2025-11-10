@@ -13,6 +13,7 @@ import { AlgorithmRankings } from "@/components/AlgorithmRankings";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Footer } from "@/components/Footer";
+import { BestAlgorithmSelector } from "@/components/BestAlgorithmSelector";
 import { useDrawResults, useRefreshResults } from "@/hooks/useDrawResults";
 import { useMostFrequentNumbers, useLeastFrequentNumbers } from "@/hooks/useNumberStatistics";
 import { useToast } from "@/hooks/use-toast";
@@ -289,6 +290,7 @@ const DrawDetails = () => {
 
           <TabsContent value="ia-avancee">
             <div className="space-y-6">
+              <BestAlgorithmSelector drawName={decodedDrawName} />
               <AdvancedPredictionPanel drawName={decodedDrawName} />
               <AlgorithmRankings drawName={decodedDrawName} />
             </div>

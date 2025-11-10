@@ -20,6 +20,7 @@ import { AlgorithmManagement } from "@/components/AlgorithmManagement";
 import { DrawResultsImporter } from "@/components/DrawResultsImporter";
 import { AlgorithmPerformanceTracker } from "@/components/AlgorithmPerformanceTracker";
 import { AlgorithmTraining } from "@/components/AlgorithmTraining";
+import { AutoTuningPanel } from "@/components/AutoTuningPanel";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -512,7 +513,7 @@ const Admin = () => {
         </Alert>
 
         <Tabs defaultValue="results" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="results" className="gap-2">
               <Database className="w-4 h-4" />
               Résultats
@@ -520,6 +521,10 @@ const Admin = () => {
             <TabsTrigger value="performance" className="gap-2">
               <TrendingUp className="w-4 h-4" />
               Performance
+            </TabsTrigger>
+            <TabsTrigger value="autotuning" className="gap-2">
+              <Settings className="w-4 h-4" />
+              Auto-Tuning
             </TabsTrigger>
             <TabsTrigger value="algorithms" className="gap-2">
               <Settings className="w-4 h-4" />
@@ -706,6 +711,10 @@ const Admin = () => {
 
           <TabsContent value="performance" className="space-y-6">
             <AlgorithmPerformanceTracker />
+          </TabsContent>
+
+          <TabsContent value="autotuning" className="space-y-6">
+            <AutoTuningPanel />
           </TabsContent>
 
           <TabsContent value="algorithms" className="space-y-6">

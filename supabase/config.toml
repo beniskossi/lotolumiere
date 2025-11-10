@@ -12,6 +12,12 @@ verify_jwt = false
 [functions.train-algorithms]
 verify_jwt = false
 
+[functions.auto-tune-algorithms]
+verify_jwt = false
+
+[functions.select-best-algorithm]
+verify_jwt = false
+
 # Nouvelles versions optimisées avec cache et architecture modulaire
 [functions.advanced-ai-prediction-v2]
 verify_jwt = false
