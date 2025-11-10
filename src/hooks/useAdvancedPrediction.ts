@@ -27,5 +27,12 @@ export const useAdvancedPrediction = (drawName: string) => {
       return data as AdvancedPredictionResponse;
     },
     enabled: !!drawName,
+    retry: 3, // Nouveau : Retry auto pour errors ML (ex. model loading)
+    retryDelay: (attempt) => attempt * 1000, // Delay croissant
+    staleTime: 5 * 60 * 1000, // Cache 5 min
+    onError: (err: Error) => {
+      console.error("Advanced prediction error:", err);
+      // Ajoutez toast si besoin : toast.error(`Erreur prédiction: ${err.message}`);
+    },
   });
 };
