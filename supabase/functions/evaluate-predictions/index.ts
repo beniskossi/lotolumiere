@@ -79,23 +79,24 @@ serve(async (req) => {
       }
 
       if (!predictions || predictions.length === 0) {
-        console.log(`⚠️ No predictions found for ${result.draw_name} before ${result.draw_date}`);
+        console.log("No predictions found for this draw");
         continue;
       }
 
-      console.log(`📈 Found ${predictions.length} predictions to evaluate`);
+      console.log(`Found ${predictions.length} predictions to evaluate`);
 
-      // Evaluate each prediction
-      for (const prediction of predictions as Prediction[]) {
-        // Count matches
-        const matches = prediction.predicted_numbers.filter((num) =>
+      for (const prediction of predictions) {
+        // Calculate matches
+        const matches = prediction.predicted_numbers.filter(num => 
           result.winning_numbers.includes(num)
         ).length;
 
-        // Calculate accuracy score (0-100)
         const accuracyScore = (matches / 5) * 100;
+        
+        // Nouveau : Calcul F1-score réel (ajoutez calculateF1Score dans utils.ts)
+        const f1Score = calculateF1Score(prediction.predicted_numbers, result.winning_numbers);
 
-        // Track algorithm stats
+        // Update stats
         if (!algorithmStats[prediction.model_used]) {
           algorithmStats[prediction.model_used] = { evaluated: 0, bestMatch: 0 };
         }
@@ -105,7 +106,7 @@ serve(async (req) => {
           matches
         );
 
-        // Check if evaluation already exists
+        // Check if already evaluated
         const { data: existing } = await supabase
           .from("algorithm_performance")
           .select("id")
@@ -127,6 +128,7 @@ serve(async (req) => {
             winning_numbers: result.winning_numbers,
             matches_count: matches,
             accuracy_score: accuracyScore,
+            f1_score: f1Score, // Nouveau champ (ajoutez en DB si besoin)
           }, {
             onConflict: "draw_name,model_used,prediction_date,draw_date"
           });
@@ -137,7 +139,7 @@ serve(async (req) => {
           evaluatedCount++;
           if (!existing) {
             newEvaluations++;
-            console.log(`✅ ${prediction.model_used}: ${matches}/5 matches (${accuracyScore.toFixed(1)}%)`);
+            console.log(`✅ ${prediction.model_used}: ${matches}/5 matches (${accuracyScore.toFixed(1)}%) F1: ${f1Score.toFixed(2)}`);
           }
         }
       }
