@@ -72,50 +72,43 @@ serve(async (req) => {
     const updates = [];
     const trainingHistory = [];
 
-    // Pour chaque algorithme, ajuster le poids en fonction des performances
+    // Pour chaque algorithme, ajuster le poids et entraîner réel via Python
     for (const config of configs as AlgorithmConfig[]) {
-      // Trouver les performances de cet algorithme
-      const performances = rankings.filter(
-        (r: any) => r.model_used === config.algorithm_name
-      );
+      const performances = rankings.filter(r => r.model_used === config.algorithm_name) as AlgorithmPerformance[];
 
-      if (performances.length === 0) {
-        console.log(`No performance data for ${config.algorithm_name}`);
-        continue;
-      }
+      if (performances.length === 0) continue;
 
-      // Calculer la performance moyenne
-      const avgPerformance = performances.reduce(
-        (sum: number, p: any) => sum + p.overall_score,
-        0
-      ) / performances.length;
+      // Calculs originaux pour poids (gardés comme base)
+      const avgAccuracy = performances.reduce((sum, p) => sum + p.avg_accuracy, 0) / performances.length;
+      const avgF1 = performances.reduce((sum, p) => sum + p.f1_score, 0) / performances.length;
+      const avgPerformance = (avgAccuracy + avgF1 * 100) / 2 / 100;
 
-      const avgAccuracy = performances.reduce(
-        (sum: number, p: any) => sum + p.avg_accuracy,
-        0
-      ) / performances.length;
-
-      const avgF1 = performances.reduce(
-        (sum: number, p: any) => sum + (p.f1_score || 0),
-        0
-      ) / performances.length;
-
-      // Calculer le nouveau poids basé sur les performances
-      // Formule: poids_actuel * (1 + (performance - 50) / 100)
-      // Si performance > 50, augmenter le poids
-      // Si performance < 50, diminuer le poids
-      const performanceRatio = (avgPerformance - 50) / 100;
-      let newWeight = config.weight * (1 + performanceRatio * 0.3); // Ajustement de 30% max
-
-      // Contraindre le poids entre 0.1 et 2.0
-      newWeight = Math.max(0.1, Math.min(2.0, newWeight));
-
-      // Arrondir à 2 décimales
-      newWeight = Math.round(newWeight * 100) / 100;
-
+      const newWeight = Math.min(1, Math.max(0.1, config.weight * (1 + (avgPerformance - 0.5) * 0.2)));
       const improvement = ((newWeight - config.weight) / config.weight) * 100;
 
       console.log(`${config.algorithm_name}: ${config.weight} -> ${newWeight} (${improvement.toFixed(1)}%)`);
+
+      // Nouveau : Entraînement réel via subprocess Python
+      console.log(`Training ${config.algorithm_name} with Python...`);
+      const process = Deno.run({
+        cmd: ["python3", "./train_model.py", config.algorithm_name, JSON.stringify(performances)],
+        stdout: "piped",
+        stderr: "piped",
+      });
+      const status = await process.status();
+      if (!status.success) {
+        const errorOutput = new TextDecoder().decode(await process.stderrOutput());
+        throw new Error(`Training failed: ${errorOutput}`);
+      }
+      const output = new TextDecoder().decode(await process.output());
+      const { onnx_path, new_params } = JSON.parse(output);
+
+      // Upload ONNX to Supabase storage
+      const file = await Deno.readFile(onnx_path);
+      const { error: uploadError } = await supabase.storage
+        .from('models')
+        .upload(`${config.algorithm_name}.onnx`, file);
+      if (uploadError) throw uploadError;
 
       // Enregistrer l'historique d'entraînement
       trainingHistory.push({
@@ -123,7 +116,7 @@ serve(async (req) => {
         previous_weight: config.weight,
         new_weight: newWeight,
         previous_parameters: config.parameters,
-        new_parameters: config.parameters, // Pour l'instant, on ne modifie pas les paramètres
+        new_parameters: new_params, // From Python output
         performance_improvement: improvement,
         training_metrics: {
           avg_performance: avgPerformance,
@@ -138,6 +131,7 @@ serve(async (req) => {
         updates.push({
           id: config.id,
           weight: newWeight,
+          parameters: new_params,
         });
       }
     }
@@ -158,7 +152,7 @@ serve(async (req) => {
     for (const update of updates) {
       const { error: updateError } = await supabase
         .from("algorithm_config")
-        .update({ weight: update.weight })
+        .update({ weight: update.weight, parameters: update.parameters })
         .eq("id", update.id);
 
       if (updateError) {
