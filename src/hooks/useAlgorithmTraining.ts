@@ -1,3 +1,4 @@
+// useAlgorithmTraining.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,10 +21,12 @@ export interface TrainingHistory {
   created_at: string;
 }
 
+const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+
 export const useTrainingHistory = (algorithmName?: string, limit = 10) => {
   return useQuery({
     queryKey: ["training-history", algorithmName, limit],
-    queryFn: async () => {
+    queryFn: async (): Promise<TrainingHistory[]> => {
       let query = supabase
         .from("algorithm_training_history")
         .select("*")
@@ -38,6 +41,10 @@ export const useTrainingHistory = (algorithmName?: string, limit = 10) => {
 
       if (error) throw error;
       return data as TrainingHistory[];
+    },
+    staleTime: STALE_TIME,
+    onError: (error: Error) => {
+      toast.error(`Erreur d'historique: ${error.message}`);
     },
   });
 };
@@ -70,6 +77,7 @@ export const useTrainAlgorithms = () => {
       queryClient.invalidateQueries({ queryKey: ["algorithm-configs"] });
       queryClient.invalidateQueries({ queryKey: ["training-history"] });
       queryClient.invalidateQueries({ queryKey: ["detailed-rankings"] });
+      queryClient.invalidateQueries({ queryKey: ["predictions"] });
     },
     onError: (error: Error) => {
       toast.error(`Erreur d'entraînement: ${error.message}`);
