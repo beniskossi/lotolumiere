@@ -26,7 +26,13 @@ export interface AutoTuningResponse {
 export const useAutoTuning = () => {
   return useMutation({
     mutationFn: async (drawName?: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Session non disponible");
+
       const { data, error } = await supabase.functions.invoke("auto-tune-algorithms", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: { drawName },
       });
 

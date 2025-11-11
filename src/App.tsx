@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import Home from "./pages/Home";
 import DrawDetails from "./pages/DrawDetails";
 import Statistics from "./pages/Statistics";
@@ -79,7 +80,9 @@ const App = () => (
             path="/admin"
             element={
               <ProtectedRoute>
-                <Admin />
+                <AdminRoute>
+                  <Admin />
+                </AdminRoute>
               </ProtectedRoute>
             }
           />

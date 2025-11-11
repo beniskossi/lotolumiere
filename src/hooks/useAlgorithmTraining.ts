@@ -47,7 +47,13 @@ export const useTrainAlgorithms = () => {
 
   return useMutation({
     mutationFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Session non disponible");
+
       const { data, error } = await supabase.functions.invoke("train-algorithms", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: {},
       });
 

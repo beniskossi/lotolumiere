@@ -7,13 +7,13 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.evaluate-predictions]
-verify_jwt = false
+verify_jwt = true
 
 [functions.train-algorithms]
-verify_jwt = false
+verify_jwt = true
 
 [functions.auto-tune-algorithms]
-verify_jwt = false
+verify_jwt = true
 
 [functions.select-best-algorithm]
 verify_jwt = false

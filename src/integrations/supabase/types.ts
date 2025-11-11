@@ -50,38 +50,62 @@ export type Database = {
       algorithm_performance: {
         Row: {
           accuracy_score: number
+          confidence_score: number | null
           created_at: string
+          data_points_used: number | null
           draw_date: string
           draw_name: string
+          execution_time: number | null
+          f1_score: number | null
+          factors: string[] | null
           id: string
           matches_count: number
           model_used: string
+          precision_score: number | null
           predicted_numbers: number[]
           prediction_date: string
+          prediction_score: number | null
+          recall_score: number | null
           winning_numbers: number[]
         }
         Insert: {
           accuracy_score?: number
+          confidence_score?: number | null
           created_at?: string
+          data_points_used?: number | null
           draw_date: string
           draw_name: string
+          execution_time?: number | null
+          f1_score?: number | null
+          factors?: string[] | null
           id?: string
           matches_count?: number
           model_used: string
+          precision_score?: number | null
           predicted_numbers: number[]
           prediction_date: string
+          prediction_score?: number | null
+          recall_score?: number | null
           winning_numbers: number[]
         }
         Update: {
           accuracy_score?: number
+          confidence_score?: number | null
           created_at?: string
+          data_points_used?: number | null
           draw_date?: string
           draw_name?: string
+          execution_time?: number | null
+          f1_score?: number | null
+          factors?: string[] | null
           id?: string
           matches_count?: number
           model_used?: string
+          precision_score?: number | null
           predicted_numbers?: number[]
           prediction_date?: string
+          prediction_score?: number | null
+          recall_score?: number | null
           winning_numbers?: number[]
         }
         Relationships: []
@@ -486,11 +510,54 @@ export type Database = {
         }
         Relationships: []
       }
+      scraping_status: {
+        Row: {
+          completed_at: string | null
+          id: string | null
+          job_date: string | null
+          results_count: number | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string | null
+          job_date?: string | null
+          results_count?: number | null
+          status?: never
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string | null
+          job_date?: string | null
+          results_count?: number | null
+          status?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       count_array_matches: {
         Args: { arr1: number[]; arr2: number[] }
         Returns: number
+      }
+      get_algorithm_trends: {
+        Args: { p_draw_name?: string }
+        Returns: {
+          accuracy_score: number
+          date: string
+          matches_count: number
+          model_used: string
+        }[]
+      }
+      get_algorithm_trends_per_model: {
+        Args: { p_draw_name?: string; p_limit_per_model?: number }
+        Returns: {
+          accuracy_score: number
+          confidence_score: number
+          date: string
+          matches_count: number
+          model_used: string
+        }[]
       }
       has_role: {
         Args: {
