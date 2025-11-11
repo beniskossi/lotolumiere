@@ -35,8 +35,8 @@ const categoryColors = {
 
 export const AdvancedPredictionPanel = ({ drawName }: AdvancedPredictionPanelProps) => {
   const { data, isLoading, error } = useAdvancedPrediction(drawName);
-  const predictions = data?.predictions;
-  const warning = data?.warning;
+  const predictions = (data as any)?.predictions || [];
+  const warning = (data as any)?.warning;
 
   if (isLoading) {
     return (
