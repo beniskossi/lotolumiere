@@ -12,12 +12,14 @@ import {
   log,
 } from "./utils.ts";
 
+const EPSILON = 1e-10; // Constante pour éviter les divisions par zéro et stabiliser les calculs
+
 /**
  * Génère une prédiction de fallback en mode dégradé
  */
 export function generateFallbackPrediction(
   algorithm: string,
-  category: any
+  category: string
 ): PredictionResult {
   return {
     numbers: generateRandomPrediction(),
@@ -27,6 +29,13 @@ export function generateFallbackPrediction(
     score: 0.2,
     category,
   };
+}
+
+/**
+ * Calcule une confiance harmonisée basée sur un score moyen
+ */
+function computeConfidence(avgScore: number, maxConfidence: number = 0.85): number {
+  return Math.min(maxConfidence, Math.tanh(avgScore * 5) + 0.2);
 }
 
 /**
@@ -52,7 +61,7 @@ export function weightedFrequencyAlgorithm(
   });
 
   for (let i = 1; i <= 90; i++) {
-    weightedFreq[i] /= totalWeight || 1;
+    weightedFreq[i] /= (totalWeight + EPSILON);
   }
 
   const sortedNumbers = Object.entries(weightedFreq)
@@ -63,7 +72,7 @@ export function weightedFrequencyAlgorithm(
   const prediction = selectBalancedNumbers(topCandidates, 5);
   
   const avgScore = prediction.reduce((sum, num) => sum + weightedFreq[num], 0) / 5;
-  const confidence = Math.min(0.85, avgScore * 12 + 0.2);
+  const confidence = computeConfidence(avgScore, 0.85);
 
   return {
     numbers: prediction,
@@ -123,7 +132,10 @@ export function kmeansClusteringAlgorithm(
         return sum.map(val => Math.round(val / cluster.length));
       });
 
+      // Critère de convergence
+      const centroidDiff = centroids.reduce((sum, c, i) => sum + euclideanDistance(c, newCentroids[i]), 0);
       centroids = newCentroids;
+      if (centroidDiff < 1e-3) break;
     }
 
     // Utiliser le centroide avec le plus de membres
@@ -138,13 +150,13 @@ export function kmeansClusteringAlgorithm(
       category: "ml",
     };
   } catch (error) {
-    log("error", "K-means failed", { error });
+    log("error", `K-means failed for ${results.length} results`, { error });
     return generateFallbackPrediction("K-means Clustering", "ml");
   }
 }
 
 function euclideanDistance(a: number[], b: number[]): number {
-  return Math.sqrt(a.reduce((sum, val, i) => sum + Math.pow(val - (b[i] || 0), 2), 0));
+  return Math.hypot(...a.map((val, i) => val - (b[i] || 0)));
 }
 
 /**
@@ -173,7 +185,7 @@ export function bayesianInferenceAlgorithm(
     // Normaliser les probabilités
     const total = Object.values(priors).reduce((sum, val) => sum + val, 0);
     for (let i = 1; i <= 90; i++) {
-      priors[i] /= total;
+      priors[i] /= (total + EPSILON);
     }
 
     // Appliquer le théorème de Bayes avec likelihood
@@ -186,7 +198,7 @@ export function bayesianInferenceAlgorithm(
     // Normaliser
     const posteriorTotal = Object.values(posteriors).reduce((sum, val) => sum + val, 0);
     for (let i = 1; i <= 90; i++) {
-      posteriors[i] /= posteriorTotal;
+      posteriors[i] /= (posteriorTotal + EPSILON);
     }
 
     const sortedNumbers = Object.entries(posteriors)
@@ -204,7 +216,7 @@ export function bayesianInferenceAlgorithm(
       category: "bayesian",
     };
   } catch (error) {
-    log("error", "Bayesian failed", { error });
+    log("error", `Bayesian failed for ${results.length} results`, { error });
     return generateFallbackPrediction("Bayesian Inference", "bayesian");
   }
 }
@@ -234,9 +246,9 @@ export function neuralNetworkAlgorithm(
     const learningRate = 0.01;
     const epochs = 100;
 
-    // Initialiser poids aléatoires
-    const weightsIH = initializeWeights(inputSize, hiddenSize);
-    const weightsHO = initializeWeights(hiddenSize, outputSize);
+    // Initialiser poids aléatoires avec graine pour reproductibilité
+    const weightsIH = initializeWeights(inputSize, hiddenSize, 42);
+    const weightsHO = initializeWeights(hiddenSize, outputSize, 43);
     const biasH = Array(hiddenSize).fill(0);
     const biasO = Array(outputSize).fill(0);
 
@@ -269,7 +281,7 @@ export function neuralNetworkAlgorithm(
     const lastInput = normalizedData[normalizedData.length - 1];
     const hidden = forwardLayer(lastInput, weightsIH, biasH);
     const output = forwardLayer(hidden, weightsHO, biasO);
-    const prediction = output.map(n => Math.round(n * 90)).sort((a, b) => a - b);
+    const prediction = output.map(n => Math.min(90, Math.max(1, Math.round(n * 90)))).sort((a, b) => a - b);
 
     return {
       numbers: prediction,
@@ -280,15 +292,24 @@ export function neuralNetworkAlgorithm(
       category: "neural",
     };
   } catch (error) {
-    log("error", "Neural failed", { error });
+    log("error", `Neural failed for ${results.length} results`, { error });
     return generateFallbackPrediction("Neural Network", "neural");
   }
 }
 
-function initializeWeights(rows: number, cols: number): number[][] {
+function initializeWeights(rows: number, cols: number, seed: number = 42): number[][] {
+  const random = seededRandom(seed);
   return Array.from({ length: rows }, () =>
-    Array.from({ length: cols }, () => Math.random() * 2 - 1)
+    Array.from({ length: cols }, () => random() * 2 - 1)
   );
+}
+
+function seededRandom(seed: number) {
+  let state = seed;
+  return () => {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
 }
 
 function sigmoid(x: number): number {
@@ -341,7 +362,7 @@ export function varianceAnalysisAlgorithm(
 
   const scores: Record<number, number> = {};
   for (let i = 1; i <= 90; i++) {
-    scores[i] = (frequencies[i] / results.length) / (variance + 1);
+    scores[i] = (frequencies[i] / results.length) / (variance + 1 + EPSILON);
   }
 
   const sortedNumbers = Object.entries(scores)
@@ -352,7 +373,7 @@ export function varianceAnalysisAlgorithm(
   const prediction = selectBalancedNumbers(topCandidates, 5);
 
   const avgScore = prediction.reduce((sum, num) => sum + scores[num], 0) / 5;
-  const confidence = Math.min(0.80, avgScore * 10 + 0.3);
+  const confidence = computeConfidence(avgScore, 0.80);
 
   return {
     numbers: prediction,
@@ -408,15 +429,23 @@ export function randomForestAlgorithm(
       category: "lightgbm",
     };
   } catch (error) {
-    log("error", "Random Forest failed", { error });
+    log("error", `Random Forest failed for ${results.length} results`, { error });
     return generateFallbackPrediction("Random Forest", "lightgbm");
   }
 }
 
 function bootstrapSampling<T>(data: T[]): T[] {
-  return Array.from({ length: data.length }, () => 
-    data[Math.floor(Math.random() * data.length)]
-  );
+  const sample = [];
+  const usedIndices = new Set<number>();
+  while (sample.length < data.length) {
+    const idx = Math.floor(Math.random() * data.length);
+    sample.push(data[idx]);
+    usedIndices.add(idx);
+  }
+  if (usedIndices.size < data.length * 0.5) {
+    return bootstrapSampling(data);
+  }
+  return sample;
 }
 
 function buildDecisionTree(results: DrawResult[]): number[] {
@@ -494,7 +523,7 @@ export function gradientBoostingAlgorithm(
       category: "catboost",
     };
   } catch (error) {
-    log("error", "Gradient Boosting failed", { error });
+    log("error", `Gradient Boosting failed for ${results.length} results`, { error });
     return generateFallbackPrediction("Gradient Boosting", "catboost");
   }
 }
@@ -523,7 +552,7 @@ function fitWeakLearner(
   const maxResidual = Math.max(...Object.values(residuals));
 
   for (let i = 1; i <= 90; i++) {
-    learner[i] = residuals[i] / (maxResidual + 1);
+    learner[i] = residuals[i] / (maxResidual + 1 + EPSILON);
   }
 
   return learner;
@@ -547,10 +576,10 @@ export function lstmAlgorithm(
     let cellState = Array(hiddenSize).fill(0);
     let hiddenState = Array(hiddenSize).fill(0);
 
-    // Poids simplifiés
-    const weightsF = initializeWeights(5, hiddenSize);
-    const weightsI = initializeWeights(5, hiddenSize);
-    const weightsO = initializeWeights(5, hiddenSize);
+    // Poids simplifiés avec graine
+    const weightsF = initializeWeights(5, hiddenSize, 44);
+    const weightsI = initializeWeights(5, hiddenSize, 45);
+    const weightsO = initializeWeights(5, hiddenSize, 46);
 
     // Traiter séquence
     results.slice(0, sequenceLength).forEach(result => {
@@ -558,13 +587,13 @@ export function lstmAlgorithm(
 
       // Gates LSTM
       const forgetGate = input.map((_, i) => 
-        sigmoid(input.reduce((sum, x, j) => sum + x * (weightsF[j] ? weightsF[j][i] : 0), 0))
+        sigmoid(input.reduce((sum, x, j) => sum + x * (weightsF[j]?.[i] ?? 0), 0))
       );
       const inputGate = input.map((_, i) =>
-        sigmoid(input.reduce((sum, x, j) => sum + x * (weightsI[j] ? weightsI[j][i] : 0), 0))
+        sigmoid(input.reduce((sum, x, j) => sum + x * (weightsI[j]?.[i] ?? 0), 0))
       );
       const outputGate = input.map((_, i) =>
-        sigmoid(input.reduce((sum, x, j) => sum + x * (weightsO[j] ? weightsO[j][i] : 0), 0))
+        sigmoid(input.reduce((sum, x, j) => sum + x * (weightsO[j]?.[i] ?? 0), 0))
       );
 
       // Mettre à jour états
@@ -577,7 +606,7 @@ export function lstmAlgorithm(
     // Prédiction depuis état caché
     const prediction = hiddenState
       .slice(0, 5)
-      .map(h => Math.round((h + 1) * 45))
+      .map(h => Math.min(90, Math.max(1, Math.round((h + 1) * 45))))
       .sort((a, b) => a - b);
 
     return {
@@ -589,7 +618,7 @@ export function lstmAlgorithm(
       category: "transformer",
     };
   } catch (error) {
-    log("error", "LSTM failed", { error });
+    log("error", `LSTM failed for ${results.length} results`, { error });
     return generateFallbackPrediction("LSTM Network", "transformer");
   }
 }
@@ -655,7 +684,7 @@ export function arimaAlgorithm(
       category: "arima",
     };
   } catch (error) {
-    log("error", "ARIMA failed", { error });
+    log("error", `ARIMA failed for ${results.length} results`, { error });
     return generateFallbackPrediction("ARIMA", "arima");
   }
 }
@@ -670,19 +699,17 @@ function difference(series: number[], order: number): number[] {
 
 function calculateARCoefficients(series: number[], order: number): number[] {
   const coeffs: number[] = [];
-  
+  const n = series.length;
   for (let i = 0; i < order; i++) {
     let numerator = 0;
     let denominator = 0;
-    
-    for (let t = order; t < series.length; t++) {
-      numerator += series[t] * series[t - i - 1];
-      denominator += series[t - i - 1] * series[t - i - 1];
+    for (let t = order; t < n; t++) {
+      const lag = series[t - i - 1];
+      numerator += series[t] * lag;
+      denominator += lag * lag;
     }
-    
-    coeffs.push(denominator !== 0 ? numerator / denominator : 0);
+    coeffs.push(denominator > EPSILON ? numerator / denominator : 0);
   }
-  
   return coeffs;
 }
 
@@ -695,7 +722,7 @@ function calculateMACoefficients(series: number[], order: number): number[] {
     for (let t = i; t < residuals.length - 1; t++) {
       sum += residuals[t] * residuals[t - i];
     }
-    coeffs.push(sum / (residuals.length - i));
+    coeffs.push(sum / (residuals.length - i + EPSILON));
   }
   
   return coeffs;
