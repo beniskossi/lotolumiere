@@ -88,27 +88,19 @@ serve(async (req) => {
 
       console.log(`${config.algorithm_name}: ${config.weight} -> ${newWeight} (${improvement.toFixed(1)}%)`);
 
-      // Nouveau : Entraînement réel via subprocess Python
-      console.log(`Training ${config.algorithm_name} with Python...`);
-      const process = Deno.run({
-        cmd: ["python3", "./train_model.py", config.algorithm_name, JSON.stringify(performances)],
-        stdout: "piped",
-        stderr: "piped",
-      });
-      const status = await process.status();
-      if (!status.success) {
-        const errorOutput = new TextDecoder().decode(await process.stderrOutput());
-        throw new Error(`Training failed: ${errorOutput}`);
+      // Ajuster les paramètres basé sur performance
+      const newParams = { ...config.parameters };
+      
+      // Auto-ajustement basique des hyperparamètres
+      if (avgPerformance > 0.7) {
+        // Performance élevée: augmenter légèrement la complexité
+        if (newParams.learningRate) newParams.learningRate *= 1.1;
+        if (newParams.numEstimators) newParams.numEstimators = Math.min(50, newParams.numEstimators + 2);
+      } else if (avgPerformance < 0.4) {
+        // Performance faible: réduire la complexité
+        if (newParams.learningRate) newParams.learningRate *= 0.9;
+        if (newParams.numEstimators) newParams.numEstimators = Math.max(5, newParams.numEstimators - 2);
       }
-      const output = new TextDecoder().decode(await process.output());
-      const { onnx_path, new_params } = JSON.parse(output);
-
-      // Upload ONNX to Supabase storage
-      const file = await Deno.readFile(onnx_path);
-      const { error: uploadError } = await supabase.storage
-        .from('models')
-        .upload(`${config.algorithm_name}.onnx`, file);
-      if (uploadError) throw uploadError;
 
       // Enregistrer l'historique d'entraînement
       trainingHistory.push({
@@ -116,7 +108,7 @@ serve(async (req) => {
         previous_weight: config.weight,
         new_weight: newWeight,
         previous_parameters: config.parameters,
-        new_parameters: new_params, // From Python output
+        new_parameters: newParams,
         performance_improvement: improvement,
         training_metrics: {
           avg_performance: avgPerformance,
@@ -131,7 +123,7 @@ serve(async (req) => {
         updates.push({
           id: config.id,
           weight: newWeight,
-          parameters: new_params,
+          parameters: newParams,
         });
       }
     }

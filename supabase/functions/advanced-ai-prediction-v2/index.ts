@@ -9,9 +9,9 @@ import {
   bayesianInferenceAlgorithm,
   neuralNetworkAlgorithm,
   varianceAnalysisAlgorithm,
-  lightGBMAlgorithm,
-  catBoostAlgorithm,
-  transformerAlgorithm,
+  randomForestAlgorithm,
+  gradientBoostingAlgorithm,
+  lstmAlgorithm,
   arimaAlgorithm,
   generateFallbackPrediction,
 } from "../_shared/algorithms.ts";
@@ -190,27 +190,27 @@ async function generateAllPredictions(
   }
 
   try {
-    // Algorithme 6: LightGBM
-    predictions.push(lightGBMAlgorithm(results));
+    // Algorithme 6: Random Forest
+    predictions.push(randomForestAlgorithm(results));
   } catch (e) {
-    log("warn", "LightGBM algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("LightGBM", "lightgbm"));
+    log("warn", "Random Forest algorithm failed", { error: e });
+    predictions.push(generateFallbackPrediction("Random Forest", "lightgbm"));
   }
 
   try {
-    // Algorithme 7: CatBoost
-    predictions.push(catBoostAlgorithm(results));
+    // Algorithme 7: Gradient Boosting
+    predictions.push(gradientBoostingAlgorithm(results));
   } catch (e) {
-    log("warn", "CatBoost algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("CatBoost", "catboost"));
+    log("warn", "Gradient Boosting algorithm failed", { error: e });
+    predictions.push(generateFallbackPrediction("Gradient Boosting", "catboost"));
   }
 
   try {
-    // Algorithme 8: Transformer
-    predictions.push(transformerAlgorithm(results));
+    // Algorithme 8: LSTM Network
+    predictions.push(lstmAlgorithm(results));
   } catch (e) {
-    log("warn", "Transformer algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("Transformer", "transformer"));
+    log("warn", "LSTM algorithm failed", { error: e });
+    predictions.push(generateFallbackPrediction("LSTM Network", "transformer"));
   }
 
   try {

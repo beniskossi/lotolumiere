@@ -87,14 +87,18 @@ serve(async (req) => {
 
       for (const prediction of predictions) {
         // Calculate matches
-        const matches = prediction.predicted_numbers.filter(num => 
+        const matches = prediction.predicted_numbers.filter((num: number) => 
           result.winning_numbers.includes(num)
         ).length;
 
         const accuracyScore = (matches / 5) * 100;
         
-        // Nouveau : Calcul F1-score réel (ajoutez calculateF1Score dans utils.ts)
-        const f1Score = calculateF1Score(prediction.predicted_numbers, result.winning_numbers);
+        // Calcul F1-score réel
+        const precision = matches / 5;
+        const recall = matches / result.winning_numbers.length;
+        const f1Score = precision + recall > 0 
+          ? (2 * precision * recall) / (precision + recall) 
+          : 0;
 
         // Update stats
         if (!algorithmStats[prediction.model_used]) {
