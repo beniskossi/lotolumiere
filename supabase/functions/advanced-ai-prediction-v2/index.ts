@@ -21,6 +21,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const DATA_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const PREDICTION_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+interface PredictionResponse {
+  predictions: PredictionResult[];
+  warning?: string;
+}
+
+interface AlgorithmConfig {
+  name: string;
+  type: string;
+  fn: (results: DrawResult[]) => PredictionResult;
+}
+
+const algorithms: AlgorithmConfig[] = [
+  { name: "Analyse Fréquentielle", type: "statistical", fn: weightedFrequencyAlgorithm },
+  { name: "ML K-means", type: "ml", fn: kmeansClusteringAlgorithm },
+  { name: "Inférence Bayésienne", type: "bayesian", fn: bayesianInferenceAlgorithm },
+  { name: "Neural Network", type: "neural", fn: neuralNetworkAlgorithm },
+  { name: "Analyse Variance", type: "variance", fn: varianceAnalysisAlgorithm },
+  { name: "Random Forest", type: "lightgbm", fn: randomForestAlgorithm },
+  { name: "Gradient Boosting", type: "catboost", fn: gradientBoostingAlgorithm },
+  { name: "LSTM Network", type: "transformer", fn: lstmAlgorithm },
+  { name: "ARIMA", type: "arima", fn: arimaAlgorithm },
+];
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -31,17 +57,17 @@ serve(async (req) => {
   try {
     const { drawName } = await req.json();
 
-    if (!drawName) {
-      throw new Error("drawName is required");
+    if (!drawName || !validateDrawName(drawName)) {
+      throw new Error("Invalid drawName");
     }
 
-    log("info", "Generating advanced predictions", { drawName });
+    log("info", `Generating advanced predictions for ${drawName}`, { drawName });
 
     // Vérifier le cache d'abord
     const cacheKey = `predictions_${drawName}_v2`;
     const cached = predictionCache.get(cacheKey);
     if (cached) {
-      log("info", "Cache hit for predictions", { drawName, elapsed: Date.now() - startTime });
+      log("info", `Cache hit for predictions for ${drawName}`, { drawName, elapsed: Date.now() - startTime });
       return new Response(JSON.stringify(cached), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -51,14 +77,14 @@ serve(async (req) => {
     const results = await fetchHistoricalData(drawName);
     
     if (!results || results.length === 0) {
-      log("warn", "No data available", { drawName });
+      log("warn", `No data available for ${drawName}`, { drawName });
       const fallbackResponse = generateFallbackResponse(drawName);
       return new Response(JSON.stringify(fallbackResponse), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    log("info", "Data fetched", { drawName, count: results.length });
+    log("info", `Data fetched for ${drawName}`, { drawName, count: results.length });
 
     // Calculer les métriques de qualité
     const dataQuality = calculateDataQuality(results);
@@ -68,7 +94,7 @@ serve(async (req) => {
     const predictions = await generateAllPredictions(results, dataQuality, freshness);
 
     // Construire la réponse
-    const response: any = { predictions };
+    const response: PredictionResponse = { predictions };
     
     // Ajouter des avertissements si nécessaire
     if (results.length < 20) {
@@ -79,11 +105,11 @@ serve(async (req) => {
       response.warning = `Données anciennes - Prédictions moins précises`;
     }
 
-    // Mettre en cache (5 minutes)
-    predictionCache.set(cacheKey, response, 5 * 60 * 1000);
+    // Mettre en cache
+    predictionCache.set(cacheKey, response, PREDICTION_CACHE_TTL);
 
     const elapsed = Date.now() - startTime;
-    log("info", "Predictions generated", { drawName, count: predictions.length, elapsed });
+    log("info", `Predictions generated for ${drawName}`, { drawName, count: predictions.length, elapsed });
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -99,13 +125,20 @@ serve(async (req) => {
 });
 
 /**
+ * Valide le nom du tirage
+ */
+function validateDrawName(name: string): boolean {
+  return typeof name === 'string' && name.length > 0 && /^[a-zA-Z0-9_-]+$/.test(name);
+}
+
+/**
  * Récupère les données historiques depuis Supabase avec cache
  */
 async function fetchHistoricalData(drawName: string): Promise<DrawResult[]> {
   const cacheKey = `data_${drawName}_v2`;
   const cached = dataCache.get(cacheKey);
   if (cached) {
-    log("info", "Cache hit for data", { drawName });
+    log("info", `Cache hit for data for ${drawName}`, { drawName });
     return cached;
   }
 
@@ -122,14 +155,14 @@ async function fetchHistoricalData(drawName: string): Promise<DrawResult[]> {
     .limit(300);
 
   if (error) {
-    log("error", "Database error", { drawName, error: error.message });
+    log("error", `Database error for ${drawName}`, { drawName, error: error.message });
     throw error;
   }
 
   const drawResults = (results || []) as DrawResult[];
   
-  // Mettre en cache (10 minutes)
-  dataCache.set(cacheKey, drawResults, 10 * 60 * 1000);
+  // Mettre en cache
+  dataCache.set(cacheKey, drawResults, DATA_CACHE_TTL);
 
   return drawResults;
 }
@@ -147,79 +180,18 @@ async function generateAllPredictions(
     return generateAllFallbacks();
   }
 
-  const predictions: PredictionResult[] = [];
+  const algorithmPromises = algorithms.map(async (algo) => {
+    try {
+      return algo.fn(results);
+    } catch (e) {
+      log("warn", `${algo.name} algorithm failed`, { error: e });
+      return generateFallbackPrediction(algo.name, algo.type);
+    }
+  });
 
-  try {
-    // Algorithme 1: Fréquence pondérée
-    predictions.push(weightedFrequencyAlgorithm(results));
-  } catch (e) {
-    log("warn", "Frequency algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("Analyse Fréquentielle", "statistical"));
-  }
-
-  try {
-    // Algorithme 2: K-means
-    predictions.push(kmeansClusteringAlgorithm(results));
-  } catch (e) {
-    log("warn", "K-means algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("ML K-means", "ml"));
-  }
-
-  try {
-    // Algorithme 3: Bayésien
-    predictions.push(bayesianInferenceAlgorithm(results));
-  } catch (e) {
-    log("warn", "Bayesian algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("Inférence Bayésienne", "bayesian"));
-  }
-
-  try {
-    // Algorithme 4: Neural Network
-    predictions.push(neuralNetworkAlgorithm(results));
-  } catch (e) {
-    log("warn", "Neural algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("Neural Network", "neural"));
-  }
-
-  try {
-    // Algorithme 5: Variance
-    predictions.push(varianceAnalysisAlgorithm(results));
-  } catch (e) {
-    log("warn", "Variance algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("Analyse Variance", "variance"));
-  }
-
-  try {
-    // Algorithme 6: Random Forest
-    predictions.push(randomForestAlgorithm(results));
-  } catch (e) {
-    log("warn", "Random Forest algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("Random Forest", "lightgbm"));
-  }
-
-  try {
-    // Algorithme 7: Gradient Boosting
-    predictions.push(gradientBoostingAlgorithm(results));
-  } catch (e) {
-    log("warn", "Gradient Boosting algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("Gradient Boosting", "catboost"));
-  }
-
-  try {
-    // Algorithme 8: LSTM Network
-    predictions.push(lstmAlgorithm(results));
-  } catch (e) {
-    log("warn", "LSTM algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("LSTM Network", "transformer"));
-  }
-
-  try {
-    // Algorithme 9: ARIMA
-    predictions.push(arimaAlgorithm(results));
-  } catch (e) {
-    log("warn", "ARIMA algorithm failed", { error: e });
-    predictions.push(generateFallbackPrediction("ARIMA", "arima"));
-  }
+  const predictions = (await Promise.allSettled(algorithmPromises))
+    .filter((result) => result.status === 'fulfilled')
+    .map((result) => (result as PromiseFulfilledResult<PredictionResult>).value);
 
   // Ajuster les scores en fonction de la qualité des données
   predictions.forEach(pred => {
@@ -234,7 +206,7 @@ async function generateAllPredictions(
 /**
  * Génère une réponse en mode dégradé
  */
-function generateFallbackResponse(drawName: string) {
+function generateFallbackResponse(drawName: string): PredictionResponse {
   return {
     predictions: generateAllFallbacks(),
     warning: "Aucune donnée historique - Prédictions générées en mode dégradé"
@@ -245,15 +217,5 @@ function generateFallbackResponse(drawName: string) {
  * Génère toutes les prédictions en mode fallback
  */
 function generateAllFallbacks(): PredictionResult[] {
-  return [
-    generateFallbackPrediction("Analyse Fréquentielle", "statistical"),
-    generateFallbackPrediction("ML K-means", "ml"),
-    generateFallbackPrediction("Inférence Bayésienne", "bayesian"),
-    generateFallbackPrediction("Neural Network", "neural"),
-    generateFallbackPrediction("Analyse Variance", "variance"),
-    generateFallbackPrediction("LightGBM", "lightgbm"),
-    generateFallbackPrediction("CatBoost", "catboost"),
-    generateFallbackPrediction("Transformer", "transformer"),
-    generateFallbackPrediction("ARIMA", "arima"),
-  ];
+  return algorithms.map(algo => generateFallbackPrediction(algo.name, algo.type));
 }
