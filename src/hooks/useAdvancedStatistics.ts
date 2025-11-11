@@ -1,5 +1,7 @@
+// useAdvancedStatistics.ts
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface PairStatistic {
   pair: [number, number];
@@ -33,6 +35,8 @@ interface AdvancedStatistics {
   consecutiveNumbers: { hasConsecutive: number; noConsecutive: number };
 }
 
+const STALE_TIME = 10 * 60 * 1000; // 10 minutes
+
 export const useAdvancedStatistics = (drawName: string) => {
   return useQuery({
     queryKey: ["advanced-statistics", drawName],
@@ -50,16 +54,15 @@ export const useAdvancedStatistics = (drawName: string) => {
         return getEmptyStatistics();
       }
 
-      // Analyse des paires
+      // Analyse des paires avec combinaisons
       const pairMap = new Map<string, number>();
       results.forEach(result => {
         const nums = result.winning_numbers.sort((a: number, b: number) => a - b);
-        for (let i = 0; i < nums.length - 1; i++) {
-          for (let j = i + 1; j < nums.length; j++) {
-            const key = `${nums[i]}-${nums[j]}`;
-            pairMap.set(key, (pairMap.get(key) || 0) + 1);
-          }
-        }
+        const pairs = combinations(nums, 2);
+        pairs.forEach(([a, b]) => {
+          const key = `${a}-${b}`;
+          pairMap.set(key, (pairMap.get(key) || 0) + 1);
+        });
       });
 
       const topPairs = Array.from(pairMap.entries())
@@ -70,18 +73,15 @@ export const useAdvancedStatistics = (drawName: string) => {
           return { pair: [a, b] as [number, number], frequency };
         });
 
-      // Analyse des triplets
+      // Analyse des triplets avec combinaisons
       const tripletMap = new Map<string, number>();
       results.forEach(result => {
         const nums = result.winning_numbers.sort((a: number, b: number) => a - b);
-        for (let i = 0; i < nums.length - 2; i++) {
-          for (let j = i + 1; j < nums.length - 1; j++) {
-            for (let k = j + 1; k < nums.length; k++) {
-              const key = `${nums[i]}-${nums[j]}-${nums[k]}`;
-              tripletMap.set(key, (tripletMap.get(key) || 0) + 1);
-            }
-          }
-        }
+        const triplets = combinations(nums, 3);
+        triplets.forEach(([a, b, c]) => {
+          const key = `${a}-${b}-${c}`;
+          tripletMap.set(key, (tripletMap.get(key) || 0) + 1);
+        });
       });
 
       const topTriplets = Array.from(tripletMap.entries())
@@ -201,7 +201,11 @@ export const useAdvancedStatistics = (drawName: string) => {
         consecutiveNumbers: { hasConsecutive, noConsecutive },
       };
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!drawName,
+    staleTime: STALE_TIME,
+    onError: (error: Error) => {
+      toast.error(`Erreur de statistiques: ${error.message}`);
+    },
   });
 };
 
@@ -215,4 +219,30 @@ function getEmptyStatistics(): AdvancedStatistics {
     temporalPatterns: [],
     consecutiveNumbers: { hasConsecutive: 0, noConsecutive: 0 },
   };
+}
+
+/**
+ * Generates all unique combinations of k elements from the given array.
+ * @param nums - The sorted array of numbers to choose from.
+ * @param k - The number of elements in each combination.
+ * @returns An array of combinations, each as a number array.
+ */
+function combinations(nums: number[], k: number): number[][] {
+  const result: number[][] = [];
+
+  function backtrack(start: number, current: number[]): void {
+    if (current.length === k) {
+      result.push([...current]);
+      return;
+    }
+
+    for (let i = start; i < nums.length; i++) {
+      current.push(nums[i]);
+      backtrack(i + 1, current);
+      current.pop();
+    }
+  }
+
+  backtrack(0, []);
+  return result;
 }
