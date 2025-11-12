@@ -1,12 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTrainAlgorithms, useTrainingHistory } from "@/hooks/useAlgorithmTraining";
-import { Brain, TrendingUp, TrendingDown, RefreshCw, Activity, Clock } from "lucide-react";
+import { Brain, TrendingUp, TrendingDown, RefreshCw, Activity, Clock, GitCompare, Undo2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { TrainingComparison } from "./TrainingComparison";
+import { ConfigRollback } from "./ConfigRollback";
 
 export const AlgorithmTraining = () => {
   const { data: history, isLoading, error } = useTrainingHistory();
@@ -57,6 +60,23 @@ export const AlgorithmTraining = () => {
 
   return (
     <div className="space-y-6">
+      <Tabs defaultValue="training" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="training" className="gap-2">
+            <Brain className="w-4 h-4" />
+            Entraînement
+          </TabsTrigger>
+          <TabsTrigger value="comparison" className="gap-2">
+            <GitCompare className="w-4 h-4" />
+            Comparaison
+          </TabsTrigger>
+          <TabsTrigger value="rollback" className="gap-2">
+            <Undo2 className="w-4 h-4" />
+            Rollback
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="training" className="mt-6">
       <Card className="bg-gradient-card border-border/50">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -247,6 +267,16 @@ export const AlgorithmTraining = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="comparison" className="mt-6">
+          <TrainingComparison />
+        </TabsContent>
+
+        <TabsContent value="rollback" className="mt-6">
+          <ConfigRollback />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

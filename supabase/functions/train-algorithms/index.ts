@@ -46,10 +46,14 @@ interface ResponseData {
   error?: string;
 }
 
+// Hyperparamètres d'entraînement
 const HIGH_PERF_THRESHOLD = 0.7;
 const LOW_PERF_THRESHOLD = 0.4;
-const LR_INCREASE_FACTOR = 1.1;
-const LR_DECREASE_FACTOR = 0.9;
+const LR_INCREASE_FACTOR = 1.15;
+const LR_DECREASE_FACTOR = 0.85;
+const WEIGHT_MOMENTUM = 0.3;
+const MAX_WEIGHT_CHANGE = 0.3;
+const MIN_EVALUATIONS_REQUIRED = 5;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -230,6 +234,7 @@ function validatePerformance(perf: AlgorithmPerformance): boolean {
 
 /**
  * Ajuste la configuration d'un algorithme basé sur ses performances
+ * Utilise une approche avancée avec momentum et contraintes de stabilité
  */
 function adjustAlgorithmConfig(
   config: AlgorithmConfig,
@@ -237,25 +242,81 @@ function adjustAlgorithmConfig(
 ): { newWeight: number; newParams: Record<string, any>; improvement: number } | null {
   if (performances.length === 0) return null;
 
-  const avgAccuracy = performances.reduce((sum, p) => sum + p.avg_accuracy, 0) / performances.length;
-  const avgF1 = performances.reduce((sum, p) => sum + p.f1_score, 0) / performances.length;
-  const avgPerformance = (avgAccuracy + avgF1 * 100) / 2 / 100;
+  // Vérifier qu'on a assez d'évaluations pour un entraînement fiable
+  if (performances.length < MIN_EVALUATIONS_REQUIRED) {
+    console.log(`${config.algorithm_name}: Pas assez d'évaluations (${performances.length} < ${MIN_EVALUATIONS_REQUIRED})`);
+    return null;
+  }
 
-  const newWeight = Math.min(1, Math.max(0.1, config.weight * (1 + (avgPerformance - 0.5) * 0.2)));
-  const improvement = ((newWeight - config.weight) / config.weight) * 100;
+  // Calculer les métriques moyennes avec pondération par récence
+  const weights = performances.map((_, idx) => Math.pow(0.95, performances.length - idx - 1));
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+
+  const avgAccuracy = performances.reduce((sum, p, idx) => sum + p.avg_accuracy * weights[idx], 0) / totalWeight;
+  const avgF1 = performances.reduce((sum, p, idx) => sum + p.f1_score * weights[idx], 0) / totalWeight;
+  const avgOverall = performances.reduce((sum, p, idx) => sum + p.overall_score * weights[idx], 0) / totalWeight;
+
+  // Score composite pondéré
+  const compositeScore = (avgAccuracy * 0.4 + avgF1 * 0.4 + avgOverall * 0.2);
+
+  // Calculer la variance pour détecter l'instabilité
+  const accuracyVariance = performances.reduce((sum, p) => {
+    const diff = p.avg_accuracy - avgAccuracy;
+    return sum + diff * diff;
+  }, 0) / performances.length;
+
+  const stabilityPenalty = Math.min(0.2, accuracyVariance * 5);
+
+  // Ajustement du poids avec momentum et contraintes
+  const performanceDelta = compositeScore - 0.5;
+  const adjustmentFactor = performanceDelta * 0.4 * (1 - stabilityPenalty);
+  
+  // Limiter les changements drastiques
+  const cappedAdjustment = Math.max(-MAX_WEIGHT_CHANGE, Math.min(MAX_WEIGHT_CHANGE, adjustmentFactor));
+  
+  // Appliquer le momentum (mélange ancien et nouveau poids)
+  const targetWeight = config.weight * (1 + cappedAdjustment);
+  const newWeight = config.weight * WEIGHT_MOMENTUM + targetWeight * (1 - WEIGHT_MOMENTUM);
+  
+  // Contraindre le poids dans des limites raisonnables
+  const finalWeight = Math.min(2, Math.max(0.05, newWeight));
+  const improvement = ((finalWeight - config.weight) / config.weight) * 100;
 
   const newParams = { ...config.parameters };
   
-  // Auto-ajustement basique des hyperparamètres
-  if (avgPerformance > HIGH_PERF_THRESHOLD) {
-    // Performance élevée: augmenter légèrement la complexité
-    if (newParams.learningRate) newParams.learningRate *= LR_INCREASE_FACTOR;
-    if (newParams.numEstimators) newParams.numEstimators = Math.min(50, newParams.numEstimators + 2);
-  } else if (avgPerformance < LOW_PERF_THRESHOLD) {
-    // Performance faible: réduire la complexité
-    if (newParams.learningRate) newParams.learningRate *= LR_DECREASE_FACTOR;
-    if (newParams.numEstimators) newParams.numEstimators = Math.max(5, newParams.numEstimators - 2);
+  // Auto-ajustement intelligent des hyperparamètres
+  if (compositeScore > HIGH_PERF_THRESHOLD && accuracyVariance < 0.01) {
+    // Performance élevée et stable: augmenter la capacité
+    if (newParams.learningRate) {
+      newParams.learningRate = Math.min(0.1, newParams.learningRate * LR_INCREASE_FACTOR);
+    }
+    if (newParams.numEstimators) {
+      newParams.numEstimators = Math.min(100, Math.round(newParams.numEstimators * 1.1));
+    }
+    if (newParams.maxDepth) {
+      newParams.maxDepth = Math.min(15, newParams.maxDepth + 1);
+    }
+  } else if (compositeScore < LOW_PERF_THRESHOLD || accuracyVariance > 0.05) {
+    // Performance faible ou instable: simplifier le modèle
+    if (newParams.learningRate) {
+      newParams.learningRate = Math.max(0.001, newParams.learningRate * LR_DECREASE_FACTOR);
+    }
+    if (newParams.numEstimators) {
+      newParams.numEstimators = Math.max(10, Math.round(newParams.numEstimators * 0.9));
+    }
+    if (newParams.maxDepth) {
+      newParams.maxDepth = Math.max(3, newParams.maxDepth - 1);
+    }
   }
 
-  return { newWeight, newParams, improvement };
+  // Ajouter des métriques de régularisation si instable
+  if (accuracyVariance > 0.03) {
+    if (newParams.regularization === undefined) {
+      newParams.regularization = 0.01;
+    } else {
+      newParams.regularization = Math.min(0.1, newParams.regularization * 1.2);
+    }
+  }
+
+  return { newWeight: finalWeight, newParams, improvement };
 }
