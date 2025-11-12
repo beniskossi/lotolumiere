@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,52 +66,53 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Vérifier l'authentification admin
-    const authHeader = req.headers.get('authorization');
+    const authHeader = req.headers.get("authorization");
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized - Admin access required' } as ResponseData),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Unauthorized - Admin access required" } as ResponseData), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const token = authHeader.replace("Bearer ", "");
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized - Invalid token' } as ResponseData),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Unauthorized - Invalid token" } as ResponseData), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Vérifier le rôle admin
     const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
       .maybeSingle();
 
     if (!roleData) {
-      return new Response(
-        JSON.stringify({ error: 'Forbidden - Admin role required' } as ResponseData),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Forbidden - Admin role required" } as ResponseData), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log("Starting algorithm training...");
 
     // Récupérer les configurations actuelles
-    const { data: configs, error: configsError } = await supabase
-      .from("algorithm_config")
-      .select("*");
+    const { data: configs, error: configsError } = await supabase.from("algorithm_config").select("*");
 
     if (configsError) throw configsError;
     if (!configs || configs.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "No algorithm configurations found" } as ResponseData),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
-      );
+      return new Response(JSON.stringify({ error: "No algorithm configurations found" } as ResponseData), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+      });
     }
 
     // Rafraîchir la vue matérialisée pour avoir les dernières données
@@ -128,10 +129,10 @@ serve(async (req) => {
 
     if (rankingsError) throw rankingsError;
     if (!rankings || rankings.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "No performance data available for training" } as ResponseData),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
-      );
+      return new Response(JSON.stringify({ error: "No performance data available for training" } as ResponseData), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+      });
     }
 
     console.log(`Found ${rankings.length} algorithm performance records`);
@@ -141,7 +142,9 @@ serve(async (req) => {
 
     // Pour chaque algorithme, ajuster le poids
     for (const config of configs as AlgorithmConfig[]) {
-      const performances = rankings.filter((r: any) => r.model_used === config.algorithm_name) as AlgorithmPerformance[];
+      const performances = rankings.filter(
+        (r: any) => r.model_used === config.algorithm_name,
+      ) as AlgorithmPerformance[];
 
       const validPerformances = performances.filter(validatePerformance);
       if (validPerformances.length !== performances.length) {
@@ -151,7 +154,9 @@ serve(async (req) => {
 
       const adjustment = adjustAlgorithmConfig(config, validPerformances);
       if (adjustment) {
-        console.log(`${config.algorithm_name}: ${config.weight} -> ${adjustment.newWeight} (${adjustment.improvement.toFixed(1)}%)`);
+        console.log(
+          `${config.algorithm_name}: ${config.weight} -> ${adjustment.newWeight} (${adjustment.improvement.toFixed(1)}%)`,
+        );
 
         trainingHistory.push({
           algorithm_name: config.algorithm_name,
@@ -161,7 +166,11 @@ serve(async (req) => {
           new_parameters: adjustment.newParams,
           performance_improvement: adjustment.improvement,
           training_metrics: {
-            avg_performance: (validPerformances.reduce((sum, p) => sum + p.avg_accuracy, 0) / validPerformances.length + validPerformances.reduce((sum, p) => sum + p.f1_score, 0) / validPerformances.length * 100) / 2 / 100,
+            avg_performance:
+              (validPerformances.reduce((sum, p) => sum + p.avg_accuracy, 0) / validPerformances.length +
+                (validPerformances.reduce((sum, p) => sum + p.f1_score, 0) / validPerformances.length) * 100) /
+              2 /
+              100,
             avg_accuracy: validPerformances.reduce((sum, p) => sum + p.avg_accuracy, 0) / validPerformances.length,
             avg_f1_score: validPerformances.reduce((sum, p) => sum + p.f1_score, 0) / validPerformances.length,
             total_evaluations: validPerformances.length,
@@ -179,11 +188,9 @@ serve(async (req) => {
     }
 
     // Enregistrer l'historique d'entraînement
-    const significantHistory = trainingHistory.filter(entry => Math.abs(entry.performance_improvement) > 1);
+    const significantHistory = trainingHistory.filter((entry) => Math.abs(entry.performance_improvement) > 1);
     if (significantHistory.length > 0) {
-      const { error: historyError } = await supabase
-        .from("algorithm_training_history")
-        .insert(significantHistory);
+      const { error: historyError } = await supabase.from("algorithm_training_history").insert(significantHistory);
 
       if (historyError) {
         console.error("Failed to save training history:", historyError);
@@ -191,14 +198,14 @@ serve(async (req) => {
     }
 
     // Appliquer les mises à jour
-    const updatePromises = updates.map(update =>
+    const updatePromises = updates.map((update) =>
       supabase
         .from("algorithm_config")
         .update({ weight: update.weight, parameters: update.parameters })
-        .eq("id", update.id)
+        .eq("id", update.id),
     );
     const results = await Promise.all(updatePromises);
-    const updatedCount = results.filter(result => !result.error).length;
+    const updatedCount = results.filter((result) => !result.error).length;
 
     console.log(`Training complete. Updated ${updatedCount} algorithms.`);
 
@@ -210,7 +217,7 @@ serve(async (req) => {
         trainingHistory,
         message: `Entraînement terminé. ${updatedCount} algorithmes mis à jour sur ${trainingHistory.length} analysés.`,
       } as ResponseData),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
     console.error("Error in train-algorithms:", error);
@@ -219,7 +226,7 @@ serve(async (req) => {
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 });
@@ -228,8 +235,14 @@ serve(async (req) => {
  * Valide une entrée de performance
  */
 function validatePerformance(perf: AlgorithmPerformance): boolean {
-  return typeof perf.avg_accuracy === 'number' && perf.avg_accuracy >= 0 && perf.avg_accuracy <= 1 &&
-         typeof perf.f1_score === 'number' && perf.f1_score >= 0 && perf.f1_score <= 1;
+  return (
+    typeof perf.avg_accuracy === "number" &&
+    perf.avg_accuracy >= 0 &&
+    perf.avg_accuracy <= 1 &&
+    typeof perf.f1_score === "number" &&
+    perf.f1_score >= 0 &&
+    perf.f1_score <= 1
+  );
 }
 
 /**
@@ -238,13 +251,15 @@ function validatePerformance(perf: AlgorithmPerformance): boolean {
  */
 function adjustAlgorithmConfig(
   config: AlgorithmConfig,
-  performances: AlgorithmPerformance[]
+  performances: AlgorithmPerformance[],
 ): { newWeight: number; newParams: Record<string, any>; improvement: number } | null {
   if (performances.length === 0) return null;
 
   // Vérifier qu'on a assez d'évaluations pour un entraînement fiable
   if (performances.length < MIN_EVALUATIONS_REQUIRED) {
-    console.log(`${config.algorithm_name}: Pas assez d'évaluations (${performances.length} < ${MIN_EVALUATIONS_REQUIRED})`);
+    console.log(
+      `${config.algorithm_name}: Pas assez d'évaluations (${performances.length} < ${MIN_EVALUATIONS_REQUIRED})`,
+    );
     return null;
   }
 
@@ -257,33 +272,34 @@ function adjustAlgorithmConfig(
   const avgOverall = performances.reduce((sum, p, idx) => sum + p.overall_score * weights[idx], 0) / totalWeight;
 
   // Score composite pondéré
-  const compositeScore = (avgAccuracy * 0.4 + avgF1 * 0.4 + avgOverall * 0.2);
+  const compositeScore = avgAccuracy * 0.4 + avgF1 * 0.4 + avgOverall * 0.2;
 
   // Calculer la variance pour détecter l'instabilité
-  const accuracyVariance = performances.reduce((sum, p) => {
-    const diff = p.avg_accuracy - avgAccuracy;
-    return sum + diff * diff;
-  }, 0) / performances.length;
+  const accuracyVariance =
+    performances.reduce((sum, p) => {
+      const diff = p.avg_accuracy - avgAccuracy;
+      return sum + diff * diff;
+    }, 0) / performances.length;
 
   const stabilityPenalty = Math.min(0.2, accuracyVariance * 5);
 
   // Ajustement du poids avec momentum et contraintes
   const performanceDelta = compositeScore - 0.5;
   const adjustmentFactor = performanceDelta * 0.4 * (1 - stabilityPenalty);
-  
+
   // Limiter les changements drastiques
   const cappedAdjustment = Math.max(-MAX_WEIGHT_CHANGE, Math.min(MAX_WEIGHT_CHANGE, adjustmentFactor));
-  
+
   // Appliquer le momentum (mélange ancien et nouveau poids)
   const targetWeight = config.weight * (1 + cappedAdjustment);
   const newWeight = config.weight * WEIGHT_MOMENTUM + targetWeight * (1 - WEIGHT_MOMENTUM);
-  
+
   // Contraindre le poids dans des limites raisonnables
   const finalWeight = Math.min(2, Math.max(0.05, newWeight));
   const improvement = ((finalWeight - config.weight) / config.weight) * 100;
 
   const newParams = { ...config.parameters };
-  
+
   // Auto-ajustement intelligent des hyperparamètres
   if (compositeScore > HIGH_PERF_THRESHOLD && accuracyVariance < 0.01) {
     // Performance élevée et stable: augmenter la capacité
