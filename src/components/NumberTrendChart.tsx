@@ -28,7 +28,23 @@ export const NumberTrendChart = ({
   days = 30,
   title = "Tendances des Numéros"
 }: NumberTrendChartProps) => {
-  const { data: trendData, isLoading } = useNumberTrends(drawName, numbers, days);
+  const { data: trendData, isLoading, error } = useNumberTrends(drawName, numbers, days);
+
+  if (error) {
+    return (
+      <Card className="bg-gradient-card border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            {title}
+          </CardTitle>
+          <CardDescription className="text-destructive">
+            Erreur lors du chargement des tendances
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return (

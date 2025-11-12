@@ -9,7 +9,17 @@ interface NumberCorrelationHeatmapProps {
 }
 
 export const NumberCorrelationHeatmap = ({ drawName }: NumberCorrelationHeatmapProps) => {
-  const { data: correlationData, isLoading } = useNumberCorrelation(drawName);
+  const { data: correlationData, isLoading, error } = useNumberCorrelation(drawName);
+
+  if (error) {
+    return (
+      <Card className="bg-gradient-card border-border/50">
+        <CardContent className="pt-6">
+          <p className="text-destructive">Erreur lors du chargement des corrélations</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -26,7 +26,17 @@ const COLORS = [
 ];
 
 export const AdvancedStatisticsPanel = ({ drawName }: AdvancedStatisticsPanelProps) => {
-  const { data: stats, isLoading } = useAdvancedStatistics(drawName);
+  const { data: stats, isLoading, error } = useAdvancedStatistics(drawName);
+
+  if (error) {
+    return (
+      <Card className="bg-gradient-card border-border/50">
+        <CardContent className="pt-6">
+          <p className="text-destructive">Erreur lors du chargement des statistiques</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return (

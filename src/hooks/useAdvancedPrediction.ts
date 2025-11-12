@@ -1,6 +1,7 @@
 // useAdvancedPrediction.ts
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export interface AdvancedPrediction {
   numbers: number[];
@@ -41,8 +42,5 @@ export const useAdvancedPrediction = (drawName: string) => {
     retry: 3,
     retryDelay: (attempt) => attempt * 1000,
     staleTime: STALE_TIME,
-    onError: (error: Error) => {
-      toast.error(`Erreur de prédiction: ${error.message}`);
-    },
   });
 };

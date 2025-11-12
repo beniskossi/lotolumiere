@@ -43,9 +43,6 @@ export const useTrainingHistory = (algorithmName?: string, limit = 10) => {
       return data as TrainingHistory[];
     },
     staleTime: STALE_TIME,
-    onError: (error: Error) => {
-      toast.error(`Erreur d'historique: ${error.message}`);
-    },
   });
 };
 

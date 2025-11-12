@@ -9,8 +9,18 @@ import { fr } from "date-fns/locale";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export const AlgorithmTraining = () => {
-  const { data: history, isLoading } = useTrainingHistory();
+  const { data: history, isLoading, error } = useTrainingHistory();
   const trainMutation = useTrainAlgorithms();
+
+  if (error) {
+    return (
+      <Card className="bg-gradient-card border-border/50">
+        <CardContent className="pt-6">
+          <p className="text-destructive">Erreur lors du chargement de l'historique</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const handleTrain = () => {
     trainMutation.mutate();

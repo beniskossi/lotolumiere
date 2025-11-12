@@ -58,9 +58,6 @@ export const useNumberTrends = (drawName: string, numbers: number[], days: numbe
     },
     enabled: !!drawName && numbers.length > 0,
     staleTime: STALE_TIME,
-    onError: (error: Error) => {
-      toast.error(`Erreur de tendances: ${error.message}`);
-    },
   });
 };
 
@@ -123,8 +120,5 @@ export const useNumberCorrelation = (drawName: string) => {
     },
     enabled: !!drawName,
     staleTime: STALE_TIME,
-    onError: (error: Error) => {
-      toast.error(`Erreur de corrélation: ${error.message}`);
-    },
   });
 };

@@ -203,9 +203,6 @@ export const useAdvancedStatistics = (drawName: string) => {
     },
     enabled: !!drawName,
     staleTime: STALE_TIME,
-    onError: (error: Error) => {
-      toast.error(`Erreur de statistiques: ${error.message}`);
-    },
   });
 };
 
