@@ -21,6 +21,7 @@ import { DrawResultsImporter } from "@/components/DrawResultsImporter";
 import { AlgorithmPerformanceTracker } from "@/components/AlgorithmPerformanceTracker";
 import { AlgorithmTraining } from "@/components/AlgorithmTraining";
 import { AutoTuningPanel } from "@/components/AutoTuningPanel";
+import { AutomationScheduler } from "@/components/AutomationScheduler";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -513,7 +514,7 @@ const Admin = () => {
         </Alert>
 
         <Tabs defaultValue="results" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-6 mb-6">
             <TabsTrigger value="results" className="gap-2">
               <Database className="w-4 h-4" />
               Résultats
@@ -533,6 +534,10 @@ const Admin = () => {
             <TabsTrigger value="training" className="gap-2">
               <TrendingUp className="w-4 h-4" />
               Entraînement
+            </TabsTrigger>
+            <TabsTrigger value="automation" className="gap-2">
+              <Calendar className="w-4 h-4" />
+              Automatisation
             </TabsTrigger>
           </TabsList>
 
@@ -723,6 +728,10 @@ const Admin = () => {
 
           <TabsContent value="training" className="space-y-6">
             <AlgorithmTraining />
+          </TabsContent>
+
+          <TabsContent value="automation" className="space-y-6">
+            <AutomationScheduler />
           </TabsContent>
         </Tabs>
       </div>

@@ -4,13 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, TrendingUp, BarChart3, PieChart as PieChartIcon, Sparkles, Activity, Trophy, GitMerge } from "lucide-react";
+import { ArrowLeft, TrendingUp, BarChart3, PieChart as PieChartIcon, Sparkles, Activity, Trophy, GitMerge, Zap } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { StatisticsCharts } from "@/components/StatisticsCharts";
 import { AdvancedStatisticsPanel } from "@/components/AdvancedStatisticsPanel";
 import { AlgorithmRankings } from "@/components/AlgorithmRankings";
 import { NumberTrendChart } from "@/components/NumberTrendChart";
 import { NumberCorrelationHeatmap } from "@/components/NumberCorrelationHeatmap";
+import { AdvancedMetricsDashboard } from "@/components/AdvancedMetricsDashboard";
 import { useMostFrequentNumbers, useLeastFrequentNumbers, useMaxGapNumbers, useMinGapNumbers } from "@/hooks/useNumberStatistics";
 import { DRAW_SCHEDULE } from "@/types/lottery";
 import { StatisticsSkeleton } from "@/components/LoadingSkeleton";
@@ -87,7 +88,7 @@ const Statistics = () => {
           <StatisticsSkeleton />
         ) : (
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 mb-6 sm:mb-8 h-auto">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-6 sm:mb-8 h-auto">
               <TabsTrigger value="overview" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
                 <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden xs:inline">Vue</span>
@@ -112,6 +113,11 @@ const Statistics = () => {
                 <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden xs:inline">IA</span>
                 <span className="xs:hidden">IA</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="gap-1 sm:gap-2 py-2 sm:py-3 text-xs sm:text-sm">
+                <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Analytics</span>
+                <span className="xs:hidden">Anal.</span>
               </TabsTrigger>
             </TabsList>
 
@@ -286,6 +292,10 @@ const Statistics = () => {
 
             <TabsContent value="rankings" className="animate-fade-in">
               <AlgorithmRankings drawName={selectedDraw} />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="animate-fade-in">
+              <AdvancedMetricsDashboard drawName={selectedDraw} />
             </TabsContent>
           </Tabs>
         )}
