@@ -10,6 +10,9 @@ import { StatisticsCharts } from "@/components/StatisticsCharts";
 import { AdvancedPredictionPanel } from "@/components/AdvancedPredictionPanel";
 import { AdvancedStatisticsPanel } from "@/components/AdvancedStatisticsPanel";
 import { AlgorithmRankings } from "@/components/AlgorithmRankings";
+import { EnhancedPredictionEngine } from "@/components/EnhancedPredictionEngine";
+import { AlgorithmOptimizer } from "@/components/AlgorithmOptimizer";
+import { AdvancedBacktesting } from "@/components/AdvancedBacktesting";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Footer } from "@/components/Footer";
@@ -99,33 +102,37 @@ const DrawDetails = () => {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="donnees" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 mb-8 h-auto flex-wrap">
-            <TabsTrigger value="donnees" className="gap-2">
-              <Database className="w-4 h-4" />
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 mb-8 h-auto flex-wrap text-xs">
+            <TabsTrigger value="donnees" className="gap-1">
+              <Database className="w-3 h-3" />
               Données
             </TabsTrigger>
-            <TabsTrigger value="consulter" className="gap-2">
-              <Search className="w-4 h-4" />
+            <TabsTrigger value="consulter" className="gap-1">
+              <Search className="w-3 h-3" />
               Consulter
             </TabsTrigger>
-            <TabsTrigger value="statistiques" className="gap-2">
-              <BarChart3 className="w-4 h-4" />
-              Statistiques
+            <TabsTrigger value="statistiques" className="gap-1">
+              <BarChart3 className="w-3 h-3" />
+              Stats
             </TabsTrigger>
-            <TabsTrigger value="stats-avancees" className="gap-2">
-              <Activity className="w-4 h-4" />
-              Stats Avancées
-            </TabsTrigger>
-            <TabsTrigger value="prediction" className="gap-2">
-              <Brain className="w-4 h-4" />
+            <TabsTrigger value="prediction" className="gap-1">
+              <Brain className="w-3 h-3" />
               Prédiction
             </TabsTrigger>
-            <TabsTrigger value="ia-avancee" className="gap-2">
-              <Sparkles className="w-4 h-4" />
-              IA Avancée
+            <TabsTrigger value="ia-engine" className="gap-1">
+              <Sparkles className="w-3 h-3" />
+              IA Engine
             </TabsTrigger>
-            <TabsTrigger value="aide" className="gap-2">
-              <Info className="w-4 h-4" />
+            <TabsTrigger value="optimizer" className="gap-1">
+              <RefreshCw className="w-3 h-3" />
+              Optimizer
+            </TabsTrigger>
+            <TabsTrigger value="backtest" className="gap-1">
+              <Activity className="w-3 h-3" />
+              Backtest
+            </TabsTrigger>
+            <TabsTrigger value="aide" className="gap-1">
+              <Info className="w-3 h-3" />
               Aide
             </TabsTrigger>
           </TabsList>
@@ -277,9 +284,7 @@ const DrawDetails = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="stats-avancees">
-            <AdvancedStatisticsPanel drawName={decodedDrawName} />
-          </TabsContent>
+
 
           <TabsContent value="prediction">
             <div className="space-y-6">
@@ -288,12 +293,16 @@ const DrawDetails = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="ia-avancee">
-            <div className="space-y-6">
-              <BestAlgorithmSelector drawName={decodedDrawName} />
-              <AdvancedPredictionPanel drawName={decodedDrawName} />
-              <AlgorithmRankings drawName={decodedDrawName} />
-            </div>
+          <TabsContent value="ia-engine">
+            <EnhancedPredictionEngine drawName={decodedDrawName} />
+          </TabsContent>
+
+          <TabsContent value="optimizer">
+            <AlgorithmOptimizer />
+          </TabsContent>
+
+          <TabsContent value="backtest">
+            <AdvancedBacktesting />
           </TabsContent>
 
           <TabsContent value="aide">

@@ -7,6 +7,10 @@ import { UserFavoriteNumbers } from "@/components/UserFavoriteNumbers";
 import { TrackedPredictionsDisplay } from "@/components/TrackedPredictionsDisplay";
 import { PredictionComparison } from "@/components/PredictionComparison";
 import { PersonalizationSettings } from "@/components/PersonalizationSettings";
+import { NotificationSettings } from "@/components/NotificationSettings";
+import { PersonalPerformanceTracker } from "@/components/PersonalPerformanceTracker";
+import { DataExport } from "@/components/DataExport";
+import { SocialShare } from "@/components/SocialShare";
 import { Onboarding } from "@/components/Onboarding";
 import { DetailedRankingsDisplay } from "@/components/DetailedRankingsDisplay";
 import { useAuth } from "@/hooks/useAuth";
@@ -66,6 +70,10 @@ export default function Dashboard() {
                 Gérez vos favoris et suivez vos prédictions
               </p>
             </div>
+            <SocialShare 
+              title="Mon Dashboard Loto Lumière"
+              description="Découvrez mes statistiques et prédictions"
+            />
           </div>
           <UserNav />
         </div>
@@ -110,14 +118,20 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <Tabs defaultValue="favorites" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="favorites">Mes Favoris</TabsTrigger>
-            <TabsTrigger value="history">Historique</TabsTrigger>
-            <TabsTrigger value="comparison">Comparaison</TabsTrigger>
-            <TabsTrigger value="rankings">Classements</TabsTrigger>
-            <TabsTrigger value="settings">Paramètres</TabsTrigger>
+        <Tabs defaultValue="performance" className="w-full">
+          <TabsList className="grid w-full grid-cols-7 text-xs">
+            <TabsTrigger value="performance">Perf.</TabsTrigger>
+            <TabsTrigger value="favorites">Favoris</TabsTrigger>
+            <TabsTrigger value="history">Hist.</TabsTrigger>
+            <TabsTrigger value="comparison">Comp.</TabsTrigger>
+            <TabsTrigger value="rankings">Class.</TabsTrigger>
+            <TabsTrigger value="export">Export</TabsTrigger>
+            <TabsTrigger value="settings">Param.</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="performance" className="space-y-4">
+            <PersonalPerformanceTracker />
+          </TabsContent>
           
           <TabsContent value="favorites" className="space-y-4">
             <UserFavoriteNumbers />
@@ -146,17 +160,25 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Personnalisation</CardTitle>
-                <CardDescription>
-                  Personnalisez votre expérience LOTO LUMIERE
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <PersonalizationSettings />
-              </CardContent>
-            </Card>
+            <div className="grid gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Personnalisation</CardTitle>
+                  <CardDescription>
+                    Personnalisez votre expérience LOTO LUMIERE
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PersonalizationSettings />
+                </CardContent>
+              </Card>
+              
+              <NotificationSettings />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="export" className="space-y-4">
+            <DataExport />
           </TabsContent>
         </Tabs>
       </div>

@@ -7,6 +7,8 @@ import { ArrowLeft, Search, TrendingUp } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { NumberConsult } from "@/components/NumberConsult";
 import { NumberRegularityChart } from "@/components/NumberRegularityChart";
+import { AdvancedSearch } from "@/components/AdvancedSearch";
+import { SocialShare } from "@/components/SocialShare";
 import { DRAW_SCHEDULE } from "@/types/lottery";
 import { UserNav } from "@/components/UserNav";
 
@@ -14,6 +16,18 @@ const Consult = () => {
   const navigate = useNavigate();
   const allDraws = Object.values(DRAW_SCHEDULE).flat();
   const [selectedDraw, setSelectedDraw] = useState(allDraws[0].name);
+  const [searchResults, setSearchResults] = useState(null);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+
+  const handleSearch = (filters: any) => {
+    // Ici vous pouvez implémenter la logique de recherche
+    console.log('Recherche avec filtres:', filters);
+    setSearchResults(filters);
+  };
+
+  const handleResetSearch = () => {
+    setSearchResults(null);
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -42,33 +56,69 @@ const Consult = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8 flex-1">
-        <Card className="bg-gradient-card border-border/50 animate-fade-in">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              Sélectionner un Tirage
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              Choisissez le tirage pour analyser les numéros
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Select value={selectedDraw} onValueChange={setSelectedDraw}>
-              <SelectTrigger className="w-full sm:max-w-md touch-target">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-[60vh] overflow-y-auto">
-                {allDraws.map((draw) => (
-                  <SelectItem key={draw.name} value={draw.name}>
-                    {draw.name} - {draw.day} {draw.time}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card className="bg-gradient-card border-border/50 animate-fade-in">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                Sélectionner un Tirage
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Choisissez le tirage pour analyser les numéros
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Select value={selectedDraw} onValueChange={setSelectedDraw}>
+                <SelectTrigger className="w-full touch-target">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-[60vh] overflow-y-auto">
+                  {allDraws.map((draw) => (
+                    <SelectItem key={draw.name} value={draw.name}>
+                      {draw.name} - {draw.day} {draw.time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                  className="gap-2"
+                >
+                  <Search className="w-4 h-4" />
+                  Recherche avancée
+                </Button>
+                <SocialShare 
+                  title="Consultation Loto Lumière"
+                  description={`Analyse du tirage ${selectedDraw}`}
+                  drawName={selectedDraw}
+                />
+              </div>
+            </CardContent>
+          </Card>
+          
+          {showAdvancedSearch && (
+            <AdvancedSearch 
+              onSearch={handleSearch}
+              onReset={handleResetSearch}
+            />
+          )}
+        </div>
 
         <div className="space-y-6 sm:space-y-8 animate-slide-up">
+          {searchResults && (
+            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+              <CardContent className="pt-6">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  Résultats filtrés - {JSON.stringify(searchResults, null, 2)}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+          
           <NumberConsult drawName={selectedDraw} />
           <NumberRegularityChart drawName={selectedDraw} />
         </div>

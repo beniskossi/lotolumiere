@@ -49,7 +49,7 @@ serve(async (req) => {
     
     // Si pas de résultats du tout, retourner des prédictions en mode dégradé
     if (!results || results.length === 0) {
-      console.log(`Aucune donnée pour ${drawName}, génération de prédictions en mode dégradé`);
+      console.log("No data available, generating fallback predictions");
       const predictions = generateFallbackPredictions(drawName);
       return new Response(JSON.stringify({ 
         predictions,
@@ -61,7 +61,7 @@ serve(async (req) => {
     
     // Si moins de 5 résultats, utiliser uniquement le mode dégradé
     if (results.length < 5) {
-      console.log(`Seulement ${results.length} résultats pour ${drawName}, mode dégradé activé`);
+      console.log("Insufficient data, fallback mode activated", { count: results.length });
       const predictions = generateFallbackPredictions(drawName);
       return new Response(JSON.stringify({ 
         predictions,
@@ -84,7 +84,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error in advanced-ai-prediction:', error);
+    console.error('Error in advanced-ai-prediction', { error: error instanceof Error ? error.message : String(error) });
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,

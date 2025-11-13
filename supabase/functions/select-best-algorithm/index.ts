@@ -23,7 +23,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log(`🎯 Selecting best algorithm for ${drawName}`);
+    console.log("Selecting best algorithm for draw");
 
     // 1. Récupérer les performances pour ce tirage
     const { data: performances, error: perfError } = await supabase
@@ -39,7 +39,7 @@ serve(async (req) => {
     let usingGlobal = false;
 
     if (!performances || performances.length === 0) {
-      console.log(`No specific data for ${drawName}, using global rankings`);
+      console.log("No specific data found, using global rankings");
       const { data: globalPerf } = await supabase
         .from('algorithm_rankings')
         .select('*')
@@ -118,7 +118,7 @@ serve(async (req) => {
     const top3 = scoredAlgorithms.slice(0, 3);
     const best = top3[0];
 
-    console.log(`✅ Best algorithm for ${drawName}: ${best.algorithm} (score: ${best.score.toFixed(3)})`);
+    console.log("Best algorithm selected", { algorithm: best.algorithm, score: best.score.toFixed(3) });
 
     // 5. Préparer la réponse
     return new Response(JSON.stringify({
@@ -136,7 +136,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in select-best-algorithm:', error);
+    console.error('Error in select-best-algorithm', { error: error instanceof Error ? error.message : String(error) });
     return new Response(JSON.stringify({ 
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error' 

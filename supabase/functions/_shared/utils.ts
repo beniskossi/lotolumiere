@@ -230,6 +230,25 @@ export function calculateVariance(data: DrawResult[]): number {
  */
 export function log(level: "info" | "warn" | "error", message: string, data?: any) {
   const timestamp = new Date().toISOString();
-  const logData = data ? ` | ${JSON.stringify(data)}` : "";
+  const safeData = data ? sanitizeLogData(data) : null;
+  const logData = safeData ? ` | ${JSON.stringify(safeData)}` : "";
   console.log(`[${timestamp}] [${level.toUpperCase()}] ${message}${logData}`);
+}
+
+function sanitizeLogData(data: any): any {
+  if (typeof data === 'string') {
+    return data.replace(/[\r\n\t]/g, ' ').substring(0, 200);
+  }
+  if (typeof data === 'object' && data !== null) {
+    const sanitized: any = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === 'string') {
+        sanitized[key] = value.replace(/[\r\n\t]/g, ' ').substring(0, 100);
+      } else if (typeof value === 'number' || typeof value === 'boolean') {
+        sanitized[key] = value;
+      }
+    }
+    return sanitized;
+  }
+  return data;
 }

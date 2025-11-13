@@ -26,7 +26,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Generating prediction for:", drawName);
+    console.log("Generating prediction for draw");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -41,7 +41,7 @@ serve(async (req) => {
       .limit(100);
 
     if (fetchError) {
-      console.error("Error fetching historical data:", fetchError);
+      console.error("Error fetching historical data", { error: fetchError.message });
       throw fetchError;
     }
 
@@ -55,7 +55,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Analyzing ${historicalData.length} historical draws`);
+    console.log("Analyzing historical draws", { count: historicalData.length });
 
     // Multi-model approach simulation
     const frequencyPrediction = predictByFrequency(historicalData as HistoricalDraw[]);
@@ -142,7 +142,7 @@ serve(async (req) => {
       });
 
     if (insertError) {
-      console.error("Error inserting predictions:", insertError);
+      console.error("Error inserting predictions", { error: insertError.message });
       throw insertError;
     }
 

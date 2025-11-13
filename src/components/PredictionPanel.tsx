@@ -3,8 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { NumberBall } from "@/components/NumberBall";
 import { PredictionShareButton } from "@/components/PredictionShareButton";
+import { SocialShare } from "@/components/SocialShare";
 import { useLatestPrediction } from "@/hooks/usePredictions";
 import { useGeneratePrediction } from "@/hooks/useGeneratePrediction";
+import { useAdvancedPrediction } from "@/hooks/useAdvancedPrediction";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -19,7 +21,11 @@ interface PredictionPanelProps {
 export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
   const { toast } = useToast();
   const { data: latestPrediction, isLoading: predictionLoading } = useLatestPrediction(drawName);
+  const { data: advancedPredictions } = useAdvancedPrediction(drawName);
   const generatePrediction = useGeneratePrediction();
+  
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const topAdvancedPrediction = advancedPredictions?.predictions?.[0];
 
   const handleGeneratePrediction = async () => {
     try {
@@ -57,23 +63,33 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
                 Prédictions basées sur des algorithmes d'apprentissage automatique
               </CardDescription>
             </div>
-            <Button
-              onClick={handleGeneratePrediction}
-              disabled={generatePrediction.isPending}
-              className="gap-2"
-            >
-              {generatePrediction.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Génération...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  Générer
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleGeneratePrediction}
+                disabled={generatePrediction.isPending}
+                className="gap-2"
+              >
+                {generatePrediction.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Génération...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Générer
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="gap-2"
+              >
+                <Brain className="w-4 h-4" />
+                {showAdvanced ? "Masquer" : "Avancé"}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -105,12 +121,18 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
                     ))}
                   </div>
 
-                  <div className="flex justify-center mb-4">
+                  <div className="flex justify-center gap-2 mb-4">
                     <PredictionShareButton
                       predictionId={latestPrediction.id}
                       drawName={drawName}
                       numbers={latestPrediction.predicted_numbers}
                       confidence={latestPrediction.confidence_score}
+                    />
+                    <SocialShare
+                      title={`Prédiction ${drawName}`}
+                      description={`Numéros prédits: ${latestPrediction.predicted_numbers.join(', ')}`}
+                      numbers={latestPrediction.predicted_numbers}
+                      drawName={drawName}
                     />
                   </div>
 
@@ -227,6 +249,34 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
           </p>
         </CardContent>
       </Card>
+      {/* Prédiction avancée */}
+      {showAdvanced && topAdvancedPrediction && (
+        <Card className="bg-gradient-accent text-white border-0">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="w-5 h-5" />
+              Prédiction IA Avancée
+            </CardTitle>
+            <CardDescription className="text-white/80">
+              {topAdvancedPrediction.algorithm} - Confiance: {Math.round(topAdvancedPrediction.confidence * 100)}%
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-3 flex-wrap justify-center mb-4">
+              {topAdvancedPrediction.numbers.map((num, idx) => (
+                <NumberBall key={`${num}-${idx}`} number={num} size="lg" />
+              ))}
+            </div>
+            <div className="flex gap-1 flex-wrap justify-center">
+              {topAdvancedPrediction.factors.slice(0, 3).map((factor, idx) => (
+                <span key={idx} className="text-xs bg-white/20 px-2 py-1 rounded">
+                  {factor}
+                </span>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

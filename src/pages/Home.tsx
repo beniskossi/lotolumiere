@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { GlobalStatistics } from "@/components/GlobalStatistics";
 import { AlgorithmRankings } from "@/components/AlgorithmRankings";
 import { BestAlgorithmDisplay } from "@/components/BestAlgorithmDisplay";
+import { RealTimeStats } from "@/components/RealTimeStats";
 import { DRAW_SCHEDULE, DAYS_ORDER } from "@/types/lottery";
 import { Sparkles, TrendingUp, BarChart3, Database, History as HistoryIcon, LayoutDashboard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -129,6 +130,11 @@ const Home = () => {
               </Link>
             </Button>
           )}
+        </div>
+
+        {/* Real-time Statistics */}
+        <div className="mb-8 sm:mb-12 animate-slide-up">
+          <RealTimeStats />
         </div>
 
         {/* Global Statistics */}

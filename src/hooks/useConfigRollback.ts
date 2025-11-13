@@ -38,7 +38,7 @@ export const useConfigRollback = () => {
           .single();
 
         if (configError || !configData) {
-          console.error(`Config not found for ${history.algorithm_name}`);
+          console.error("Config not found for algorithm", { algorithm: history.algorithm_name });
           return null;
         }
 

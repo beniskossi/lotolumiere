@@ -70,16 +70,20 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+            ([theme, prefix]) => {
+              const safeId = id.replace(/[^a-zA-Z0-9-_]/g, '');
+              return `
+${prefix} [data-chart=${safeId}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
+    const safeKey = key.replace(/[^a-zA-Z0-9-_]/g, '');
     const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    return color && /^#[0-9a-fA-F]{3,6}$|^hsl\(|^rgb\(/.test(color) ? `  --color-${safeKey}: ${color};` : null;
   })
   .join("\n")}
 }
-`,
+`;
+            }
           )
           .join("\n"),
       }}

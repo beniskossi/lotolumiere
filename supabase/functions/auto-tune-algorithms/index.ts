@@ -89,7 +89,7 @@ serve(async (req) => {
 
     const { drawName } = await req.json();
 
-    console.log(`🎯 Starting auto-tuning for ${drawName || 'all draws'}`);
+    console.log("Starting auto-tuning for algorithms");
 
     // 1. Récupérer les performances de tous les algorithmes
     const { data: performances, error: perfError } = await supabase
@@ -108,7 +108,7 @@ serve(async (req) => {
       });
     }
 
-    console.log(`📊 Analysing ${performances.length} algorithm performances`);
+    console.log("Analysing algorithm performances", { count: performances.length });
 
     const tuningResults = [];
 
@@ -196,7 +196,7 @@ serve(async (req) => {
         }
       });
 
-      console.log(`✅ Tuned ${normalizedName}: weight ${currentWeight.toFixed(2)} → ${newWeight.toFixed(2)} (${improvement > 0 ? '+' : ''}${improvement.toFixed(1)}%)`);
+      console.log("Algorithm tuned", { algorithm: normalizedName, oldWeight: currentWeight.toFixed(2), newWeight: newWeight.toFixed(2), improvement: improvement.toFixed(1) });
     }
 
     return new Response(JSON.stringify({

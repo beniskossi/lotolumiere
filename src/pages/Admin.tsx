@@ -22,6 +22,7 @@ import { AlgorithmPerformanceTracker } from "@/components/AlgorithmPerformanceTr
 import { AlgorithmTraining } from "@/components/AlgorithmTraining";
 import { AutoTuningPanel } from "@/components/AutoTuningPanel";
 import { AutomationScheduler } from "@/components/AutomationScheduler";
+import { LivePerformanceMetrics } from "@/components/LivePerformanceMetrics";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -514,30 +515,34 @@ const Admin = () => {
         </Alert>
 
         <Tabs defaultValue="results" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-6">
-            <TabsTrigger value="results" className="gap-2">
-              <Database className="w-4 h-4" />
+          <TabsList className="grid w-full grid-cols-7 mb-6 text-xs">
+            <TabsTrigger value="results" className="gap-1">
+              <Database className="w-3 h-3" />
               Résultats
             </TabsTrigger>
-            <TabsTrigger value="performance" className="gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Performance
+            <TabsTrigger value="performance" className="gap-1">
+              <TrendingUp className="w-3 h-3" />
+              Perf.
             </TabsTrigger>
-            <TabsTrigger value="autotuning" className="gap-2">
-              <Settings className="w-4 h-4" />
-              Auto-Tuning
+            <TabsTrigger value="live" className="gap-1">
+              <RefreshCw className="w-3 h-3" />
+              Live
             </TabsTrigger>
-            <TabsTrigger value="algorithms" className="gap-2">
-              <Settings className="w-4 h-4" />
-              Configuration
+            <TabsTrigger value="autotuning" className="gap-1">
+              <Settings className="w-3 h-3" />
+              Auto-Tune
             </TabsTrigger>
-            <TabsTrigger value="training" className="gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Entraînement
+            <TabsTrigger value="algorithms" className="gap-1">
+              <Settings className="w-3 h-3" />
+              Config
             </TabsTrigger>
-            <TabsTrigger value="automation" className="gap-2">
-              <Calendar className="w-4 h-4" />
-              Automatisation
+            <TabsTrigger value="training" className="gap-1">
+              <TrendingUp className="w-3 h-3" />
+              Train
+            </TabsTrigger>
+            <TabsTrigger value="automation" className="gap-1">
+              <Calendar className="w-3 h-3" />
+              Auto
             </TabsTrigger>
           </TabsList>
 
@@ -716,6 +721,10 @@ const Admin = () => {
 
           <TabsContent value="performance" className="space-y-6">
             <AlgorithmPerformanceTracker />
+          </TabsContent>
+
+          <TabsContent value="live" className="space-y-6">
+            <LivePerformanceMetrics />
           </TabsContent>
 
           <TabsContent value="autotuning" className="space-y-6">

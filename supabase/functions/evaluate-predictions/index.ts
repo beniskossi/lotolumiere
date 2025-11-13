@@ -67,7 +67,7 @@ serve(async (req) => {
 
     const { drawName } = await req.json();
 
-    console.log(`🔍 Evaluating predictions for: ${drawName || "all draws"}`);
+    console.log("Evaluating predictions for draw");
 
     // Get all draw results sorted by date (most recent first)
     let resultsQuery = supabase
@@ -89,7 +89,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`📊 Found ${results.length} draw results to evaluate`);
+    console.log("Found draw results to evaluate", { count: results.length });
 
     let evaluatedCount = 0;
     let newEvaluations = 0;
@@ -97,7 +97,7 @@ serve(async (req) => {
 
     // For each result, find ALL predictions made before the draw date
     for (const result of results as DrawResult[]) {
-      console.log(`\n🎯 Processing draw: ${result.draw_name} on ${result.draw_date}`);
+      console.log("Processing draw result");
       
       // Get ALL predictions for this draw made before the result date
       const { data: predictions, error: predictionsError } = await supabase
@@ -108,7 +108,7 @@ serve(async (req) => {
         .order("prediction_date", { ascending: false });
 
       if (predictionsError) {
-        console.error(`❌ Error fetching predictions: ${predictionsError.message}`);
+        console.error("Error fetching predictions", { error: predictionsError.message });
         continue;
       }
 
@@ -117,7 +117,7 @@ serve(async (req) => {
         continue;
       }
 
-      console.log(`Found ${predictions.length} predictions to evaluate`);
+      console.log("Found predictions to evaluate", { count: predictions.length });
 
       for (const prediction of predictions) {
         // Calculate matches
@@ -172,12 +172,12 @@ serve(async (req) => {
           });
 
         if (insertError) {
-          console.error(`❌ Error inserting performance: ${insertError.message}`);
+          console.error("Error inserting performance", { error: insertError.message });
         } else {
           evaluatedCount++;
           if (!existing) {
             newEvaluations++;
-            console.log(`✅ ${prediction.model_used}: ${matches}/5 matches (${accuracyScore.toFixed(1)}%) F1: ${f1Score.toFixed(2)}`);
+            console.log("Performance recorded", { matches, accuracy: accuracyScore.toFixed(1), f1: f1Score.toFixed(2) });
           }
         }
       }
@@ -187,7 +187,7 @@ serve(async (req) => {
     console.log("\n🔄 Refreshing algorithm rankings...");
     const { error: refreshError } = await supabase.rpc("refresh_algorithm_rankings");
     if (refreshError) {
-      console.error(`⚠️ Warning: Could not refresh rankings: ${refreshError.message}`);
+      console.error("Warning: Could not refresh rankings", { error: refreshError.message });
     } else {
       console.log("✅ Rankings refreshed successfully");
     }
@@ -195,10 +195,10 @@ serve(async (req) => {
     // Log summary by algorithm
     console.log("\n📊 Evaluation Summary by Algorithm:");
     Object.entries(algorithmStats).forEach(([algo, stats]) => {
-      console.log(`  • ${algo}: ${stats.evaluated} evaluations, best: ${stats.bestMatch}/5`);
+      console.log("Algorithm stats", { algorithm: algo, evaluated: stats.evaluated, bestMatch: stats.bestMatch });
     });
 
-    console.log(`\n🎉 Successfully evaluated ${evaluatedCount} predictions (${newEvaluations} new)`);
+    console.log("Successfully evaluated predictions", { total: evaluatedCount, new: newEvaluations });
 
     return new Response(
       JSON.stringify({
@@ -211,7 +211,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("❌ Error in evaluate-predictions:", error);
+    console.error("Error in evaluate-predictions", { error: error instanceof Error ? error.message : String(error) });
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       {

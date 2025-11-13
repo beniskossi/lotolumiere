@@ -138,7 +138,7 @@ export const PredictionComparison = ({ drawName }: PredictionComparisonProps) =>
     const exportData = validComparisons.map(comp => ({
       date_prediction: comp.prediction.prediction_date,
       date_tirage: comp.result?.draw_date,
-      algorithme: comp.prediction.model_used,
+      algorithme: comp.prediction.model_used?.replace(/[,"]/g, ' ') || 'Unknown',
       numeros_predits: comp.prediction.predicted_numbers.join(', '),
       numeros_gagnants: comp.result?.winning_numbers.join(', '),
       matches: comp.matches,
@@ -155,7 +155,7 @@ export const PredictionComparison = ({ drawName }: PredictionComparisonProps) =>
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `comparaison-predictions-${drawName}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.download = `comparaison-predictions-${encodeURIComponent(drawName)}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
   };
 

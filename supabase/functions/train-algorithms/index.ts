@@ -134,7 +134,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Found ${rankings.length} algorithm performance records`);
+    console.log("Found algorithm performance records", { count: rankings.length });
 
     const updates = [];
     const trainingHistory: TrainingHistoryEntry[] = [];
@@ -151,7 +151,7 @@ serve(async (req) => {
 
       const adjustment = adjustAlgorithmConfig(config, validPerformances);
       if (adjustment) {
-        console.log(`${config.algorithm_name}: ${config.weight} -> ${adjustment.newWeight} (${adjustment.improvement.toFixed(1)}%)`);
+        console.log("Algorithm adjustment", { algorithm: config.algorithm_name, oldWeight: config.weight, newWeight: adjustment.newWeight, improvement: adjustment.improvement.toFixed(1) });
 
         trainingHistory.push({
           algorithm_name: config.algorithm_name,
@@ -200,7 +200,7 @@ serve(async (req) => {
     const results = await Promise.all(updatePromises);
     const updatedCount = results.filter(result => !result.error).length;
 
-    console.log(`Training complete. Updated ${updatedCount} algorithms.`);
+    console.log("Training complete", { updatedCount });
 
     return new Response(
       JSON.stringify({
@@ -213,7 +213,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Error in train-algorithms:", error);
+    console.error("Error in train-algorithms", { error: error instanceof Error ? error.message : String(error) });
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" } as ResponseData),
       {
@@ -244,7 +244,7 @@ function adjustAlgorithmConfig(
 
   // Vérifier qu'on a assez d'évaluations pour un entraînement fiable
   if (performances.length < MIN_EVALUATIONS_REQUIRED) {
-    console.log(`${config.algorithm_name}: Pas assez d'évaluations (${performances.length} < ${MIN_EVALUATIONS_REQUIRED})`);
+    console.log("Insufficient evaluations for training", { algorithm: config.algorithm_name, count: performances.length, required: MIN_EVALUATIONS_REQUIRED });
     return null;
   }
 

@@ -19,7 +19,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Starting scraping job...");
+    console.log("Starting scraping job");
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -39,7 +39,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      console.error("Authentication failed:", authError);
+      console.error("Authentication failed", { error: authError?.message });
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }), 
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -55,14 +55,14 @@ serve(async (req) => {
       .maybeSingle();
 
     if (roleError || !roleData) {
-      console.error("Admin check failed:", roleError || "User is not admin");
+      console.error("Admin check failed", { error: roleError?.message || "User is not admin" });
       return new Response(
         JSON.stringify({ error: 'Forbidden - Admin access required' }), 
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Admin user ${user.id} authorized to scrape`);
+    console.log("Admin user authorized to scrape");
 
     // Create scraping job record
     const { data: job, error: jobError } = await supabase
@@ -80,11 +80,11 @@ serve(async (req) => {
       throw jobError;
     }
 
-    console.log("Job created:", job.id);
+    console.log("Job created", { jobId: job.id });
 
     // Fetch data from Loto Bonheur API
     const apiUrl = "https://lotobonheur.ci/api/results";
-    console.log("Fetching from:", apiUrl);
+    console.log("Fetching from API");
     
     const response = await fetch(apiUrl, {
       headers: {
@@ -99,7 +99,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("Received data structure:", JSON.stringify(data).substring(0, 500));
+    console.log("Received data structure", { hasData: !!data, success: data?.success });
     
     if (!data.success) {
       throw new Error('API response not successful');
@@ -183,7 +183,7 @@ serve(async (req) => {
             // Match draw name directly (case-sensitive)
             const mappedName = drawNameMap[draw.drawName.toLowerCase()];
             if (!mappedName) {
-              console.log(`Unknown draw name: ${draw.drawName}`);
+              console.log("Unknown draw name encountered");
               continue;
             }
             
@@ -221,14 +221,14 @@ serve(async (req) => {
                 machineNumbers,
               });
             } else {
-              console.log(`Invalid numbers for ${draw.drawName}: got ${winningNumbers.length} numbers from ${draw.winningNumbers}`);
+              console.log("Invalid numbers detected", { expectedCount: 5, actualCount: winningNumbers.length });
             }
           }
         }
       }
     }
 
-    console.log(`Parsed ${results.length} results`);
+    console.log("Parsed results", { count: results.length });
 
     // Insert results into database
     let insertedCount = 0;
@@ -245,7 +245,7 @@ serve(async (req) => {
           .maybeSingle();
 
         if (existing) {
-          console.log(`Skipping duplicate: ${result.game} - ${result.date}`);
+          console.log("Skipping duplicate result");
           continue;
         }
 
@@ -264,13 +264,13 @@ serve(async (req) => {
           });
 
         if (insertError) {
-          console.error(`Error inserting ${result.game}:`, insertError);
+          console.error("Error inserting result", { error: insertError.message });
           errors.push(`${result.game}: ${insertError.message}`);
         } else {
           insertedCount++;
         }
       } catch (error) {
-        console.error(`Error processing ${result.game}:`, error);
+        console.error("Error processing result", { error: error instanceof Error ? error.message : String(error) });
         const errorMessage = error instanceof Error ? error.message : String(error);
         errors.push(`${result.game}: ${errorMessage}`);
       }
@@ -288,7 +288,7 @@ serve(async (req) => {
       .eq("id", job.id);
 
     if (updateError) {
-      console.error("Error updating job:", updateError);
+      console.error("Error updating job", { error: updateError.message });
     }
 
     return new Response(
@@ -302,7 +302,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Scraping error:", error);
+    console.error("Scraping error", { error: error instanceof Error ? error.message : String(error) });
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
