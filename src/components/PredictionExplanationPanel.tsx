@@ -28,11 +28,11 @@ export const PredictionExplanationPanel = ({ explanations }: PredictionExplanati
   return (
     <Card className="bg-accent/10 border-accent/30">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Info className="w-5 h-5" />
+        <CardTitle className="flex items-center gap-2 text-base text-foreground">
+          <Info className="w-5 h-5 text-accent" />
           Pourquoi ces numéros ?
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-muted-foreground">
           Explications détaillées de la prédiction
         </CardDescription>
       </CardHeader>

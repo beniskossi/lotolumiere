@@ -11,6 +11,12 @@ import { usePersonalizedPrediction } from "@/hooks/usePersonalizedPrediction";
 import { PredictionExplanationPanel } from "./PredictionExplanationPanel";
 import { PatternDetectionPanel } from "./PatternDetectionPanel";
 import { PredictionFeedbackDialog } from "./PredictionFeedbackDialog";
+import { DynamicConfidenceIndicator } from "./DynamicConfidenceIndicator";
+import { MultiAlgorithmComparison } from "./MultiAlgorithmComparison";
+import { ConditionalPredictions } from "./ConditionalPredictions";
+import { PersonalLearningPanel } from "./PersonalLearningPanel";
+import { AnomalyDetectionPanel } from "./AnomalyDetectionPanel";
+import { MultiDrawPredictionPanel } from "./MultiDrawPredictionPanel";
 import { MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -63,6 +69,17 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Confiance Dynamique */}
+      <DynamicConfidenceIndicator drawName={drawName} />
+
+      {/* Comparaison Multi-Algorithmes */}
+      <MultiAlgorithmComparison drawName={drawName} />
+
+      {/* Auto-Learning Personnel */}
+      {user && <PersonalLearningPanel />}
+
+      {/* Détection d'Anomalies */}
+      <AnomalyDetectionPanel drawName={drawName} />
       <Card className="bg-gradient-card border-border/50">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -224,8 +241,8 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
 
       <Card className="bg-accent/10 border-accent/30">
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
+          <CardTitle className="text-base flex items-center gap-2 text-foreground">
+            <TrendingUp className="w-4 h-4 text-accent" />
             Approche Hybride Multi-Modèles
           </CardTitle>
         </CardHeader>
@@ -234,7 +251,7 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
             <div className="flex gap-3">
               <div className="w-2 h-2 mt-2 rounded-full bg-primary flex-shrink-0" />
               <div>
-                <p className="font-semibold text-primary">Analyse de Fréquence Pondérée</p>
+                <p className="font-semibold text-foreground">Analyse de Fréquence Pondérée</p>
                 <p className="text-xs text-muted-foreground">
                   Détection des numéros chauds avec boost de récence et seuil d'activité
                 </p>
@@ -243,7 +260,7 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
             <div className="flex gap-3">
               <div className="w-2 h-2 mt-2 rounded-full bg-success flex-shrink-0" />
               <div>
-                <p className="font-semibold text-success">Patterns de Séquence</p>
+                <p className="font-semibold text-foreground">Patterns de Séquence</p>
                 <p className="text-xs text-muted-foreground">
                   Analyse des paires et triplets fréquents pour identifier les associations
                 </p>
@@ -252,7 +269,7 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
             <div className="flex gap-3">
               <div className="w-2 h-2 mt-2 rounded-full bg-accent flex-shrink-0" />
               <div>
-                <p className="font-semibold text-accent">Gap Analysis Avancée</p>
+                <p className="font-semibold text-foreground">Gap Analysis Avancée</p>
                 <p className="text-xs text-muted-foreground">
                   Prédiction basée sur les écarts temporels et la variance des patterns
                 </p>
@@ -264,8 +281,8 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
 
       <Card className="bg-destructive/10 border-destructive/30">
         <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">
-            <strong>⚠️ Avertissement:</strong> Ces prédictions sont basées sur des analyses 
+          <p className="text-sm text-foreground">
+            <strong className="text-destructive">⚠️ Avertissement:</strong> Ces prédictions sont basées sur des analyses 
             statistiques historiques et ne garantissent aucun résultat. La loterie reste un 
             jeu de hasard où chaque tirage est totalement indépendant. Jouez de manière 
             responsable.
@@ -296,6 +313,9 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Prédictions Conditionnelles */}
+      <ConditionalPredictions drawName={drawName} />
 
       {/* Patterns */}
       {patterns.length > 0 && (

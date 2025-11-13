@@ -222,30 +222,30 @@ export const LivePerformanceMetrics = ({ drawName }: LivePerformanceMetricsProps
           <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-4 h-4 text-primary" />
-              <span className="font-medium text-primary">Résumé Global</span>
+              <span className="font-medium text-foreground">Résumé Global</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Précision moyenne</p>
-                <p className="font-bold">
+                <p className="font-bold text-foreground">
                   {(metrics.reduce((sum, m) => sum + m.currentAccuracy, 0) / metrics.length).toFixed(1)}%
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Meilleur algorithme</p>
-                <p className="font-bold">
+                <p className="font-bold text-foreground">
                   {metrics.sort((a, b) => b.currentAccuracy - a.currentAccuracy)[0]?.algorithm.split(' ')[0]}
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Total prédictions</p>
-                <p className="font-bold">
+                <p className="font-bold text-foreground">
                   {metrics.reduce((sum, m) => sum + m.predictions24h, 0)}
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Algorithmes actifs</p>
-                <p className="font-bold">
+                <p className="font-bold text-foreground">
                   {metrics.filter(m => m.status !== "poor").length}/{metrics.length}
                 </p>
               </div>

@@ -14,6 +14,7 @@ import { SocialShare } from "@/components/SocialShare";
 import { Onboarding } from "@/components/Onboarding";
 import { DetailedRankingsDisplay } from "@/components/DetailedRankingsDisplay";
 import { NumberHeatmap } from "@/components/NumberHeatmap";
+import { MultiDrawPredictionPanel } from "@/components/MultiDrawPredictionPanel";
 import { useDrawResults } from "@/hooks/useDrawResults";
 import { AchievementSystem } from "@/components/AchievementSystem";
 import { GlobalLeaderboard } from "@/components/GlobalLeaderboard";
@@ -134,6 +135,7 @@ export default function Dashboard() {
             <TabsTrigger value="achievements" className="px-2 sm:px-3 hidden sm:flex">Succ.</TabsTrigger>
             <TabsTrigger value="leaderboard" className="px-2 sm:px-3 hidden sm:flex">Top</TabsTrigger>
             <TabsTrigger value="heatmap" className="px-2 sm:px-3 hidden sm:flex">Chaleur</TabsTrigger>
+            <TabsTrigger value="multidraw" className="px-2 sm:px-3 hidden sm:flex">Multi</TabsTrigger>
             <TabsTrigger value="export" className="px-2 sm:px-3 hidden sm:flex">Export</TabsTrigger>
             <TabsTrigger value="settings" className="px-2 sm:px-3 hidden sm:flex">Param.</TabsTrigger>
           </TabsList>
@@ -187,6 +189,10 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="multidraw" className="space-y-4">
+            <MultiDrawPredictionPanel drawNames={["Midi", "Etoile", "National"]} />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">
