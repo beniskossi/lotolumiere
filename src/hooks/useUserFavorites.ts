@@ -8,6 +8,7 @@ export interface UserFavorite {
   draw_name: string;
   favorite_numbers: number[];
   notes: string | null;
+  category?: string;
   created_at: string;
   updated_at: string;
 }

@@ -1,33 +1,49 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTrackedPredictions } from "@/hooks/usePredictionTracking";
+import { usePaginatedQuery, PaginatedResponse } from "@/hooks/usePaginatedQuery";
 import { useAuth } from "@/hooks/useAuth";
 import { NumberBall } from "./NumberBall";
 import { Badge } from "@/components/ui/badge";
-import { History } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { History, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 
 export const TrackedPredictionsDisplay = () => {
   const { user } = useAuth();
-  const { data: trackedPredictions, isLoading } = useTrackedPredictions(user?.id);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDraw, setSelectedDraw] = useState<string>("all");
+  const itemsPerPage = 10;
+  
+  const { data: paginatedData, isLoading } = usePaginatedQuery<any>(
+    "user_prediction_tracking",
+    ["tracked-predictions", user?.id || "", selectedDraw],
+    { page: currentPage, pageSize: itemsPerPage, orderBy: "marked_at", ascending: false },
+    { user_id: user?.id }
+  );
+  
+  const paginatedPredictions = paginatedData?.data || [];
+  const totalPages = paginatedData?.totalPages || 0;
+  const totalCount = paginatedData?.count || 0;
+  
+  // Get draw names for filter
+  const { data: allPredictions } = useTrackedPredictions(user?.id);
+  const drawNames = Array.from(new Set((allPredictions || []).map((p: any) => p.predictions?.draw_name).filter(Boolean)));
+  
+  const handleDrawChange = (value: string) => {
+    setSelectedDraw(value);
+    setCurrentPage(1);
+  };
 
   if (isLoading) {
-    return <div>Chargement...</div>;
-  }
-
-  if (!trackedPredictions || trackedPredictions.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <History className="w-5 h-5" />
-            Historique de Prédictions
-          </CardTitle>
-          <CardDescription>
-            Aucune prédiction sauvegardée pour le moment
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
+
+  const hasNoPredictions = totalCount === 0;
 
   return (
     <Card>
@@ -37,11 +53,40 @@ export const TrackedPredictionsDisplay = () => {
           Historique de Prédictions
         </CardTitle>
         <CardDescription>
-          Vos prédictions sauvegardées ({trackedPredictions.length})
+          {hasNoPredictions ? "Aucune prédiction sauvegardée" : `${totalCount} prédiction${totalCount > 1 ? 's' : ''}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {trackedPredictions.map((tracked: any) => (
+        {!hasNoPredictions && (
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <Select value={selectedDraw} onValueChange={handleDrawChange}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrer par tirage" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les tirages</SelectItem>
+                {drawNames.map((drawName: string) => (
+                  <SelectItem key={drawName} value={drawName}>
+                    {drawName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        {hasNoPredictions ? (
+          <p className="text-center text-muted-foreground py-8">
+            Aucune prédiction sauvegardée pour le moment
+          </p>
+        ) : paginatedPredictions.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">
+            Aucune prédiction pour ce tirage
+          </p>
+        ) : (
+          <>
+          {paginatedPredictions.map((tracked: any) => (
           <div key={tracked.id} className="border rounded-lg p-4 space-y-2">
             <div className="flex justify-between items-start">
               <div>
@@ -77,6 +122,37 @@ export const TrackedPredictionsDisplay = () => {
             </p>
           </div>
         ))}
+          </>
+        )}
+        
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} sur {totalPages}
+              <span className="ml-2">({(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, totalCount)} sur {totalCount})</span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

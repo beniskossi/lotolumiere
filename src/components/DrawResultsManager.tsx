@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useDrawResults, DrawResult } from "@/hooks/useDrawResults";
+import { useDrawResultsPaginated, DrawResult } from "@/hooks/useDrawResults";
 import { NumberBall } from "@/components/NumberBall";
 import { Edit2, Trash2, Calendar, Clock, CalendarIcon, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import { format } from "date-fns";
@@ -58,18 +58,17 @@ export const DrawResultsManager = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const resultsPerPage = 20;
   
-  const { data: allResults = [], refetch } = useDrawResults(undefined, 500);
+  const { data: paginatedData, refetch } = useDrawResultsPaginated(
+    selectedDrawName === "all" ? undefined : selectedDrawName,
+    currentPage,
+    resultsPerPage
+  );
   
-  // Filter results based on selected draw
-  const filteredResults = selectedDrawName === "all" 
-    ? allResults 
-    : allResults.filter(r => r.draw_name === selectedDrawName);
-  
-  // Pagination
-  const totalPages = Math.ceil(filteredResults.length / resultsPerPage);
+  const paginatedResults = paginatedData?.data || [];
+  const totalPages = paginatedData?.totalPages || 0;
+  const totalCount = paginatedData?.count || 0;
   const startIndex = (currentPage - 1) * resultsPerPage;
-  const endIndex = startIndex + resultsPerPage;
-  const paginatedResults = filteredResults.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + resultsPerPage, totalCount);
   
   const [editingResult, setEditingResult] = useState<DrawResult | null>(null);
   const [deletingResult, setDeletingResult] = useState<DrawResult | null>(null);
@@ -79,8 +78,9 @@ export const DrawResultsManager = () => {
   const [editDate, setEditDate] = useState<Date | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get unique draw names for filter
-  const drawNames = Array.from(new Set(allResults.map(r => r.draw_name))).sort();
+  // Get unique draw names for filter (fetch separately)
+  const { data: allDrawNames } = useDrawResultsPaginated(undefined, 1, 1000);
+  const drawNames = Array.from(new Set((allDrawNames?.data || []).map(r => r.draw_name))).sort();
 
   // Reset to first page when filter changes
   const handleDrawFilterChange = (value: string) => {
@@ -253,7 +253,7 @@ export const DrawResultsManager = () => {
             </div>
             
             <div className="text-sm text-muted-foreground">
-              {filteredResults.length} résultat{filteredResults.length > 1 ? 's' : ''}
+              {totalCount} résultat{totalCount > 1 ? 's' : ''}
               {selectedDrawName !== "all" && ` pour ${selectedDrawName}`}
             </div>
           </div>
@@ -349,7 +349,7 @@ export const DrawResultsManager = () => {
               <div className="text-sm text-muted-foreground">
                 Page {currentPage} sur {totalPages}
                 <span className="ml-2">
-                  ({startIndex + 1}-{Math.min(endIndex, filteredResults.length)} sur {filteredResults.length})
+                  ({startIndex + 1}-{endIndex} sur {totalCount})
                 </span>
               </div>
               <div className="flex gap-2">

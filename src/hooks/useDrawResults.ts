@@ -12,6 +12,14 @@ export interface DrawResult {
   created_at: string;
 }
 
+export interface PaginatedResults {
+  data: DrawResult[];
+  count: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export const useDrawResults = (drawName?: string, limit = 10) => {
   return useQuery({
     queryKey: ["draw-results", drawName, limit],
@@ -31,6 +39,43 @@ export const useDrawResults = (drawName?: string, limit = 10) => {
       if (error) throw error;
       return data as DrawResult[];
     },
+  });
+};
+
+export const useDrawResultsPaginated = (
+  drawName?: string,
+  page = 1,
+  pageSize = 20
+) => {
+  return useQuery({
+    queryKey: ["draw-results-paginated", drawName, page, pageSize],
+    queryFn: async (): Promise<PaginatedResults> => {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = supabase
+        .from("draw_results")
+        .select("*", { count: "exact" })
+        .order("draw_date", { ascending: false })
+        .range(from, to);
+
+      if (drawName) {
+        query = query.eq("draw_name", drawName);
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+
+      return {
+        data: data as DrawResult[],
+        count: count || 0,
+        page,
+        pageSize,
+        totalPages: Math.ceil((count || 0) / pageSize),
+      };
+    },
+    keepPreviousData: true,
   });
 };
 

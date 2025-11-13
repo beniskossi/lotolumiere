@@ -15,6 +15,8 @@ import {
   arimaAlgorithm,
   generateFallbackPrediction,
 } from "../_shared/algorithms.ts";
+import { ensemblePrediction } from "../_shared/ensemble.ts";
+import { explainPrediction } from "../_shared/explainability.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,6 +28,7 @@ const PREDICTION_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 interface PredictionResponse {
   predictions: PredictionResult[];
+  explanations?: any[];
   warning?: string;
 }
 
@@ -36,11 +39,10 @@ interface AlgorithmConfig {
 }
 
 const algorithms: AlgorithmConfig[] = [
+  { name: "Ensemble (7 modèles)", type: "ensemble", fn: ensemblePrediction },
   { name: "Analyse Fréquentielle", type: "statistical", fn: weightedFrequencyAlgorithm },
-  { name: "ML K-means", type: "ml", fn: kmeansClusteringAlgorithm },
   { name: "Inférence Bayésienne", type: "bayesian", fn: bayesianInferenceAlgorithm },
   { name: "Neural Network", type: "neural", fn: neuralNetworkAlgorithm },
-  { name: "Analyse Variance", type: "variance", fn: varianceAnalysisAlgorithm },
   { name: "Random Forest", type: "lightgbm", fn: randomForestAlgorithm },
   { name: "Gradient Boosting", type: "catboost", fn: gradientBoostingAlgorithm },
   { name: "LSTM Network", type: "transformer", fn: lstmAlgorithm },
@@ -93,8 +95,11 @@ serve(async (req) => {
     // Générer les prédictions avec tous les algorithmes
     const predictions = await generateAllPredictions(results, dataQuality, freshness);
 
+    // Générer explications pour top prédiction
+    const explanations = predictions.length > 0 ? explainPrediction(predictions[0], results) : [];
+
     // Construire la réponse
-    const response: PredictionResponse = { predictions };
+    const response: PredictionResponse = { predictions, explanations };
     
     // Ajouter des avertissements si nécessaire
     if (results.length < 20) {

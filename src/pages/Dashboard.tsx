@@ -13,6 +13,11 @@ import { DataExport } from "@/components/DataExport";
 import { SocialShare } from "@/components/SocialShare";
 import { Onboarding } from "@/components/Onboarding";
 import { DetailedRankingsDisplay } from "@/components/DetailedRankingsDisplay";
+import { NumberHeatmap } from "@/components/NumberHeatmap";
+import { useDrawResults } from "@/hooks/useDrawResults";
+import { AchievementSystem } from "@/components/AchievementSystem";
+import { GlobalLeaderboard } from "@/components/GlobalLeaderboard";
+import { LevelProgress } from "@/components/LevelProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { ArrowLeft, LayoutDashboard, TrendingUp } from "lucide-react";
@@ -23,6 +28,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { data: preferences, isLoading: prefsLoading } = useUserPreferences(user?.id);
+  const { data: drawResults } = useDrawResults(preferences?.preferred_draw_name || "Midi", 50);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
@@ -51,7 +57,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button
@@ -119,14 +125,17 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="performance" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 text-xs">
-            <TabsTrigger value="performance">Perf.</TabsTrigger>
-            <TabsTrigger value="favorites">Favoris</TabsTrigger>
-            <TabsTrigger value="history">Hist.</TabsTrigger>
-            <TabsTrigger value="comparison">Comp.</TabsTrigger>
-            <TabsTrigger value="rankings">Class.</TabsTrigger>
-            <TabsTrigger value="export">Export</TabsTrigger>
-            <TabsTrigger value="settings">Param.</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-10 gap-1 text-[10px] sm:text-xs p-1 h-auto">
+            <TabsTrigger value="performance" className="px-2 sm:px-3">Perf.</TabsTrigger>
+            <TabsTrigger value="favorites" className="px-2 sm:px-3">Fav.</TabsTrigger>
+            <TabsTrigger value="history" className="px-2 sm:px-3">Hist.</TabsTrigger>
+            <TabsTrigger value="comparison" className="px-2 sm:px-3 hidden sm:flex">Comp.</TabsTrigger>
+            <TabsTrigger value="rankings" className="px-2 sm:px-3 hidden sm:flex">Class.</TabsTrigger>
+            <TabsTrigger value="achievements" className="px-2 sm:px-3 hidden sm:flex">Succ.</TabsTrigger>
+            <TabsTrigger value="leaderboard" className="px-2 sm:px-3 hidden sm:flex">Top</TabsTrigger>
+            <TabsTrigger value="heatmap" className="px-2 sm:px-3 hidden sm:flex">Chaleur</TabsTrigger>
+            <TabsTrigger value="export" className="px-2 sm:px-3 hidden sm:flex">Export</TabsTrigger>
+            <TabsTrigger value="settings" className="px-2 sm:px-3 hidden sm:flex">Param.</TabsTrigger>
           </TabsList>
           
           <TabsContent value="performance" className="space-y-4">
@@ -157,6 +166,27 @@ export default function Dashboard() {
 
           <TabsContent value="rankings" className="space-y-4">
             <DetailedRankingsDisplay />
+          </TabsContent>
+
+          <TabsContent value="achievements" className="space-y-4">
+            <LevelProgress />
+            <AchievementSystem />
+          </TabsContent>
+
+          <TabsContent value="leaderboard" className="space-y-4">
+            <GlobalLeaderboard />
+          </TabsContent>
+
+          <TabsContent value="heatmap" className="space-y-4">
+            {drawResults && drawResults.length > 0 ? (
+              <NumberHeatmap results={drawResults} />
+            ) : (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  Chargement des données...
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">

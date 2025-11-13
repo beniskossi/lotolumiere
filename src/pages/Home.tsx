@@ -4,7 +4,6 @@ import { InstallButton } from "@/components/InstallButton";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { Footer } from "@/components/Footer";
 import { GlobalStatistics } from "@/components/GlobalStatistics";
-import { AlgorithmRankings } from "@/components/AlgorithmRankings";
 import { BestAlgorithmDisplay } from "@/components/BestAlgorithmDisplay";
 import { RealTimeStats } from "@/components/RealTimeStats";
 import { DRAW_SCHEDULE, DAYS_ORDER } from "@/types/lottery";
@@ -20,7 +19,6 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
       <div className="bg-gradient-primary text-white py-8 sm:py-16 px-4 mb-6 sm:mb-8 shadow-lg relative overflow-hidden safe-area-top">
         <div className="absolute inset-0 bg-gradient-accent opacity-10"></div>
         <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2 z-20">
@@ -43,7 +41,6 @@ const Home = () => {
             prédictions intelligentes et visualisations interactives
           </p>
 
-          {/* Features Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-6 sm:mt-8">
             <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all touch-target">
               <CardContent className="p-3 sm:p-4 flex items-center gap-3">
@@ -76,40 +73,23 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Draws Section */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 pb-8 sm:pb-12">
-        {/* Navigation Links */}
         <div className="flex gap-2 sm:gap-3 mb-6 sm:mb-8 animate-fade-in flex-wrap">
-          <Button
-            variant="outline"
-            asChild
-            className="gap-2 flex-1 sm:flex-initial touch-target"
-            size="sm"
-          >
+          <Button variant="outline" asChild className="gap-2 flex-1 sm:flex-initial touch-target" size="sm">
             <Link to="/statistiques">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden xs:inline">Statistiques</span>
               <span className="xs:hidden">Stats</span>
             </Link>
           </Button>
-          <Button
-            variant="outline"
-            asChild
-            className="gap-2 flex-1 sm:flex-initial touch-target"
-            size="sm"
-          >
+          <Button variant="outline" asChild className="gap-2 flex-1 sm:flex-initial touch-target" size="sm">
             <Link to="/consulter">
               <Sparkles className="w-4 h-4" />
               <span className="hidden xs:inline">Consulter</span>
               <span className="xs:hidden">Cons.</span>
             </Link>
           </Button>
-          <Button
-            variant="outline"
-            asChild
-            className="gap-2 flex-1 sm:flex-initial touch-target"
-            size="sm"
-          >
+          <Button variant="outline" asChild className="gap-2 flex-1 sm:flex-initial touch-target" size="sm">
             <Link to="/historique">
               <HistoryIcon className="w-4 h-4" />
               <span className="hidden xs:inline">Historique</span>
@@ -117,12 +97,7 @@ const Home = () => {
             </Link>
           </Button>
           {user && (
-            <Button
-              variant="default"
-              asChild
-              className="gap-2 flex-1 sm:flex-initial touch-target"
-              size="sm"
-            >
+            <Button variant="default" asChild className="gap-2 flex-1 sm:flex-initial touch-target" size="sm">
               <Link to="/dashboard">
                 <LayoutDashboard className="w-4 h-4" />
                 <span className="hidden xs:inline">Dashboard</span>
@@ -132,22 +107,14 @@ const Home = () => {
           )}
         </div>
 
-        {/* Real-time Statistics */}
         <div className="mb-8 sm:mb-12 animate-slide-up">
           <RealTimeStats />
         </div>
 
-        {/* Global Statistics */}
         <div className="mb-8 sm:mb-12 animate-slide-up">
           <GlobalStatistics />
         </div>
 
-        {/* Algorithm Rankings */}
-        <div className="mb-8 sm:mb-12 animate-slide-up">
-          <AlgorithmRankings />
-        </div>
-
-        {/* Best Algorithm Recommendation */}
         <div className="mb-8 sm:mb-12 animate-slide-up">
           <BestAlgorithmDisplay drawName={DRAW_SCHEDULE[DAYS_ORDER[0]][0].name} />
         </div>

@@ -7,10 +7,16 @@ import { SocialShare } from "@/components/SocialShare";
 import { useLatestPrediction } from "@/hooks/usePredictions";
 import { useGeneratePrediction } from "@/hooks/useGeneratePrediction";
 import { useAdvancedPrediction } from "@/hooks/useAdvancedPrediction";
+import { usePersonalizedPrediction } from "@/hooks/usePersonalizedPrediction";
+import { PredictionExplanationPanel } from "./PredictionExplanationPanel";
+import { PatternDetectionPanel } from "./PatternDetectionPanel";
+import { PredictionFeedbackDialog } from "./PredictionFeedbackDialog";
+import { MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Brain, Sparkles, TrendingUp, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
 import { PredictionSkeleton } from "@/components/LoadingSkeleton";
 
@@ -20,11 +26,17 @@ interface PredictionPanelProps {
 
 export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const { data: latestPrediction, isLoading: predictionLoading } = useLatestPrediction(drawName);
   const { data: advancedPredictions } = useAdvancedPrediction(drawName);
+  const { data: personalizedData } = usePersonalizedPrediction(drawName, user?.id);
+  const explanations = advancedPredictions?.explanations || [];
+  const patterns = personalizedData?.patterns || [];
+  const personalizedPrediction = personalizedData?.prediction;
   const generatePrediction = useGeneratePrediction();
   
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const topAdvancedPrediction = advancedPredictions?.predictions?.[0];
 
   const handleGeneratePrediction = async () => {
@@ -134,6 +146,17 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
                       numbers={latestPrediction.predicted_numbers}
                       drawName={drawName}
                     />
+                    {user && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowFeedback(true)}
+                        className="gap-2"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        Évaluer
+                      </Button>
+                    )}
                   </div>
 
                   {latestPrediction.confidence_score && (
@@ -249,6 +272,41 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
           </p>
         </CardContent>
       </Card>
+      {/* Prédiction personnalisée */}
+      {user && personalizedPrediction && (
+        <Card className="bg-gradient-accent text-white border-0">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              Prédiction Personnalisée
+            </CardTitle>
+            <CardDescription className="text-white/80">
+              Basée sur vos favoris et historique
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-3 flex-wrap justify-center mb-4">
+              {personalizedPrediction.numbers.map((num, idx) => (
+                <NumberBall key={`${num}-${idx}`} number={num} size="lg" />
+              ))}
+            </div>
+            <div className="text-center text-sm opacity-90">
+              Confiance: {Math.round(personalizedPrediction.confidence * 100)}%
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Patterns */}
+      {patterns.length > 0 && (
+        <PatternDetectionPanel patterns={patterns} />
+      )}
+
+      {/* Explications */}
+      {latestPrediction && explanations.length > 0 && (
+        <PredictionExplanationPanel explanations={explanations} />
+      )}
+
       {/* Prédiction avancée */}
       {showAdvanced && topAdvancedPrediction && (
         <Card className="bg-gradient-accent text-white border-0">
@@ -276,6 +334,16 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Feedback Dialog */}
+      {user && latestPrediction && (
+        <PredictionFeedbackDialog
+          open={showFeedback}
+          onOpenChange={setShowFeedback}
+          predictionId={latestPrediction.id}
+          predictedNumbers={latestPrediction.predicted_numbers}
+        />
       )}
     </div>
   );

@@ -64,76 +64,79 @@ const DrawDetails = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-gradient-primary text-white py-12 px-4 shadow-lg relative overflow-hidden">
+      <div className="bg-gradient-primary text-white py-6 sm:py-12 px-3 sm:px-4 shadow-lg relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-accent opacity-10"></div>
-        <div className="absolute top-4 right-4 flex items-center gap-2">
+        <div className="absolute top-2 sm:top-4 right-2 sm:right-4 flex items-center gap-1 sm:gap-2 z-20">
           <ThemeToggle />
           <UserNav />
         </div>
         <div className="max-w-7xl mx-auto relative z-10">
           <Button
             variant="ghost"
-            className="text-white hover:bg-white/20 mb-6 transition-all hover:scale-105"
+            className="text-white hover:bg-white/20 mb-4 sm:mb-6 transition-all"
             onClick={() => navigate("/")}
+            size="sm"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour à l'accueil
+            <span className="hidden xs:inline">Retour à l'accueil</span>
+            <span className="xs:hidden">Retour</span>
           </Button>
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
             <div className="animate-fade-in">
-              <h1 className="text-4xl md:text-5xl font-bold mb-2">{decodedDrawName}</h1>
-              <p className="text-white/80 text-sm">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-1 sm:mb-2">{decodedDrawName}</h1>
+              <p className="text-white/80 text-xs sm:text-sm">
                 Analyse complète et prédictions intelligentes
               </p>
             </div>
             <Button
               variant="secondary"
               onClick={handleRefresh}
-              className="gap-2 shadow-lg hover:shadow-glow transition-all"
-              size="lg"
+              className="gap-2 shadow-lg w-full sm:w-auto"
+              size="sm"
             >
-              <RefreshCw className="w-5 h-5" />
-              Actualiser les données
+              <RefreshCw className="w-4 h-4" />
+              <span className="hidden xs:inline">Actualiser les données</span>
+              <span className="xs:hidden">Actualiser</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
         <Tabs defaultValue="donnees" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 mb-8 h-auto flex-wrap text-xs">
-            <TabsTrigger value="donnees" className="gap-1">
-              <Database className="w-3 h-3" />
-              Données
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 mb-4 sm:mb-8 h-auto gap-1 text-[10px] sm:text-xs p-1">
+            <TabsTrigger value="donnees" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
+              <Database className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Données</span>
             </TabsTrigger>
-            <TabsTrigger value="consulter" className="gap-1">
-              <Search className="w-3 h-3" />
-              Consulter
+            <TabsTrigger value="consulter" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
+              <Search className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Consulter</span>
             </TabsTrigger>
-            <TabsTrigger value="statistiques" className="gap-1">
-              <BarChart3 className="w-3 h-3" />
-              Stats
+            <TabsTrigger value="statistiques" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
+              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Stats</span>
             </TabsTrigger>
-            <TabsTrigger value="prediction" className="gap-1">
-              <Brain className="w-3 h-3" />
-              Prédiction
+            <TabsTrigger value="prediction" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
+              <Brain className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Prédiction</span>
             </TabsTrigger>
-            <TabsTrigger value="ia-engine" className="gap-1">
-              <Sparkles className="w-3 h-3" />
-              IA Engine
+            <TabsTrigger value="ia-engine" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">IA</span>
             </TabsTrigger>
-            <TabsTrigger value="optimizer" className="gap-1">
-              <RefreshCw className="w-3 h-3" />
-              Optimizer
+            <TabsTrigger value="optimizer" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
+              <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Optim.</span>
             </TabsTrigger>
-            <TabsTrigger value="backtest" className="gap-1">
-              <Activity className="w-3 h-3" />
-              Backtest
+            <TabsTrigger value="backtest" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
+              <Activity className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Test</span>
             </TabsTrigger>
-            <TabsTrigger value="aide" className="gap-1">
-              <Info className="w-3 h-3" />
-              Aide
+            <TabsTrigger value="aide" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
+              <Info className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Aide</span>
             </TabsTrigger>
           </TabsList>
 
@@ -154,7 +157,7 @@ const DrawDetails = () => {
                       results.map((result) => (
                         <div
                           key={result.id}
-                          className="p-4 rounded-lg bg-card border border-border/50 space-y-3 hover:border-primary/50 transition-all"
+                          className="p-3 sm:p-4 rounded-lg bg-card border border-border/50 space-y-2 sm:space-y-3 hover:border-primary/50 transition-all"
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-semibold text-muted-foreground">

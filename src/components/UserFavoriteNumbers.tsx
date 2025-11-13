@@ -8,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { NumberBall } from "./NumberBall";
 import { useUserFavorites, useAddFavorite, useDeleteFavorite } from "@/hooks/useUserFavorites";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Trash2, Star, Copy, Share2, TrendingUp } from "lucide-react";
+import { Plus, Trash2, Star, Copy, Share2, TrendingUp, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { favoriteSchema, validateData } from "@/lib/validations";
+import { sanitizeNumbers, sanitizeString } from "@/lib/sanitize";
 import { useToast } from "@/hooks/use-toast";
 import { DRAW_SCHEDULE, DAYS_ORDER } from "@/types/lottery";
 
@@ -24,6 +26,26 @@ export const UserFavoriteNumbers = () => {
   const [inputValue, setInputValue] = useState("");
   const [selectedDraw, setSelectedDraw] = useState("Midi");
   const [category, setCategory] = useState("personnel");
+  const [filterDraw, setFilterDraw] = useState<string>("all");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+  
+  const filteredFavorites = (favorites || []).filter(fav => {
+    const matchDraw = filterDraw === "all" || fav.draw_name === filterDraw;
+    const matchCategory = filterCategory === "all" || fav.category === filterCategory;
+    return matchDraw && matchCategory;
+  });
+  
+  const totalCount = filteredFavorites.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedFavorites = filteredFavorites.slice(startIndex, endIndex);
+  
+  const handleFilterChange = () => {
+    setCurrentPage(1);
+  };
 
   const allDraws = DAYS_ORDER.flatMap(day => DRAW_SCHEDULE[day]);
 
@@ -65,15 +87,6 @@ export const UserFavoriteNumbers = () => {
   };
 
   const handleSaveFavorite = async () => {
-    if (newNumbers.length !== 5) {
-      toast({
-        title: "Erreur",
-        description: "Vous devez sélectionner exactement 5 numéros",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!user) {
       toast({
         title: "Erreur",
@@ -83,13 +96,28 @@ export const UserFavoriteNumbers = () => {
       return;
     }
 
-    await addFavorite.mutateAsync({
+    const sanitizedNumbers = sanitizeNumbers(newNumbers);
+    const sanitizedNotes = notes ? sanitizeString(notes) : null;
+
+    const validation = validateData(favoriteSchema, {
       user_id: user.id,
       draw_name: selectedDraw,
-      favorite_numbers: newNumbers,
-      notes: notes || null,
+      favorite_numbers: sanitizedNumbers,
+      notes: sanitizedNotes,
       category: category,
     });
+
+    if (!validation.success) {
+      const firstError = Object.values(validation.errors)[0]?.[0];
+      toast({
+        title: "Erreur de validation",
+        description: firstError || "Données invalides",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await addFavorite.mutateAsync(validation.data);
 
     setNewNumbers([]);
     setNotes("");
@@ -97,7 +125,11 @@ export const UserFavoriteNumbers = () => {
   };
 
   if (isLoading) {
-    return <div>Chargement...</div>;
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
@@ -195,8 +227,48 @@ export const UserFavoriteNumbers = () => {
 
       {favorites && favorites.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Vos Favoris</h3>
-          {favorites.map((fav) => (
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Vos Favoris ({totalCount})</h3>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select value={filterDraw} onValueChange={(v) => { setFilterDraw(v); handleFilterChange(); }}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Tirage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les tirages</SelectItem>
+                  {Array.from(new Set(favorites.map(f => f.draw_name))).map(draw => (
+                    <SelectItem key={draw} value={draw}>{draw}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <Select value={filterCategory} onValueChange={(v) => { setFilterCategory(v); handleFilterChange(); }}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes catégories</SelectItem>
+                <SelectItem value="personnel">Personnel</SelectItem>
+                <SelectItem value="famille">Famille</SelectItem>
+                <SelectItem value="anniversaire">Anniversaire</SelectItem>
+                <SelectItem value="chance">Porte-bonheur</SelectItem>
+                <SelectItem value="analyse">Basé sur analyse</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {paginatedFavorites.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              Aucun favori ne correspond aux filtres
+            </p>
+          ) : (
+            <>
+            {paginatedFavorites.map((fav) => (
             <Card key={fav.id}>
               <CardContent className="pt-6">
                 <div className="space-y-4">
@@ -258,6 +330,37 @@ export const UserFavoriteNumbers = () => {
               </CardContent>
             </Card>
           ))}
+            </>
+          )}
+          
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage} sur {totalPages}
+                <span className="ml-2">({startIndex + 1}-{Math.min(endIndex, totalCount)} sur {totalCount})</span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Suivant
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Trash2, Download, Upload, RefreshCw, LogOut, LogIn, Database, TrendingUp, Calendar, AlertCircle, Settings } from "lucide-react";
+import { drawResultSchema, validateData, loginSchema } from "@/lib/validations";
+import { sanitizeNumbers, sanitizeString, sanitizeEmail } from "@/lib/sanitize";
 import { useRefreshResults } from "@/hooks/useDrawResults";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DRAW_SCHEDULE } from "@/types/lottery";
@@ -23,6 +25,7 @@ import { AlgorithmTraining } from "@/components/AlgorithmTraining";
 import { AutoTuningPanel } from "@/components/AutoTuningPanel";
 import { AutomationScheduler } from "@/components/AutomationScheduler";
 import { LivePerformanceMetrics } from "@/components/LivePerformanceMetrics";
+import { AlgorithmEvaluationPanel } from "@/components/AlgorithmEvaluationPanel";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -92,34 +95,21 @@ const Admin = () => {
   };
 
   const handleAddResult = async () => {
-    if (!drawName || !drawDate) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs",
-        variant: "destructive",
-      });
-      return;
-    }
+    const sanitizedWinningNumbers = sanitizeNumbers(numbers);
+    const sanitizedMachineNumbers = showMachineNumbers ? sanitizeNumbers(machineNumbers) : null;
 
-    const winningNumbers = numbers.map(n => parseInt(n)).filter(n => n >= 1 && n <= 90);
-    if (winningNumbers.length !== 5) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez entrer 5 numéros valides entre 1 et 90",
-        variant: "destructive",
-      });
-      return;
-    }
+    const validation = validateData(drawResultSchema, {
+      draw_name: drawName,
+      draw_date: drawDate,
+      winning_numbers: sanitizedWinningNumbers,
+      machine_numbers: sanitizedMachineNumbers,
+    });
 
-    // Validate machine numbers if provided
-    const parsedMachineNumbers = showMachineNumbers 
-      ? machineNumbers.map(n => parseInt(n)).filter(n => n >= 1 && n <= 90)
-      : [];
-    
-    if (showMachineNumbers && parsedMachineNumbers.length > 0 && parsedMachineNumbers.length !== 5) {
+    if (!validation.success) {
+      const firstError = Object.values(validation.errors)[0]?.[0];
       toast({
-        title: "Erreur",
-        description: "Les numéros machine doivent être soit vides, soit 5 numéros valides entre 1 et 90",
+        title: "Erreur de validation",
+        description: firstError || "Données invalides",
         variant: "destructive",
       });
       return;
@@ -129,15 +119,15 @@ const Admin = () => {
     try {
       const draw = allDraws.find(d => d.name === drawName);
       const insertData: any = {
-        draw_name: drawName,
+        draw_name: validation.data.draw_name,
         draw_day: draw?.day || "",
         draw_time: draw?.time || "",
-        draw_date: drawDate,
-        winning_numbers: winningNumbers,
+        draw_date: validation.data.draw_date,
+        winning_numbers: validation.data.winning_numbers,
       };
 
-      if (parsedMachineNumbers.length === 5) {
-        insertData.machine_numbers = parsedMachineNumbers;
+      if (validation.data.machine_numbers && validation.data.machine_numbers.length === 5) {
+        insertData.machine_numbers = validation.data.machine_numbers;
       }
 
       const { error } = await supabase.from("draw_results").insert(insertData);
@@ -283,9 +273,26 @@ const Admin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const sanitizedEmail = sanitizeEmail(email);
+    const validation = validateData(loginSchema, {
+      email: sanitizedEmail,
+      password: password,
+    });
+
+    if (!validation.success) {
+      const firstError = Object.values(validation.errors)[0]?.[0];
+      toast({
+        title: "Erreur de validation",
+        description: firstError || "Données invalides",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(validation.data.email, validation.data.password);
       if (error) throw error;
       
       toast({
@@ -515,34 +522,38 @@ const Admin = () => {
         </Alert>
 
         <Tabs defaultValue="results" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 mb-6 text-xs">
-            <TabsTrigger value="results" className="gap-1">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-8 gap-1 mb-4 sm:mb-6 text-[10px] sm:text-xs p-1 h-auto">
+            <TabsTrigger value="results" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
               <Database className="w-3 h-3" />
-              Résultats
+              <span className="hidden xs:inline">Résultats</span>
             </TabsTrigger>
-            <TabsTrigger value="performance" className="gap-1">
+            <TabsTrigger value="performance" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
               <TrendingUp className="w-3 h-3" />
-              Perf.
+              <span className="hidden xs:inline">Perf.</span>
             </TabsTrigger>
-            <TabsTrigger value="live" className="gap-1">
+            <TabsTrigger value="live" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
               <RefreshCw className="w-3 h-3" />
-              Live
+              <span className="hidden xs:inline">Live</span>
             </TabsTrigger>
-            <TabsTrigger value="autotuning" className="gap-1">
+            <TabsTrigger value="autotuning" className="gap-0.5 sm:gap-1 px-1 sm:px-3 hidden sm:flex">
               <Settings className="w-3 h-3" />
-              Auto-Tune
+              <span className="hidden xs:inline">Auto</span>
             </TabsTrigger>
-            <TabsTrigger value="algorithms" className="gap-1">
+            <TabsTrigger value="algorithms" className="gap-0.5 sm:gap-1 px-1 sm:px-3 hidden sm:flex">
               <Settings className="w-3 h-3" />
-              Config
+              <span className="hidden xs:inline">Config</span>
             </TabsTrigger>
-            <TabsTrigger value="training" className="gap-1">
+            <TabsTrigger value="training" className="gap-0.5 sm:gap-1 px-1 sm:px-3 hidden sm:flex">
               <TrendingUp className="w-3 h-3" />
-              Train
+              <span className="hidden xs:inline">Train</span>
             </TabsTrigger>
-            <TabsTrigger value="automation" className="gap-1">
+            <TabsTrigger value="automation" className="gap-0.5 sm:gap-1 px-1 sm:px-3 hidden sm:flex">
               <Calendar className="w-3 h-3" />
-              Auto
+              <span className="hidden xs:inline">Auto</span>
+            </TabsTrigger>
+            <TabsTrigger value="evaluation" className="gap-0.5 sm:gap-1 px-1 sm:px-3 hidden sm:flex">
+              <TrendingUp className="w-3 h-3" />
+              <span className="hidden xs:inline">Eval</span>
             </TabsTrigger>
           </TabsList>
 
@@ -741,6 +752,10 @@ const Admin = () => {
 
           <TabsContent value="automation" className="space-y-6">
             <AutomationScheduler />
+          </TabsContent>
+
+          <TabsContent value="evaluation" className="space-y-6">
+            <AlgorithmEvaluationPanel />
           </TabsContent>
         </Tabs>
       </div>
