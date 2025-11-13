@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Download, FileText, Database, Calendar, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserFavorites } from "@/hooks/useUserFavorites";
-import { usePredictionTracking } from "@/hooks/usePredictionTracking";
+import { useTrackedPredictions } from "@/hooks/usePredictionTracking";
 import { useDrawResults } from "@/hooks/useDrawResults";
 import { toast } from "sonner";
 
@@ -21,7 +21,7 @@ interface ExportOptions {
 export const DataExport = () => {
   const { user } = useAuth();
   const { data: favorites } = useUserFavorites(user?.id);
-  const { data: predictions } = usePredictionTracking(user?.id);
+  const { data: predictions } = useTrackedPredictions(user?.id);
   const { data: results } = useDrawResults("", 100);
   
   const [exportOptions, setExportOptions] = useState<ExportOptions>({

@@ -5,12 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { TrendingUp, Target, Award, Calendar, Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { usePredictionTracking } from "@/hooks/usePredictionTracking";
+import { useTrackedPredictions } from "@/hooks/usePredictionTracking";
 import { useUserFavorites } from "@/hooks/useUserFavorites";
 
 export const PersonalPerformanceTracker = () => {
   const { user } = useAuth();
-  const { data: trackingData } = usePredictionTracking(user?.id);
+  const { data: trackingData } = useTrackedPredictions(user?.id);
   const { data: favorites } = useUserFavorites(user?.id);
 
   // Calculer les statistiques personnelles
