@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface TrainingMetrics {
+  avg_accuracy: number;
+  avg_f1_score: number;
+  avg_performance: number;
+}
+
 export interface TrainingComparison {
   algorithm_name: string;
   before: {
@@ -59,19 +65,22 @@ export const useTrainingComparison = (beforeDate?: string, afterDate?: string) =
         );
 
         if (after) {
+          const beforeMetrics = before.training_metrics as unknown as TrainingMetrics;
+          const afterMetrics = after.training_metrics as unknown as TrainingMetrics;
+          
           comparisons.push({
             algorithm_name: before.algorithm_name,
             before: {
               weight: before.previous_weight,
-              avg_accuracy: before.training_metrics.avg_accuracy,
-              avg_f1_score: before.training_metrics.avg_f1_score,
-              overall_score: before.training_metrics.avg_performance,
+              avg_accuracy: beforeMetrics.avg_accuracy,
+              avg_f1_score: beforeMetrics.avg_f1_score,
+              overall_score: beforeMetrics.avg_performance,
             },
             after: {
               weight: after.new_weight,
-              avg_accuracy: after.training_metrics.avg_accuracy,
-              avg_f1_score: after.training_metrics.avg_f1_score,
-              overall_score: after.training_metrics.avg_performance,
+              avg_accuracy: afterMetrics.avg_accuracy,
+              avg_f1_score: afterMetrics.avg_f1_score,
+              overall_score: afterMetrics.avg_performance,
             },
             improvement: {
               weight_change_pct:
@@ -79,19 +88,16 @@ export const useTrainingComparison = (beforeDate?: string, afterDate?: string) =
                   before.previous_weight) *
                 100,
               accuracy_change_pct:
-                ((after.training_metrics.avg_accuracy -
-                  before.training_metrics.avg_accuracy) /
-                  before.training_metrics.avg_accuracy) *
+                ((afterMetrics.avg_accuracy - beforeMetrics.avg_accuracy) /
+                  beforeMetrics.avg_accuracy) *
                 100,
               f1_change_pct:
-                ((after.training_metrics.avg_f1_score -
-                  before.training_metrics.avg_f1_score) /
-                  before.training_metrics.avg_f1_score) *
+                ((afterMetrics.avg_f1_score - beforeMetrics.avg_f1_score) /
+                  beforeMetrics.avg_f1_score) *
                 100,
               overall_change_pct:
-                ((after.training_metrics.avg_performance -
-                  before.training_metrics.avg_performance) /
-                  before.training_metrics.avg_performance) *
+                ((afterMetrics.avg_performance - beforeMetrics.avg_performance) /
+                  beforeMetrics.avg_performance) *
                 100,
             },
           });
