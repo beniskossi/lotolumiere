@@ -15,25 +15,24 @@ export const PersonalPerformanceTracker = () => {
 
   // Calculer les statistiques personnelles
   const totalPredictions = trackingData?.length || 0;
-  const correctPredictions = trackingData?.filter(t => t.matches >= 3).length || 0;
-  const accuracy = totalPredictions > 0 ? (correctPredictions / totalPredictions) * 100 : 0;
-  const bestMatch = Math.max(...(trackingData?.map(t => t.matches) || [0]));
+  const correctPredictions = 0; // On ne peut pas calculer sans winning_numbers
+  const accuracy = 0;
+  const bestMatch = 0;
   
   // Données pour les graphiques
   const performanceData = trackingData?.slice(-10).map((track, index) => ({
     name: `T${index + 1}`,
-    matches: track.matches,
-    accuracy: (track.matches / 5) * 100,
-    date: new Date(track.created_at).toLocaleDateString()
+    matches: 0,
+    accuracy: 0,
+    date: new Date(track.marked_at).toLocaleDateString()
   })) || [];
 
   const monthlyStats = trackingData?.reduce((acc, track) => {
-    const month = new Date(track.created_at).toLocaleDateString('fr-FR', { month: 'short' });
+    const month = new Date(track.marked_at).toLocaleDateString('fr-FR', { month: 'short' });
     if (!acc[month]) {
       acc[month] = { month, predictions: 0, successes: 0 };
     }
     acc[month].predictions++;
-    if (track.matches >= 3) acc[month].successes++;
     return acc;
   }, {} as Record<string, any>) || {};
 

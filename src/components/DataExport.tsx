@@ -62,12 +62,11 @@ export const DataExport = () => {
     if (exportOptions.predictions && predictions) {
       exportData.predictions = predictions.map(pred => ({
         id: pred.id,
-        drawName: pred.draw_name,
-        predictedNumbers: pred.predicted_numbers,
-        actualNumbers: pred.actual_numbers,
-        matches: pred.matches,
-        algorithm: pred.algorithm_used,
-        createdAt: pred.created_at
+        drawName: pred.predictions?.draw_name || '',
+        predictedNumbers: pred.predictions?.predicted_numbers || [],
+        algorithm: pred.predictions?.model_used || '',
+        markedAt: pred.marked_at,
+        notes: pred.notes || ''
       }));
     }
 

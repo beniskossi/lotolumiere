@@ -12,8 +12,9 @@ export interface AdvancedPrediction {
   category: "statistical" | "ml" | "bayesian" | "neural" | "variance" | "lightgbm" | "catboost" | "transformer" | "arima";
 }
 
-interface AdvancedPredictionResponse {
+export interface AdvancedPredictionResponse {
   predictions: AdvancedPrediction[];
+  explanations?: any[];
   warning?: string;
 }
 

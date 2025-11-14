@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useBestAlgorithm } from "@/hooks/useAutoTuning";
+import { useBestAlgorithm } from "@/hooks/useBestAlgorithm";
 import { Crown, Award, TrendingUp, Info } from "lucide-react";
 
 interface BestAlgorithmSelectorProps {

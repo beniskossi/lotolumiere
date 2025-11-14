@@ -7,6 +7,7 @@ export interface UserPreferences {
   has_completed_onboarding: boolean;
   preferred_draw_name: string | null;
   notification_enabled: boolean;
+  notification_time?: string;
   preferred_algorithm: string;
   theme_primary_color: string;
   theme_accent_color: string;
