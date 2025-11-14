@@ -26,6 +26,7 @@ import { AutoTuningPanel } from "@/components/AutoTuningPanel";
 import { AutomationScheduler } from "@/components/AutomationScheduler";
 import { LivePerformanceMetrics } from "@/components/LivePerformanceMetrics";
 import { AlgorithmEvaluationPanel } from "@/components/AlgorithmEvaluationPanel";
+import { AdminDashboardStats } from "@/components/AdminDashboardStats";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -469,48 +470,9 @@ const Admin = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
-          <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all duration-300">
-            <CardHeader className="pb-3">
-              <CardDescription className="flex items-center gap-2">
-                <Database className="w-4 h-4" />
-                Total Tirages
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">{stats.totalDraws}</div>
-              <p className="text-xs text-muted-foreground mt-1">Résultats enregistrés</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all duration-300">
-            <CardHeader className="pb-3">
-              <CardDescription className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Dernier Tirage
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">
-                {stats.lastDrawDate ? new Date(stats.lastDrawDate).toLocaleDateString('fr-FR') : "N/A"}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Date la plus récente</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-card border-border/50 hover:shadow-glow transition-all duration-300">
-            <CardHeader className="pb-3">
-              <CardDescription className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Total Numéros
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">{stats.totalNumbers}</div>
-              <p className="text-xs text-muted-foreground mt-1">Numéros analysés</p>
-            </CardContent>
-          </Card>
+        {/* Statistics Dashboard with Real Data */}
+        <div className="animate-fade-in">
+          <AdminDashboardStats />
         </div>
 
         <Alert className="bg-accent/10 border-accent/50 animate-slide-up">

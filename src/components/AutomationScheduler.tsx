@@ -4,9 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, Zap, RefreshCw, TrendingUp, Database } from "lucide-react";
+import { Calendar, Clock, Zap, RefreshCw, TrendingUp, Database, PlayCircle, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useState } from "react";
+import { useScrapingJobs, useLatestScrapingJob } from "@/hooks/useScrapingJobs";
+import { useRefreshResults } from "@/hooks/useDrawResults";
+import { useTrainAlgorithms } from "@/hooks/useAlgorithmTraining";
+import { useEvaluatePredictions } from "@/hooks/useAlgorithmRankings";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ScheduledJob {
   id: string;
@@ -61,11 +66,19 @@ export const AutomationScheduler = () => {
   const { toast } = useToast();
   const [jobs, setJobs] = useState(AVAILABLE_JOBS);
   const [isConfiguring, setIsConfiguring] = useState(false);
+  
+  // Hooks pour les vraies actions
+  const refreshResults = useRefreshResults();
+  const trainAlgorithms = useTrainAlgorithms();
+  const evaluatePredictions = useEvaluatePredictions();
+  
+  // Charger les données réelles des jobs de scraping
+  const { data: scrapingJobs, isLoading: scrapingLoading } = useScrapingJobs(5);
+  const { data: latestJob } = useLatestScrapingJob();
 
   const handleToggleJob = async (jobId: string) => {
     setIsConfiguring(true);
     
-    // Simuler une mise à jour (à remplacer par un vrai appel API)
     setTimeout(() => {
       setJobs(prev => 
         prev.map(job => 
@@ -83,6 +96,31 @@ export const AutomationScheduler = () => {
 
       setIsConfiguring(false);
     }, 1000);
+  };
+  
+  const handleManualRun = async (action: string) => {
+    try {
+      switch (action) {
+        case "scrape-results":
+          await refreshResults();
+          toast({ title: "✓ Scraping lancé", description: "Les résultats sont en cours de récupération" });
+          break;
+        case "train-algorithms":
+          trainAlgorithms.mutate();
+          break;
+        case "evaluate-predictions":
+          evaluatePredictions.mutate(undefined);
+          break;
+        default:
+          toast({ title: "Action non implémentée", variant: "destructive" });
+      }
+    } catch (error: any) {
+      toast({ 
+        title: "Erreur", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    }
   };
 
   return (
@@ -145,16 +183,84 @@ export const AutomationScheduler = () => {
                       </div>
                     </div>
                   </div>
-                  <Switch
-                    checked={job.enabled}
-                    onCheckedChange={() => handleToggleJob(job.id)}
-                    disabled={isConfiguring}
-                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleManualRun(job.action)}
+                      disabled={isConfiguring}
+                    >
+                      <PlayCircle className="w-4 h-4 mr-1" />
+                      Exécuter
+                    </Button>
+                    <Switch
+                      checked={job.enabled}
+                      onCheckedChange={() => handleToggleJob(job.id)}
+                      disabled={isConfiguring}
+                    />
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
+
+        {/* Section des jobs de scraping récents */}
+        {scrapingJobs && scrapingJobs.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <Database className="w-4 h-4" />
+              Derniers Jobs de Scraping
+            </h3>
+            <div className="space-y-2">
+              {scrapingLoading ? (
+                <Skeleton className="h-16 w-full" />
+              ) : (
+                scrapingJobs.slice(0, 5).map((job) => (
+                  <div
+                    key={job.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/20 border"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={
+                            job.status === "completed"
+                              ? "default"
+                              : job.status === "running"
+                              ? "secondary"
+                              : "destructive"
+                          }
+                        >
+                          {job.status}
+                        </Badge>
+                        <span className="text-sm">
+                          {new Date(job.job_date).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                      {job.results_count > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          {job.results_count} résultats importés
+                        </span>
+                      )}
+                      {job.error_message && (
+                        <span className="text-xs text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {job.error_message.substring(0, 50)}...
+                        </span>
+                      )}
+                    </div>
+                    {job.completed_at && (
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(job.completed_at).toLocaleTimeString('fr-FR')}
+                      </span>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
 
         <Alert className="bg-secondary/20">
           <AlertDescription className="text-xs">
