@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Settings, Play, Pause, RotateCcw, TrendingUp, Zap } from "lucide-react";
 import { useAutoTuning } from "@/hooks/useAutoTuning";
+import { useAlgorithmRankings } from "@/hooks/useAlgorithmRankings";
+import { useAlgorithmConfigs } from "@/hooks/useAlgorithmConfig";
 import { toast } from "sonner";
 
 interface OptimizationConfig {
@@ -39,33 +41,36 @@ export const AlgorithmOptimizer = () => {
   const [optimizationProgress, setOptimizationProgress] = useState(0);
   const autoTuning = useAutoTuning();
   
-  // Métriques simulées des algorithmes
-  const [algorithms, setAlgorithms] = useState<AlgorithmMetrics[]>([
-    {
-      name: "LightGBM Pro",
-      currentAccuracy: 78.5,
-      targetAccuracy: 82.0,
-      learningRate: 0.015,
-      lastOptimization: "2h ago",
-      status: "optimizing"
-    },
-    {
-      name: "Transformers Pro", 
-      currentAccuracy: 76.2,
-      targetAccuracy: 79.5,
-      learningRate: 0.012,
-      lastOptimization: "4h ago",
-      status: "stable"
-    },
-    {
-      name: "CatBoost Pro",
-      currentAccuracy: 74.8,
-      targetAccuracy: 78.0,
-      learningRate: 0.018,
-      lastOptimization: "1h ago",
-      status: "needs_attention"
+  // Charger les vraies données depuis la base de données
+  const { data: rankings, isLoading: rankingsLoading } = useAlgorithmRankings();
+  const { data: configs, isLoading: configsLoading } = useAlgorithmConfigs();
+  
+  const [algorithms, setAlgorithms] = useState<AlgorithmMetrics[]>([]);
+
+  // Mettre à jour les algorithmes avec les vraies données
+  useEffect(() => {
+    if (rankings && configs) {
+      const realAlgorithms: AlgorithmMetrics[] = rankings.slice(0, 10).map(ranking => {
+        const config = configs.find(c => c.algorithm_name === ranking.model_used);
+        const currentAccuracy = ranking.avg_accuracy || 0;
+        const targetAccuracy = currentAccuracy * 1.05; // Objectif +5%
+        
+        return {
+          name: ranking.model_used,
+          currentAccuracy: Number(currentAccuracy.toFixed(2)),
+          targetAccuracy: Number(targetAccuracy.toFixed(2)),
+          learningRate: config ? Number(config.weight) : 0.01,
+          lastOptimization: config?.updated_at 
+            ? new Date(config.updated_at).toLocaleString('fr-FR')
+            : "N/A",
+          status: currentAccuracy >= 75 ? "stable" 
+            : currentAccuracy >= 65 ? "optimizing" 
+            : "needs_attention"
+        };
+      });
+      setAlgorithms(realAlgorithms);
     }
-  ]);
+  }, [rankings, configs]);
 
   useEffect(() => {
     if (config.autoTuning) {
