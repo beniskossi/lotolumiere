@@ -68,7 +68,8 @@ function findConditionalRules(results: any[]): ConditionalRule[] {
     .map(([key, data]) => {
       const [condition, consequence] = key.split("-").map(Number);
       const probability = (data.count / data.total) * 100;
-      const confidence = probability >= 70 ? "high" : probability >= 50 ? "medium" : "low";
+      const confidence: "high" | "medium" | "low" = 
+        probability >= 70 ? "high" : probability >= 50 ? "medium" : "low";
       
       return {
         condition,

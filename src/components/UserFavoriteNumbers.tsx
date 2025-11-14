@@ -117,7 +117,16 @@ export const UserFavoriteNumbers = () => {
       return;
     }
 
-    await addFavorite.mutateAsync(validation.data);
+    // Ensure all required fields are present
+    const favoriteData = {
+      user_id: user.id,
+      draw_name: validation.data.draw_name || selectedDraw,
+      favorite_numbers: validation.data.favorite_numbers || [],
+      notes: validation.data.notes || null,
+      category: validation.data.category,
+    };
+
+    await addFavorite.mutateAsync(favoriteData as any);
 
     setNewNumbers([]);
     setNotes("");
