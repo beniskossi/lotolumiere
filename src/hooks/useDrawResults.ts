@@ -75,7 +75,7 @@ export const useDrawResultsPaginated = (
         totalPages: Math.ceil((count || 0) / pageSize),
       };
     },
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 };
 

@@ -31,7 +31,7 @@ export const usePaginatedQuery = <T>(
       const to = from + pageSize - 1;
 
       let query = supabase
-        .from(table)
+        .from(table as any)
         .select("*", { count: "exact" })
         .order(orderBy, { ascending })
         .range(from, to);
@@ -40,7 +40,7 @@ export const usePaginatedQuery = <T>(
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
-            query = query.eq(key, value);
+            query = query.eq(key, value) as any;
           }
         });
       }
@@ -57,6 +57,6 @@ export const usePaginatedQuery = <T>(
         totalPages: Math.ceil((count || 0) / pageSize),
       };
     },
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 };
