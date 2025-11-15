@@ -10,6 +10,7 @@ export const drawNameSchema = z.string()
 // Request schemas for different endpoints
 export const predictionRequestSchema = z.object({
   drawName: drawNameSchema,
+  analysisDepth: z.number().int().min(10).max(1000).optional().default(100),
 });
 
 export const autoTuneRequestSchema = z.object({

@@ -29,6 +29,7 @@ import { AlgorithmEvaluationPanel } from "@/components/AlgorithmEvaluationPanel"
 import { AdminDashboardStats } from "@/components/AdminDashboardStats";
 import { CreateAdminAccount } from "@/components/CreateAdminAccount";
 import { AdminDiagnostic } from "@/components/AdminDiagnostic";
+import { DiagnosticPanel } from "@/components/DiagnosticPanel";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -192,7 +193,7 @@ const Admin = () => {
       const url = URL.createObjectURL(dataBlob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `loto-bonheur-export-${new Date().toISOString().split("T")[0]}.json`;
+      link.download = `loto-lumiere-export-${new Date().toISOString().split("T")[0]}.json`;
       link.click();
 
       toast({
@@ -242,7 +243,7 @@ const Admin = () => {
   };
 
   const handleDeleteOldResults = async () => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer les résultats de plus de 6 mois ?")) {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer les résultats de plus de 6 mois ?")) {
       return;
     }
 
@@ -504,8 +505,12 @@ const Admin = () => {
           </AlertDescription>
         </Alert>
 
-        <Tabs defaultValue="results" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-8 gap-1 mb-4 sm:mb-6 text-[10px] sm:text-xs p-1 h-auto">
+        <Tabs defaultValue="diagnostic" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-9 gap-1 mb-4 sm:mb-6 text-[10px] sm:text-xs p-1 h-auto">
+            <TabsTrigger value="diagnostic" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
+              <AlertCircle className="w-3 h-3" />
+              <span className="hidden xs:inline">Diagnostic</span>
+            </TabsTrigger>
             <TabsTrigger value="results" className="gap-0.5 sm:gap-1 px-1 sm:px-3">
               <Database className="w-3 h-3" />
               <span className="hidden xs:inline">Résultats</span>
@@ -539,6 +544,10 @@ const Admin = () => {
               <span className="hidden xs:inline">Eval</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="diagnostic" className="space-y-6 animate-fade-in">
+            <DiagnosticPanel />
+          </TabsContent>
 
           <TabsContent value="results" className="space-y-6">
             <div className="grid lg:grid-cols-2 gap-6">

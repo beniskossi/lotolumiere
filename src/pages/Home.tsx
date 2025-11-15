@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserNav } from "@/components/UserNav";
 import { UserFeedback } from "@/components/UserFeedback";
 import { AppStatus } from "@/components/AppStatus";
+import { HelpButton } from "@/components/HelpButton";
 
 const Home = () => {
   const { user } = useAuth();
@@ -109,6 +110,7 @@ const Home = () => {
               </Link>
             </Button>
           )}
+          <HelpButton />
         </div>
 
         <div className="mb-6 sm:mb-8 animate-slide-up">

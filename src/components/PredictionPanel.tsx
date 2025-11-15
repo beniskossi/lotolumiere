@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { NumberBall } from "@/components/NumberBall";
 import { PredictionShareButton } from "@/components/PredictionShareButton";
 import { SocialShare } from "@/components/SocialShare";
@@ -43,6 +45,7 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
   
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [analysisDepth, setAnalysisDepth] = useState("100");
   const topAdvancedPrediction = advancedPredictions?.predictions?.[0];
 
   const handleGeneratePrediction = async () => {
@@ -52,7 +55,10 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
         description: "Analyse des données historiques avec les modèles ML",
       });
 
-      await generatePrediction.mutateAsync({ drawName });
+      await generatePrediction.mutateAsync({ 
+        drawName, 
+        analysisDepth: parseInt(analysisDepth) 
+      });
 
       toast({
         title: "✓ Prédiction générée",
@@ -92,32 +98,49 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
                 Prédictions basées sur des algorithmes d'apprentissage automatique
               </CardDescription>
             </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={handleGeneratePrediction}
-                disabled={generatePrediction.isPending}
-                className="gap-2"
-              >
-                {generatePrediction.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Génération...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    Générer
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="gap-2"
-              >
-                <Brain className="w-4 h-4" />
-                {showAdvanced ? "Masquer" : "Avancé"}
-              </Button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="analysis-depth" className="text-sm whitespace-nowrap">Analyser:</Label>
+                <Select value={analysisDepth} onValueChange={setAnalysisDepth}>
+                  <SelectTrigger id="analysis-depth" className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">30 tirages</SelectItem>
+                    <SelectItem value="50">50 tirages</SelectItem>
+                    <SelectItem value="100">100 tirages</SelectItem>
+                    <SelectItem value="200">200 tirages</SelectItem>
+                    <SelectItem value="500">500 tirages</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleGeneratePrediction}
+                  disabled={generatePrediction.isPending}
+                  className="gap-2"
+                >
+                  {generatePrediction.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Génération...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Générer
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="gap-2"
+                >
+                  <Brain className="w-4 h-4" />
+                  {showAdvanced ? "Masquer" : "Avancé"}
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>

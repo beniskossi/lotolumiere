@@ -3,15 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface GeneratePredictionParams {
   drawName: string;
+  analysisDepth?: number;
 }
 
 export const useGeneratePrediction = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ drawName }: GeneratePredictionParams) => {
+    mutationFn: async ({ drawName, analysisDepth = 100 }: GeneratePredictionParams) => {
       const { data, error } = await supabase.functions.invoke("generate-prediction", {
-        body: { drawName },
+        body: { drawName, analysisDepth },
       });
 
       if (error) throw error;

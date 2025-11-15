@@ -7,7 +7,8 @@ import { NumberBall } from "./NumberBall";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { History, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { History, Filter } from "lucide-react";
+import { MobilePagination } from "./MobilePagination";
 
 export const TrackedPredictionsDisplay = () => {
   const { user } = useAuth();
@@ -125,34 +126,13 @@ export const TrackedPredictionsDisplay = () => {
           </>
         )}
         
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-4 border-t">
-            <div className="text-sm text-muted-foreground">
-              Page {currentPage} sur {totalPages}
-              <span className="ml-2">({(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, totalCount)} sur {totalCount})</span>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Précédent
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Suivant
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          </div>
-        )}
+        <MobilePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={totalCount}
+          className="pt-4 border-t"
+        />
       </CardContent>
     </Card>
   );

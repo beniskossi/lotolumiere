@@ -29,21 +29,21 @@ serve(async (req) => {
       );
     }
     
-    const { drawName } = validation.data;
+    const { drawName, analysisDepth = 100 } = validation.data;
 
-    console.log("Generating prediction for draw");
+    console.log("Generating prediction for draw:", drawName, "with depth:", analysisDepth);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch historical data (last 100 draws)
+    // Fetch historical data
     const { data: historicalData, error: fetchError } = await supabase
       .from("draw_results")
       .select("draw_date, winning_numbers")
       .eq("draw_name", drawName)
       .order("draw_date", { ascending: false })
-      .limit(100);
+      .limit(analysisDepth);
 
     if (fetchError) {
       console.error("Error fetching historical data", { error: fetchError.message });
@@ -94,6 +94,7 @@ serve(async (req) => {
         model_used: "LightGBM-like (Weighted Frequency)",
         model_metadata: {
           historical_draws_analyzed: historicalData.length,
+          analysis_depth_requested: analysisDepth,
           algorithm: "frequency",
           timestamp: new Date().toISOString()
         }
@@ -106,6 +107,7 @@ serve(async (req) => {
         model_used: "CatBoost-like (Pattern Sequence)",
         model_metadata: {
           historical_draws_analyzed: historicalData.length,
+          analysis_depth_requested: analysisDepth,
           algorithm: "sequence",
           timestamp: new Date().toISOString()
         }
@@ -118,6 +120,7 @@ serve(async (req) => {
         model_used: "Transformers-like (Gap Analysis)",
         model_metadata: {
           historical_draws_analyzed: historicalData.length,
+          analysis_depth_requested: analysisDepth,
           algorithm: "gap_analysis",
           timestamp: new Date().toISOString()
         }
@@ -130,6 +133,7 @@ serve(async (req) => {
         model_used: "Hybrid (Ensemble Model)",
         model_metadata: {
           historical_draws_analyzed: historicalData.length,
+          analysis_depth_requested: analysisDepth,
           frequency_component: frequencyPrediction,
           sequence_component: sequencePrediction,
           gap_analysis_component: gapAnalysisPrediction,

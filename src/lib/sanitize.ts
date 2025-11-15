@@ -1,10 +1,13 @@
 // Sanitization des inputs utilisateur
 export const sanitizeString = (input: string): string => {
+  if (typeof input !== 'string') return '';
   return input
     .trim()
-    .replace(/[<>]/g, '') // Supprimer < et >
+    .replace(/[<>"'&]/g, '') // Supprimer caractères dangereux
     .replace(/javascript:/gi, '') // Supprimer javascript:
-    .replace(/on\w+=/gi, ''); // Supprimer les event handlers
+    .replace(/on\w+=/gi, '') // Supprimer les event handlers
+    .replace(/data:/gi, '') // Supprimer data: URLs
+    .substring(0, 1000); // Limiter la longueur
 };
 
 export const sanitizeNumber = (input: string | number): number | null => {
@@ -19,7 +22,12 @@ export const sanitizeNumbers = (inputs: (string | number)[]): number[] => {
 };
 
 export const sanitizeEmail = (email: string): string => {
-  return email.toLowerCase().trim();
+  if (typeof email !== 'string') return '';
+  return email
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9@._-]/g, '') // Garder seulement les caractères valides
+    .substring(0, 254); // Limite RFC pour les emails
 };
 
 // Limiter la longueur des strings

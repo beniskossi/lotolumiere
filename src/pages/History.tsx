@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { DrawResultsSkeleton } from "@/components/LoadingSkeleton";
 import { NumberBall } from "@/components/NumberBall";
 import { DRAW_SCHEDULE } from "@/types/lottery";
 import { UserNav } from "@/components/UserNav";
+import { MobilePagination } from "@/components/MobilePagination";
 import {
   Table,
   TableBody,
@@ -25,14 +26,29 @@ const History = () => {
   const { data: allResults = [], isLoading } = useDrawResults(undefined, 1000);
   const [searchDate, setSearchDate] = useState("");
   const [filterDraw, setFilterDraw] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
   const allDraws = Object.values(DRAW_SCHEDULE).flat();
 
-  const filteredResults = allResults.filter((result) => {
-    const matchesDate = !searchDate || result.draw_date.includes(searchDate);
-    const matchesDraw = filterDraw === "all" || result.draw_name === filterDraw;
-    return matchesDate && matchesDraw;
-  });
+  const filteredResults = useMemo(() => {
+    return allResults.filter((result) => {
+      const matchesDate = !searchDate || result.draw_date.includes(searchDate);
+      const matchesDraw = filterDraw === "all" || result.draw_name === filterDraw;
+      return matchesDate && matchesDraw;
+    });
+  }, [allResults, searchDate, filterDraw]);
+
+  const totalPages = Math.ceil(filteredResults.length / itemsPerPage);
+  const paginatedResults = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredResults.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredResults, currentPage, itemsPerPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -118,6 +134,7 @@ const History = () => {
                   onClick={() => {
                     setSearchDate("");
                     setFilterDraw("all");
+                    setCurrentPage(1);
                   }}
                 >
                   Réinitialiser
@@ -145,7 +162,7 @@ const History = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredResults.map((result) => (
+                    {paginatedResults.map((result) => (
                       <TableRow 
                         key={result.id}
                         className="hover:bg-accent/5 transition-colors"
@@ -203,6 +220,14 @@ const History = () => {
                 </Table>
               </div>
             )}
+            
+            <MobilePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalItems={filteredResults.length}
+              className="mt-6"
+            />
           </CardContent>
         </Card>
       </div>
