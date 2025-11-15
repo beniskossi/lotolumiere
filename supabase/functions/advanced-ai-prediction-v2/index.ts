@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import type { DrawResult, PredictionResult } from "../_shared/types.ts";
+import type { DrawResult, PredictionResult, AlgorithmCategory } from "../_shared/types.ts";
 import { dataCache, predictionCache } from "../_shared/cache.ts";
 import { log, calculateDataQuality, calculateFreshness } from "../_shared/utils.ts";
+import { predictionRequestSchema, validateRequest } from "../_shared/validation.ts";
 import {
   weightedFrequencyAlgorithm,
   kmeansClusteringAlgorithm,
@@ -34,7 +35,7 @@ interface PredictionResponse {
 
 interface AlgorithmConfig {
   name: string;
-  type: string;
+  type: AlgorithmCategory;
   fn: (results: DrawResult[]) => PredictionResult;
 }
 
@@ -57,11 +58,18 @@ serve(async (req) => {
   const startTime = Date.now();
 
   try {
-    const { drawName } = await req.json();
+    const body = await req.json();
 
-    if (!drawName || !validateDrawName(drawName)) {
-      throw new Error("Invalid drawName");
+    // Validate input
+    const validation = validateRequest(predictionRequestSchema, body);
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ error: "Invalid input", details: validation.error }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+    
+    const { drawName } = validation.data;
 
     log("info", `Generating advanced predictions for ${drawName}`, { drawName });
 
