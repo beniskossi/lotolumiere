@@ -61,9 +61,9 @@ export const AlgorithmRankings = ({ drawName }: AlgorithmRankingsProps) => {
                   "Inférence Bayésienne",
                   "Neural Network",
                   "Analyse Variance",
-                  "LightGBM",
-                  "CatBoost",
-                  "Transformer",
+                  "Random Forest",
+                  "Gradient Boosting",
+                  "LSTM Network",
                   "ARIMA",
                 ].map((algo) => (
                   <Badge key={algo} variant="outline" className="text-xs">

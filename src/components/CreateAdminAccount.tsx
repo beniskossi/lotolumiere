@@ -34,23 +34,14 @@ export const CreateAdminAccount = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // 2. Ajouter le rôle admin
-        const { error: roleError } = await supabase
-          .from("admin_roles")
-          .insert({
-            user_id: authData.user.id,
-            role: "admin"
-          });
-
-        if (roleError) throw roleError;
-
-        // 3. Créer le profil utilisateur
+        // 2. Créer le profil utilisateur avec rôle admin
         const { error: profileError } = await supabase
           .from("user_profiles")
           .insert({
             id: authData.user.id,
             username: email.split("@")[0],
             full_name: "Administrateur",
+            role: "admin",
           });
 
         if (profileError) throw profileError;

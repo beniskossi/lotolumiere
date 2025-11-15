@@ -11,16 +11,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Liste complète des 9 algorithmes
+// Liste complète des 9 algorithmes (noms unifiés)
 const ALL_ALGORITHMS = [
   "Analyse Fréquentielle",
   "ML K-means",
   "Inférence Bayésienne",
   "Neural Network",
   "Analyse Variance",
-  "LightGBM",
-  "CatBoost",
-  "Transformer",
+  "Random Forest",
+  "Gradient Boosting",
+  "LSTM Network",
   "ARIMA",
 ];
 

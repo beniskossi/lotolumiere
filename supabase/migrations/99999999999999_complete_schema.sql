@@ -195,6 +195,7 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   full_name text,
   avatar_url text,
   bio text,
+  role text DEFAULT 'user' CHECK (role IN ('user', 'admin', 'super_admin')),
   level integer DEFAULT 1,
   experience_points integer DEFAULT 0,
   total_predictions integer DEFAULT 0,
@@ -205,6 +206,7 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
 
 CREATE INDEX IF NOT EXISTS idx_user_profiles_username ON public.user_profiles(username);
 CREATE INDEX IF NOT EXISTS idx_user_profiles_level ON public.user_profiles(level DESC);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_role ON public.user_profiles(role);
 
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 
@@ -390,25 +392,7 @@ DROP POLICY IF EXISTS "Anyone can view scraping jobs" ON public.scraping_jobs;
 CREATE POLICY "Anyone can view scraping jobs" ON public.scraping_jobs FOR SELECT USING (true);
 
 -- ============================================================================
--- 14. ADMIN ROLES
--- ============================================================================
-
-CREATE TABLE IF NOT EXISTS public.admin_roles (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
-  role text NOT NULL DEFAULT 'admin' CHECK (role IN ('admin', 'super_admin')),
-  created_at timestamptz DEFAULT now()
-);
-
-CREATE INDEX IF NOT EXISTS idx_admin_roles_user_id ON public.admin_roles(user_id);
-
-ALTER TABLE public.admin_roles ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Users can view own admin role" ON public.admin_roles;
-CREATE POLICY "Users can view own admin role" ON public.admin_roles FOR SELECT USING (auth.uid() = user_id);
-
--- ============================================================================
--- 15. ALGORITHM CONFIGURATIONS
+-- 14. ALGORITHM CONFIGURATIONS
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.algorithm_configurations (
