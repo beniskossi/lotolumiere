@@ -1,7 +1,7 @@
 // Algorithmes de prédiction RÉELS implémentés en pur TypeScript
 // Pas de simulations - implémentations complètes des algorithmes ML/Stats
 
-import type { DrawResult, PredictionResult } from "./types.ts";
+import type { DrawResult, PredictionResult, AlgorithmCategory } from "./types.ts";
 import {
   generateRandomPrediction,
   selectBalancedNumbers,
@@ -19,7 +19,7 @@ const EPSILON = 1e-10; // Constante pour éviter les divisions par zéro et stab
  */
 export function generateFallbackPrediction(
   algorithm: string,
-  category: string
+  category: AlgorithmCategory
 ): PredictionResult {
   return {
     numbers: generateRandomPrediction(),

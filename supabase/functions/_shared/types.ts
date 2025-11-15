@@ -25,7 +25,8 @@ export type AlgorithmCategory =
   | "lightgbm" 
   | "catboost" 
   | "transformer" 
-  | "arima";
+  | "arima"
+  | "ensemble";
 
 export interface AlgorithmMetrics {
   totalRecords: number;
