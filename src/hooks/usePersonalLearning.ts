@@ -80,8 +80,18 @@ export const usePersonalLearning = (userId?: string) => {
   const updateLearning = useMutation({
     mutationFn: async ({ numbers, result }: { numbers: number[]; result: number[] }) => {
       if (!userId) throw new Error("User not authenticated");
-      // Placeholder - no tracking table exists
-      console.log("Learning update:", { numbers, result });
+      
+      // Sauvegarder comme favori pour apprentissage futur
+      const { error } = await supabase
+        .from("user_favorites")
+        .insert({
+          user_id: userId,
+          draw_name: "learning",
+          favorite_numbers: numbers,
+          notes: `Résultat: ${result.join(", ")}`
+        });
+      
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["personal-learning", userId] });
