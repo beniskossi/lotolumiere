@@ -65,6 +65,10 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
+  const validateColor = (color: string): boolean => {
+    return /^#[0-9a-fA-F]{3,6}$|^hsl\(|^rgb\(/.test(color) && color.length < 100;
+  };
+
   return (
     <style
       dangerouslySetInnerHTML={{
@@ -78,7 +82,7 @@ ${colorConfig
   .map(([key, itemConfig]) => {
     const safeKey = key.replace(/[^a-zA-Z0-9-_]/g, '');
     const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color && /^#[0-9a-fA-F]{3,6}$|^hsl\(|^rgb\(/.test(color) ? `  --color-${safeKey}: ${color};` : null;
+    return color && validateColor(color) ? `  --color-${safeKey}: ${color};` : null;
   })
   .join("\n")}
 }

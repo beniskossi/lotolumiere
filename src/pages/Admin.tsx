@@ -335,6 +335,7 @@ const Admin = () => {
 
   // Mode développement - permet l'accès admin sans authentification
   const isDevelopment = import.meta.env.DEV;
+  const hasAccess = isDevelopment || (user && isAdmin);
   
   // Check if user has admin role
   if (user && !isAdmin && !isDevelopment) {
@@ -377,7 +378,7 @@ const Admin = () => {
     );
   }
 
-  if (!user && !isDevelopment) {
+  if (!hasAccess) {
     return (
       <div className="min-h-screen bg-background">
         <div className="bg-gradient-primary text-white py-8 px-4 shadow-lg">

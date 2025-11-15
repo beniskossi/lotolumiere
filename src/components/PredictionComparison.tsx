@@ -135,10 +135,15 @@ export const PredictionComparison = ({ drawName }: PredictionComparisonProps) =>
 
   // Export function
   const handleExport = () => {
+    const escapeCSV = (value: any): string => {
+      const str = String(value).substring(0, 1000);
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+
     const exportData = validComparisons.map(comp => ({
       date_prediction: comp.prediction.prediction_date,
       date_tirage: comp.result?.draw_date,
-      algorithme: comp.prediction.model_used?.replace(/[,"]/g, ' ') || 'Unknown',
+      algorithme: comp.prediction.model_used?.replace(/[^a-zA-Z0-9\s-]/g, '') || 'Unknown',
       numeros_predits: comp.prediction.predicted_numbers.join(', '),
       numeros_gagnants: comp.result?.winning_numbers.join(', '),
       matches: comp.matches,
@@ -148,14 +153,14 @@ export const PredictionComparison = ({ drawName }: PredictionComparisonProps) =>
 
     const csv = [
       Object.keys(exportData[0]).join(','),
-      ...exportData.map(row => Object.values(row).join(','))
+      ...exportData.map(row => Object.values(row).map(escapeCSV).join(','))
     ].join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `comparaison-predictions-${encodeURIComponent(drawName)}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.download = `comparaison-predictions-${drawName.replace(/[^a-z0-9]/gi, '_')}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
   };
 

@@ -27,7 +27,12 @@ export const useSubmitFeedback = () => {
 
   return useMutation({
     mutationFn: async (feedback: FeedbackData) => {
-      console.log("Feedback submitted:", feedback);
+      const safeLog = {
+        prediction_id: feedback.prediction_id.substring(0, 50),
+        rating: feedback.rating,
+        matches: feedback.matches,
+      };
+      console.log("Feedback submitted:", safeLog);
       return { success: true };
     },
     onSuccess: () => {

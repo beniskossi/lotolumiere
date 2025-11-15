@@ -37,6 +37,7 @@ export const truncateString = (str: string, maxLength: number): string => {
 
 // Échapper les caractères HTML
 export const escapeHtml = (text: string): string => {
+  if (typeof text !== 'string') return '';
   const map: Record<string, string> = {
     '&': '&amp;',
     '<': '&lt;',
@@ -44,5 +45,5 @@ export const escapeHtml = (text: string): string => {
     '"': '&quot;',
     "'": '&#039;'
   };
-  return text.replace(/[&<>"']/g, (m) => map[m]);
+  return text.substring(0, 10000).replace(/[&<>"']/g, (m) => map[m]);
 };

@@ -77,12 +77,13 @@ export const SocialShare = ({
         
         const pngFile = canvas.toDataURL('image/png');
         const downloadLink = document.createElement('a');
-        downloadLink.download = 'loto-lumiere-qr.png';
+        downloadLink.download = `loto-lumiere-qr-${Date.now()}.png`;
         downloadLink.href = pngFile;
         downloadLink.click();
       };
       
-      img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+      const encoded = btoa(String.fromCharCode.apply(null, Array.from(new TextEncoder().encode(svgData))));
+      img.src = 'data:image/svg+xml;base64,' + encoded;
     }
   };
 

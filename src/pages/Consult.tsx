@@ -20,8 +20,9 @@ const Consult = () => {
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
 
   const handleSearch = (filters: any) => {
-    // Ici vous pouvez implémenter la logique de recherche
-    console.log('Recherche avec filtres:', filters);
+    // Valider les filtres avant logging
+    const safeFilters = JSON.stringify(filters).substring(0, 500);
+    console.log('Recherche avec filtres:', safeFilters);
     setSearchResults(filters);
   };
 
@@ -113,7 +114,7 @@ const Consult = () => {
             <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
               <CardContent className="pt-6">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
-                  Résultats filtrés - {JSON.stringify(searchResults, null, 2)}
+                  Résultats filtrés - {JSON.stringify(searchResults, null, 2).substring(0, 500)}
                 </p>
               </CardContent>
             </Card>

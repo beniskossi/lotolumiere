@@ -204,7 +204,8 @@ export const DrawResultsImporter = ({ onImportComplete }: { onImportComplete?: (
         const { error } = await supabase.from("draw_results").insert(result);
         
         if (error) {
-          console.error("Error inserting:", error);
+          const safeError = String(error).substring(0, 100);
+          console.error("Error inserting:", safeError);
         } else {
           insertedCount++;
         }
@@ -224,7 +225,8 @@ export const DrawResultsImporter = ({ onImportComplete }: { onImportComplete?: (
         onImportComplete();
       }
     } catch (error) {
-      console.error("Import error:", error);
+      const safeError = String(error).substring(0, 100);
+      console.error("Import error:", safeError);
       toast({
         title: "Erreur",
         description: "Échec de l'import",

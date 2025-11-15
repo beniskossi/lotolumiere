@@ -66,12 +66,14 @@ serve(async (req) => {
     const frequencyPrediction = predictByFrequency(historicalData as HistoricalDraw[]);
     const sequencePrediction = predictBySequence(historicalData as HistoricalDraw[]);
     const gapAnalysisPrediction = predictByGapAnalysis(historicalData as HistoricalDraw[]);
+    const markovPrediction = predictByMarkov(historicalData as HistoricalDraw[]);
 
     // Combine predictions with weighted average (simulating ensemble approach)
     const combinedPrediction = combineModels([
-      { numbers: frequencyPrediction, weight: 0.4 },
-      { numbers: sequencePrediction, weight: 0.35 },
-      { numbers: gapAnalysisPrediction, weight: 0.25 }
+      { numbers: frequencyPrediction, weight: 0.3 },
+      { numbers: sequencePrediction, weight: 0.25 },
+      { numbers: gapAnalysisPrediction, weight: 0.2 },
+      { numbers: markovPrediction, weight: 0.25 }
     ]);
 
     // Calculate next draw date based on draw schedule
@@ -82,6 +84,7 @@ serve(async (req) => {
     const frequencyConfidence = calculateConfidence(historicalData as HistoricalDraw[], frequencyPrediction);
     const sequenceConfidence = calculateConfidence(historicalData as HistoricalDraw[], sequencePrediction);
     const gapAnalysisConfidence = calculateConfidence(historicalData as HistoricalDraw[], gapAnalysisPrediction);
+    const markovConfidence = calculateConfidence(historicalData as HistoricalDraw[], markovPrediction);
     const hybridConfidence = calculateConfidence(historicalData as HistoricalDraw[], combinedPrediction);
 
     // Create predictions for each model
@@ -128,6 +131,19 @@ serve(async (req) => {
       {
         draw_name: drawName,
         prediction_date: predictionDate,
+        predicted_numbers: markovPrediction,
+        confidence_score: markovConfidence,
+        model_used: "Markov Chain (State Transition)",
+        model_metadata: {
+          historical_draws_analyzed: historicalData.length,
+          analysis_depth_requested: analysisDepth,
+          algorithm: "markov_chain",
+          timestamp: new Date().toISOString()
+        }
+      },
+      {
+        draw_name: drawName,
+        prediction_date: predictionDate,
         predicted_numbers: combinedPrediction,
         confidence_score: hybridConfidence,
         model_used: "Hybrid (Ensemble Model)",
@@ -137,6 +153,7 @@ serve(async (req) => {
           frequency_component: frequencyPrediction,
           sequence_component: sequencePrediction,
           gap_analysis_component: gapAnalysisPrediction,
+          markov_component: markovPrediction,
           timestamp: new Date().toISOString()
         }
       }
@@ -512,6 +529,55 @@ function getNextDrawDate(drawName: string): Date {
   nextDrawDate.setHours(hours, minutes, 0, 0);
   
   return nextDrawDate;
+}
+
+// Markov Chain: Analyze state transitions between draws
+function predictByMarkov(data: HistoricalDraw[]): number[] {
+  if (data.length < 3) return predictByFrequency(data);
+  
+  // Build transition matrix: number -> next numbers
+  const transitions = new Map<number, Map<number, number>>();
+  
+  for (let i = 0; i < data.length - 1; i++) {
+    const currentNumbers = data[i].winning_numbers;
+    const nextNumbers = data[i + 1].winning_numbers;
+    
+    currentNumbers.forEach(currentNum => {
+      if (!transitions.has(currentNum)) {
+        transitions.set(currentNum, new Map());
+      }
+      
+      const currentTransitions = transitions.get(currentNum)!;
+      nextNumbers.forEach(nextNum => {
+        currentTransitions.set(nextNum, (currentTransitions.get(nextNum) || 0) + 1);
+      });
+    });
+  }
+  
+  // Get most recent numbers as starting state
+  const lastNumbers = data[0].winning_numbers;
+  const scores = new Map<number, number>();
+  
+  // Calculate transition probabilities
+  lastNumbers.forEach(num => {
+    const numTransitions = transitions.get(num);
+    if (numTransitions) {
+      const totalTransitions = Array.from(numTransitions.values()).reduce((a, b) => a + b, 0);
+      
+      numTransitions.forEach((count, nextNum) => {
+        const probability = count / totalTransitions;
+        scores.set(nextNum, (scores.get(nextNum) || 0) + probability);
+      });
+    }
+  });
+  
+  // Select top candidates
+  const candidates = Array.from(scores.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .map(([num]) => num);
+  
+  return selectWithRandomization(candidates.length > 0 ? candidates : Array.from({length: 15}, (_, i) => i + 1), 5);
 }
 
 function selectWithRandomization(candidates: number[], count: number): number[] {
