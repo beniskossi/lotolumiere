@@ -9,6 +9,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { CalendarIcon, Play, Download, TrendingUp, Target, Award } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useBacktesting } from "@/hooks/useBacktesting";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAlgorithmConfigs } from "@/hooks/useAlgorithmConfig";
 
 interface BacktestResult {
   algorithm: string;
@@ -38,27 +41,14 @@ export const AdvancedBacktesting = () => {
     strategy: "top_confidence"
   });
   
-  const [isRunning, setIsRunning] = useState(false);
-  const [results, setResults] = useState<BacktestResult[]>([]);
-  
-  // Données simulées de performance historique
-  const performanceData = [
-    { date: "Jan", lightgbm: 78, catboost: 76, transformer: 74, neural: 72 },
-    { date: "Fév", lightgbm: 79, catboost: 77, transformer: 75, neural: 73 },
-    { date: "Mar", lightgbm: 81, catboost: 78, transformer: 76, neural: 74 },
-    { date: "Avr", lightgbm: 80, catboost: 79, transformer: 77, neural: 75 },
-    { date: "Mai", lightgbm: 82, catboost: 80, transformer: 78, neural: 76 },
-    { date: "Jun", lightgbm: 83, catboost: 81, transformer: 79, neural: 77 }
-  ];
+  const [shouldRun, setShouldRun] = useState(false);
+  const { data: algorithmConfigs } = useAlgorithmConfigs();
+  const { data: results, isLoading: isRunning } = useBacktesting({
+    ...config,
+    algorithms: shouldRun ? config.algorithms : []
+  });
 
-  const algorithms = [
-    "LightGBM Pro",
-    "CatBoost Pro", 
-    "Transformers Pro",
-    "Neural LSTM",
-    "Bayésien Avancé",
-    "ARIMA Time Series"
-  ];
+  const algorithms = algorithmConfigs?.map(c => c.algorithm_name) || [];
 
   const strategies = [
     { value: "top_confidence", label: "Plus haute confiance" },
@@ -67,29 +57,13 @@ export const AdvancedBacktesting = () => {
     { value: "ensemble", label: "Ensemble adaptatif" }
   ];
 
-  const runBacktest = async () => {
-    setIsRunning(true);
-    
-    // Simuler le backtesting
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Générer des résultats simulés
-    const mockResults: BacktestResult[] = config.algorithms.map(algo => ({
-      algorithm: algo,
-      period: `${format(config.startDate, "MMM yyyy", { locale: fr })} - ${format(config.endDate, "MMM yyyy", { locale: fr })}`,
-      totalPredictions: Math.floor(Math.random() * 100) + 50,
-      accuracy: Math.floor(Math.random() * 30) + 60,
-      bestMatch: Math.floor(Math.random() * 3) + 3,
-      avgConfidence: Math.floor(Math.random() * 20) + 70,
-      profitability: (Math.random() - 0.3) * 100,
-      sharpeRatio: Math.random() * 2
-    }));
-    
-    setResults(mockResults.sort((a, b) => b.accuracy - a.accuracy));
-    setIsRunning(false);
+  const runBacktest = () => {
+    setShouldRun(true);
   };
 
   const exportResults = () => {
+    if (!results || results.length === 0) return;
+    
     const csv = [
       "Algorithme,Période,Prédictions,Précision,Meilleur Match,Confiance Moy,Rentabilité,Sharpe Ratio",
       ...results.map(r => 
@@ -213,7 +187,7 @@ export const AdvancedBacktesting = () => {
               {isRunning ? "Test en cours..." : "Lancer le backtest"}
             </Button>
             
-            {results.length > 0 && (
+            {!isRunning && results && results.length > 0 && (
               <Button variant="outline" onClick={exportResults} className="gap-2">
                 <Download className="w-4 h-4" />
                 Exporter
@@ -223,32 +197,8 @@ export const AdvancedBacktesting = () => {
         </CardContent>
       </Card>
 
-      {/* Graphique de performance historique */}
-      <Card className="bg-gradient-card border-border/50">
-        <CardHeader>
-          <CardTitle>Performance Historique</CardTitle>
-          <CardDescription>
-            Évolution de la précision des algorithmes sur 6 mois
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={performanceData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="lightgbm" stroke="#8884d8" name="LightGBM" />
-              <Line type="monotone" dataKey="catboost" stroke="#82ca9d" name="CatBoost" />
-              <Line type="monotone" dataKey="transformer" stroke="#ffc658" name="Transformer" />
-              <Line type="monotone" dataKey="neural" stroke="#ff7300" name="Neural" />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
       {/* Résultats du backtest */}
-      {results.length > 0 && (
+      {!isRunning && results && results.length > 0 && (
         <div className="space-y-4">
           <Card className="bg-gradient-primary text-white border-0">
             <CardHeader>
