@@ -24,13 +24,25 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { ArrowLeft, LayoutDashboard, TrendingUp } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { UserNav } from "@/components/UserNav";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DRAW_SCHEDULE } from "@/types/lottery";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { data: preferences, isLoading: prefsLoading } = useUserPreferences(user?.id);
-  const { data: drawResults } = useDrawResults(preferences?.preferred_draw_name || "Midi", 50);
+  const [selectedDraw, setSelectedDraw] = useState<string>("Etoile");
+  const { data: drawResults } = useDrawResults(selectedDraw, 50);
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Get all available draws
+  const allDraws = Object.values(DRAW_SCHEDULE).flat();
+
+  useEffect(() => {
+    if (preferences?.preferred_draw_name) {
+      setSelectedDraw(preferences.preferred_draw_name);
+    }
+  }, [preferences]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -85,16 +97,44 @@ export default function Dashboard() {
           <UserNav />
         </div>
 
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Sélection du Tirage</CardTitle>
+            <CardDescription>
+              Choisissez le tirage à analyser dans votre dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedDraw} onValueChange={setSelectedDraw}>
+              <SelectTrigger className="w-full md:w-64">
+                <SelectValue placeholder="Sélectionner un tirage" />
+              </SelectTrigger>
+              <SelectContent>
+                {allDraws.map((draw) => (
+                  <SelectItem key={draw.name} value={draw.name}>
+                    {draw.name} - {draw.day} {draw.time}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-6 md:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Statistiques</CardTitle>
+              <CardTitle>Tirage Analysé</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-primary">
-                {preferences?.preferred_draw_name || "Midi"}
+                {selectedDraw}
               </div>
-              <p className="text-sm text-muted-foreground">Tirage préféré</p>
+              <p className="text-sm text-muted-foreground">
+                {allDraws.find(d => d.name === selectedDraw)?.day} {allDraws.find(d => d.name === selectedDraw)?.time}
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                {drawResults?.length || 0} résultat(s) disponible(s)
+              </p>
             </CardContent>
           </Card>
 
@@ -161,7 +201,7 @@ export default function Dashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <PredictionComparison drawName="Midi" />
+                <PredictionComparison drawName={selectedDraw} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -184,15 +224,20 @@ export default function Dashboard() {
               <NumberHeatmap results={drawResults} />
             ) : (
               <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  Chargement des données...
+                <CardContent className="py-8 text-center">
+                  <p className="text-muted-foreground mb-2">
+                    Aucune donnée disponible pour le tirage "{selectedDraw}"
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Essayez de sélectionner un autre tirage ou importez des données
+                  </p>
                 </CardContent>
               </Card>
             )}
           </TabsContent>
 
           <TabsContent value="multidraw" className="space-y-4">
-            <MultiDrawPredictionPanel drawNames={["Midi", "Etoile", "National"]} />
+            <MultiDrawPredictionPanel drawNames={[selectedDraw, "Fortune", "National"]} />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">
@@ -214,7 +259,28 @@ export default function Dashboard() {
           </TabsContent>
           
           <TabsContent value="export" className="space-y-4">
-            <DataExport />
+            <div className="grid gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Import de Données</CardTitle>
+                  <CardDescription>
+                    Importez des résultats de tirages pour enrichir vos analyses
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => navigate("/admin")}
+                    className="w-full"
+                  >
+                    Accéder à l'import de données
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    Vous pouvez importer des résultats via CSV ou copier-coller
+                  </p>
+                </CardContent>
+              </Card>
+              <DataExport />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

@@ -27,6 +27,8 @@ import { AutomationScheduler } from "@/components/AutomationScheduler";
 import { LivePerformanceMetrics } from "@/components/LivePerformanceMetrics";
 import { AlgorithmEvaluationPanel } from "@/components/AlgorithmEvaluationPanel";
 import { AdminDashboardStats } from "@/components/AdminDashboardStats";
+import { CreateAdminAccount } from "@/components/CreateAdminAccount";
+import { AdminDiagnostic } from "@/components/AdminDiagnostic";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -330,8 +332,11 @@ const Admin = () => {
     );
   }
 
+  // Mode développement - permet l'accès admin sans authentification
+  const isDevelopment = import.meta.env.DEV;
+  
   // Check if user has admin role
-  if (user && !isAdmin) {
+  if (user && !isAdmin && !isDevelopment) {
     return (
       <div className="min-h-screen bg-background">
         <div className="bg-gradient-primary text-white py-8 px-4 shadow-lg">
@@ -371,7 +376,7 @@ const Admin = () => {
     );
   }
 
-  if (!user) {
+  if (!user && !isDevelopment) {
     return (
       <div className="min-h-screen bg-background">
         <div className="bg-gradient-primary text-white py-8 px-4 shadow-lg">
@@ -409,7 +414,7 @@ const Admin = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@lotobonheur.ci"
+                    placeholder="admin@lotolumiere.ci"
                     required
                   />
                 </div>
@@ -433,6 +438,11 @@ const Admin = () => {
                   Se connecter
                 </Button>
               </form>
+              
+              <div className="mt-6 pt-6 border-t border-border/50 space-y-4">
+                <AdminDiagnostic />
+                <CreateAdminAccount />
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -470,6 +480,17 @@ const Admin = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+        {/* Mode développement indicator */}
+        {isDevelopment && (
+          <Alert className="bg-yellow-500/10 border-yellow-500/50 animate-pulse">
+            <AlertCircle className="h-4 w-4 text-yellow-500" />
+            <AlertDescription>
+              <strong>🛠️ Mode Développement:</strong> Accès administrateur activé pour les tests. 
+              Désactivé en production.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Statistics Dashboard with Real Data */}
         <div className="animate-fade-in">
           <AdminDashboardStats />

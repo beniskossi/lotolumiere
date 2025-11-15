@@ -263,6 +263,103 @@ Etoile,2024-01-15,8,15,27,56,78,,,,,`;
       <CardContent>
         <Tabs defaultValue="text" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="text">Copier-Coller</TabsTrigger>
+            <TabsTrigger value="csv">Fichier CSV</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="text" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="paste-text">Collez vos données ici</Label>
+              <Textarea
+                id="paste-text"
+                placeholder="Exemple:
+Reveil 2024-01-15 12 23 45 67 89
+Etoile 2024-01-15 8 15 27 56 78 5 10 20 30 40"
+                value={pastedText}
+                onChange={(e) => setPastedText(e.target.value)}
+                rows={6}
+              />
+            </div>
+            <Button onClick={handlePreviewText} disabled={!pastedText.trim()}>
+              <FileText className="w-4 h-4 mr-2" />
+              Prévisualiser
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="csv" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="csv-file">Sélectionnez un fichier CSV</Label>
+              <input
+                id="csv-file"
+                type="file"
+                accept=".csv"
+                onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/80"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handlePreviewCsv} disabled={!csvFile}>
+                <FileText className="w-4 h-4 mr-2" />
+                Prévisualiser
+              </Button>
+              <Button variant="outline" onClick={downloadTemplate}>
+                <Download className="w-4 h-4 mr-2" />
+                Télécharger modèle
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {previewResults.length > 0 && (
+          <div className="mt-6 space-y-4">
+            <Alert>
+              <AlertDescription>
+                {previewResults.length} résultat(s) détecté(s). Vérifiez avant d'importer.
+              </AlertDescription>
+            </Alert>
+
+            <div className="max-h-64 overflow-y-auto border rounded-lg p-4 bg-muted/50">
+              {previewResults.map((result, index) => (
+                <div key={index} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                  <div className="flex-1">
+                    <span className="font-medium">{result.draw_name}</span>
+                    <span className="text-muted-foreground ml-2">{result.draw_date}</span>
+                  </div>
+                  <div className="flex gap-1">
+                    {result.winning_numbers.map((num, i) => (
+                      <span key={i} className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                        {num}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <Button onClick={handleImport} disabled={isLoading} className="flex-1">
+                {isLoading ? "Import en cours..." : `Importer ${previewResults.length} résultat(s)`}
+              </Button>
+              <Button variant="outline" onClick={() => setPreviewResults([])}>
+                Annuler
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+          <h4 className="font-semibold mb-2">Format attendu :</h4>
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p><strong>Texte :</strong> NomTirage Date N1 N2 N3 N4 N5 [M1 M2 M3 M4 M5]</p>
+            <p><strong>CSV :</strong> Tirage,Date,N1,N2,N3,N4,N5,M1,M2,M3,M4,M5</p>
+            <p><strong>Date :</strong> YYYY-MM-DD ou DD/MM/YYYY</p>
+            <p><strong>Numéros :</strong> 1-90, M1-M5 optionnels (numéros machine)</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};lassName="grid w-full grid-cols-2">
             <TabsTrigger value="text" className="gap-2">
               <Copy className="w-4 h-4" />
               Copier-Coller

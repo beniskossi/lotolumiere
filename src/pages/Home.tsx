@@ -6,6 +6,8 @@ import { Footer } from "@/components/Footer";
 import { GlobalStatistics } from "@/components/GlobalStatistics";
 import { BestAlgorithmDisplay } from "@/components/BestAlgorithmDisplay";
 import { RealTimeStats } from "@/components/RealTimeStats";
+import { QuickActions } from "@/components/QuickActions";
+import { AppVersion } from "@/components/AppVersion";
 import { DRAW_SCHEDULE, DAYS_ORDER } from "@/types/lottery";
 import { Sparkles, TrendingUp, BarChart3, Database, History as HistoryIcon, LayoutDashboard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { UserNav } from "@/components/UserNav";
+import { UserFeedback } from "@/components/UserFeedback";
+import { AppStatus } from "@/components/AppStatus";
 
 const Home = () => {
   const { user } = useAuth();
@@ -107,6 +111,10 @@ const Home = () => {
           )}
         </div>
 
+        <div className="mb-6 sm:mb-8 animate-slide-up">
+          <QuickActions />
+        </div>
+
         <div className="mb-8 sm:mb-12 animate-slide-up">
           <RealTimeStats />
         </div>
@@ -117,6 +125,11 @@ const Home = () => {
 
         <div className="mb-8 sm:mb-12 animate-slide-up">
           <BestAlgorithmDisplay drawName={DRAW_SCHEDULE[DAYS_ORDER[0]][0].name} />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-8 sm:mb-12 animate-slide-up">
+          <AppStatus />
+          {user && <UserFeedback />}
         </div>
 
         <div className="mb-6 sm:mb-8 animate-fade-in">
@@ -137,6 +150,10 @@ const Home = () => {
         </div>
       </div>
 
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 pb-4">
+        <AppVersion />
+      </div>
+      
       <Footer />
       <PWAInstallPrompt />
     </div>

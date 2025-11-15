@@ -131,7 +131,10 @@ export const PredictionPanel = ({ drawName }: PredictionPanelProps) => {
                 <div className="p-6 bg-gradient-primary rounded-lg text-white">
                   <div className="mb-4">
                     <p className="text-sm opacity-90 mb-1">
-                      Prédiction du {format(new Date(latestPrediction.prediction_date), "d MMMM yyyy", { locale: fr })}
+                      Prédiction pour le prochain tirage {drawName}
+                    </p>
+                    <p className="text-xs opacity-70">
+                      Date prévue: {format(new Date(latestPrediction.prediction_date), "EEEE d MMMM yyyy", { locale: fr })}
                     </p>
                     <div className="flex items-center gap-4 text-xs opacity-80">
                       <span>Modèle: <strong>{latestPrediction.model_used}</strong></span>

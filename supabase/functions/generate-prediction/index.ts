@@ -74,10 +74,9 @@ serve(async (req) => {
       { numbers: gapAnalysisPrediction, weight: 0.25 }
     ]);
 
-    // Store prediction in database
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const predictionDate = tomorrow.toISOString().split("T")[0];
+    // Calculate next draw date based on draw schedule
+    const nextDrawDate = getNextDrawDate(drawName);
+    const predictionDate = nextDrawDate.toISOString().split("T")[0];
 
     // Calculate confidence scores for each model
     const frequencyConfidence = calculateConfidence(historicalData as HistoricalDraw[], frequencyPrediction);
@@ -431,6 +430,84 @@ function calculateVariance(data: HistoricalDraw[]): number {
   const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
   
   return Math.sqrt(variance);
+}
+
+function getNextDrawDate(drawName: string): Date {
+  // Mapping des tirages aux jours de la semaine (0 = Dimanche, 1 = Lundi, etc.)
+  const drawSchedule: Record<string, { day: number; time: string }> = {
+    // Lundi (1)
+    "Reveil": { day: 1, time: "10:00" },
+    "Etoile": { day: 1, time: "13:00" },
+    "Akwaba": { day: 1, time: "16:00" },
+    "Monday Special": { day: 1, time: "18:15" },
+    // Mardi (2)
+    "La Matinale": { day: 2, time: "10:00" },
+    "Emergence": { day: 2, time: "13:00" },
+    "Sika": { day: 2, time: "16:00" },
+    "Lucky Tuesday": { day: 2, time: "18:15" },
+    // Mercredi (3)
+    "Premiere Heure": { day: 3, time: "10:00" },
+    "Fortune": { day: 3, time: "13:00" },
+    "Baraka": { day: 3, time: "16:00" },
+    "Midweek": { day: 3, time: "18:15" },
+    // Jeudi (4)
+    "Kado": { day: 4, time: "10:00" },
+    "Privilege": { day: 4, time: "13:00" },
+    "Monni": { day: 4, time: "16:00" },
+    "Fortune Thursday": { day: 4, time: "18:15" },
+    // Vendredi (5)
+    "Cash": { day: 5, time: "10:00" },
+    "Solution": { day: 5, time: "13:00" },
+    "Wari": { day: 5, time: "16:00" },
+    "Friday Bonanza": { day: 5, time: "18:15" },
+    // Samedi (6)
+    "Soutra": { day: 6, time: "10:00" },
+    "Diamant": { day: 6, time: "13:00" },
+    "Moaye": { day: 6, time: "16:00" },
+    "National": { day: 6, time: "18:15" },
+    // Dimanche (0)
+    "Benediction": { day: 0, time: "10:00" },
+    "Prestige": { day: 0, time: "13:00" },
+    "Awale": { day: 0, time: "16:00" },
+    "Espoir": { day: 0, time: "18:15" }
+  };
+
+  const schedule = drawSchedule[drawName];
+  if (!schedule) {
+    // Si le tirage n'est pas trouvé, retourner demain
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow;
+  }
+
+  const now = new Date();
+  const currentDay = now.getDay();
+  const [hours, minutes] = schedule.time.split(":").map(Number);
+  
+  // Calculer le prochain jour de tirage
+  let daysUntilNext = schedule.day - currentDay;
+  
+  // Si c'est le même jour, vérifier l'heure
+  if (daysUntilNext === 0) {
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Si l'heure du tirage est déjà passée aujourd'hui, passer à la semaine suivante
+    if (currentHour > hours || (currentHour === hours && currentMinute >= minutes)) {
+      daysUntilNext = 7;
+    }
+  }
+  
+  // Si le jour est dans le passé cette semaine, passer à la semaine suivante
+  if (daysUntilNext < 0) {
+    daysUntilNext += 7;
+  }
+  
+  const nextDrawDate = new Date(now);
+  nextDrawDate.setDate(now.getDate() + daysUntilNext);
+  nextDrawDate.setHours(hours, minutes, 0, 0);
+  
+  return nextDrawDate;
 }
 
 function selectWithRandomization(candidates: number[], count: number): number[] {
