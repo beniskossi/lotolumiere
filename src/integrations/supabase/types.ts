@@ -510,30 +510,6 @@ export type Database = {
         }
         Relationships: []
       }
-      scraping_status: {
-        Row: {
-          completed_at: string | null
-          id: string | null
-          job_date: string | null
-          results_count: number | null
-          status: string | null
-        }
-        Insert: {
-          completed_at?: string | null
-          id?: string | null
-          job_date?: string | null
-          results_count?: number | null
-          status?: never
-        }
-        Update: {
-          completed_at?: string | null
-          id?: string | null
-          job_date?: string | null
-          results_count?: number | null
-          status?: never
-        }
-        Relationships: []
-      }
     }
     Functions: {
       count_array_matches: {
